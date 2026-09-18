@@ -1,10 +1,10 @@
 # Internal provisional PS1 submission validator
 
-## Scenario B optimiser gate
+## Scenario B/C optimiser gate
 
-Generated Scenario B candidates call `validate(dataset, files, "B", physical_nights=mapping)`. Artifacts are accepted only when `feasible`, `physical_validation_complete`, and an empty hard-violation list agree. Rejected candidates retain diagnostic physical assignments but expose no accepted CSVs. `judge_validation` remains `not_run`; `score_verification` remains `internal_only`.
+Generated Scenario B/C candidates call `validate(dataset, files, scenario, physical_nights=mapping)`. Artifacts are accepted only when `feasible`, `physical_validation_complete`, and an empty hard-violation list agree. Scenario C additionally cross-checks the validator objective against the scale-10 model objective. Rejected candidates retain diagnostic physical assignments and Scenario C ECLO windows but expose no accepted CSVs. `judge_validation` remains `not_run`; `score_verification` remains `internal_only`.
 
-Version: `ps1-validator/1.1.0`. Policy: `ps1-policy/3-explicit-night-domain`.
+Version: `ps1-validator/1.1.0`. Policy: `ps1-policy/4-scenario-c-line-windows`.
 **Judge validation not run. Objectives are internal, not officially verified.**
 This validates uploaded schedules; it does not optimise, generate schedules, approve track
 access, use AI or translate PS1 activities into nightly maintenance requests. Input imports,
@@ -209,4 +209,4 @@ empty disposable database named `railplan_test...`. Without it they skip. Do not
 Tests cover retention, deduplication, aliases, collisions, isolation, roles, FKs, audit,
 immutability and rollback. PostgreSQL execution, browser interactions, concurrent load
 testing and official-validator comparison remain outstanding. The validator itself adds
-no approval, solver, AI or production authentication. Scenario A optimisation is separate.
+no approval, AI or production authentication. Scenario A/B/C optimisation is a separate validation-gated service.

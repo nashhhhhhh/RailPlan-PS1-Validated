@@ -319,7 +319,7 @@ export type OptimiseInput = {
 };
 
 export type OptimiseResult = {
-  "scenario"?: "A" | "B";
+  "scenario"?: "A" | "B" | "C";
   "optimiser_version"?: string;
   "solver_status": string;
   "publishable"?: boolean;
@@ -346,6 +346,12 @@ export type OptimiseResult = {
 })[];
   "baseline_movement"?: number;
   "contract_completion_gate"?: boolean;
+  "eclo_windows"?: {
+  [key:string]: {
+
+};
+};
+  "cross_line_eclo_activities"?: (string)[];
   "diagnostics"?: ({
 
 })[];
@@ -568,7 +574,7 @@ export type SavedOptimiseInput = {
 };
 
 export type SavedOptimiseResult = {
-  "scenario"?: "A" | "B";
+  "scenario"?: "A" | "B" | "C";
   "optimiser_version"?: string;
   "solver_status": string;
   "publishable"?: boolean;
@@ -595,6 +601,12 @@ export type SavedOptimiseResult = {
 })[];
   "baseline_movement"?: number;
   "contract_completion_gate"?: boolean;
+  "eclo_windows"?: {
+  [key:string]: {
+
+};
+};
+  "cross_line_eclo_activities"?: (string)[];
   "diagnostics"?: ({
 
 })[];
@@ -624,6 +636,18 @@ export type SavedValidation = {
 };
 
 export type ScenarioBPreviewInput = {
+  "time_limit_seconds"?: number;
+  "deterministic_time_limit"?: number;
+  "random_seed"?: number;
+  "physical_nights_per_week"?: number;
+  "locked_placements"?: (Placement)[];
+  "baseline_placements"?: (Placement)[];
+  "instance_files": {
+  [key:string]: string;
+};
+};
+
+export type ScenarioCPreviewInput = {
   "time_limit_seconds"?: number;
   "deterministic_time_limit"?: number;
   "random_seed"?: number;

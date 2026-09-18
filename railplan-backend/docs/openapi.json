@@ -10457,6 +10457,156 @@
         }
       }
     },
+    "/api/ps1/instances/{instance_id}/optimise/scenario-c": {
+      "post": {
+        "tags": [
+          "PS1 optimisation"
+        ],
+        "summary": "Scenario C",
+        "operationId": "scenario_c_api_ps1_instances__instance_id__optimise_scenario_c_post",
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Instance Id"
+            }
+          },
+          {
+            "name": "x-demo-user-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Demo-User-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavedOptimiseInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedOptimiseResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
     "/api/ps1/optimise/scenario-b/preview": {
       "post": {
         "tags": [
@@ -10470,6 +10620,128 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ScenarioBPreviewInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OptimiseResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Content Too Large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ps1/optimise/scenario-c/preview": {
+      "post": {
+        "tags": [
+          "PS1 optimisation"
+        ],
+        "summary": "Scenario C Preview",
+        "description": "Pure bounded Scenario C preview: no identity, database, or history.",
+        "operationId": "scenario_c_preview_api_ps1_optimise_scenario_c_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioCPreviewInput"
               }
             }
           },
@@ -10630,7 +10902,8 @@
                 {
                   "enum": [
                     "A",
-                    "B"
+                    "B",
+                    "C"
                   ],
                   "type": "string"
                 },
@@ -12942,7 +13215,8 @@
             "type": "string",
             "enum": [
               "A",
-              "B"
+              "B",
+              "C"
             ],
             "title": "Scenario",
             "default": "A"
@@ -12950,7 +13224,7 @@
           "optimiser_version": {
             "type": "string",
             "title": "Optimiser Version",
-            "default": "ps1-optimiser/1.1.0"
+            "default": "ps1-optimiser/1.2.0"
           },
           "solver_status": {
             "type": "string",
@@ -13052,6 +13326,20 @@
             "type": "boolean",
             "title": "Contract Completion Gate",
             "default": false
+          },
+          "eclo_windows": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Eclo Windows"
+          },
+          "cross_line_eclo_activities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Cross Line Eclo Activities"
           },
           "diagnostics": {
             "items": {
@@ -14313,7 +14601,8 @@
             "type": "string",
             "enum": [
               "A",
-              "B"
+              "B",
+              "C"
             ],
             "title": "Scenario",
             "default": "A"
@@ -14321,7 +14610,7 @@
           "optimiser_version": {
             "type": "string",
             "title": "Optimiser Version",
-            "default": "ps1-optimiser/1.1.0"
+            "default": "ps1-optimiser/1.2.0"
           },
           "solver_status": {
             "type": "string",
@@ -14423,6 +14712,20 @@
             "type": "boolean",
             "title": "Contract Completion Gate",
             "default": false
+          },
+          "eclo_windows": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Eclo Windows"
+          },
+          "cross_line_eclo_activities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Cross Line Eclo Activities"
           },
           "diagnostics": {
             "items": {
@@ -14592,6 +14895,70 @@
           "instance_files"
         ],
         "title": "ScenarioBPreviewInput"
+      },
+      "ScenarioCPreviewInput": {
+        "properties": {
+          "time_limit_seconds": {
+            "type": "number",
+            "maximum": 120.0,
+            "minimum": 0.1,
+            "title": "Time Limit Seconds",
+            "default": 20
+          },
+          "deterministic_time_limit": {
+            "type": "number",
+            "maximum": 60.0,
+            "minimum": 0.001,
+            "title": "Deterministic Time Limit",
+            "default": 10
+          },
+          "random_seed": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Random Seed",
+            "default": 0
+          },
+          "physical_nights_per_week": {
+            "type": "integer",
+            "maximum": 7.0,
+            "minimum": 1.0,
+            "title": "Physical Nights Per Week",
+            "default": 7
+          },
+          "locked_placements": {
+            "items": {
+              "$ref": "#/components/schemas/Placement"
+            },
+            "type": "array",
+            "maxItems": 2000,
+            "title": "Locked Placements"
+          },
+          "baseline_placements": {
+            "items": {
+              "$ref": "#/components/schemas/Placement"
+            },
+            "type": "array",
+            "maxItems": 2000,
+            "title": "Baseline Placements"
+          },
+          "instance_files": {
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 4000000
+            },
+            "type": "object",
+            "maxProperties": 8,
+            "minProperties": 8,
+            "title": "Instance Files"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "instance_files"
+        ],
+        "title": "ScenarioCPreviewInput"
       },
       "ScenarioClone": {
         "properties": {

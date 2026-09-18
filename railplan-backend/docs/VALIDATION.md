@@ -1,23 +1,24 @@
 # Validation — merged FastAPI v0.4
 
-## Current Scenario B verification (2026-09-19)
+## Current Scenario C verification (2026-09-19)
 
 | Command / check | Actual result |
 |---|---|
 | `python -m compileall -q app migrations tests scripts` | Passed |
-| `python -m pytest -q -p no:cacheprovider` | **451 passed, 93 skipped**, 0 failed; one Starlette/httpx deprecation warning |
-| `python -m pytest -q tests/test_ps1_scenario_b.py` | **12 passed**, included above |
-| PostgreSQL/PostGIS suites with `-rs` | **93 skipped** because `TEST_DATABASE_URL`, `TEST_COMMITTED_DATABASE_URL`, and `TEST_MIGRATION_DATABASE_URL` were not configured; no live migration/persistence claim |
-| `python scripts/export_contracts.py` | **66 paths, 76 schemas** |
-| API-client `tsc` build plus direct TAP files | Build passed; **19 passed**, 0 failed |
+| `python -m pytest -q` | **464 passed, 94 skipped**, 0 failed; one Starlette/httpx deprecation warning |
+| Focused A/B/C, validator, API/static and conflict tests | **306 passed**, 0 failed; included above |
+| Scenario C module | **11 passed**, included above |
+| PostgreSQL/PostGIS suites | **94 skipped** because `TEST_DATABASE_URL`, `TEST_COMMITTED_DATABASE_URL`, and `TEST_MIGRATION_DATABASE_URL` were not configured; no live migration/persistence claim |
+| `python scripts/export_contracts.py` | **68 paths, 77 schemas** |
+| API-client `npm test` | TypeScript build passed; **20 passed**, 0 failed |
 | Modified root TS/TSX transpilation and frontend-test syntax | Passed |
 | Root strict typecheck / production build | Not completed: the clean dependency install exhausted available disk; the build attempt reports missing `vinext` |
 | Browser workflow | Not run because the root browser/build dependency tree is unavailable; browser test source parses |
-| Official dataset, wall budget 3 s / deterministic budget 0.1 | `UNKNOWN` after 1.906 s, no incumbent, no accepted artifacts; not an infeasibility proof |
+| Official dataset, wall budget 3 s / deterministic budget 0.1 | `UNKNOWN` after 1.853 s, no incumbent, no accepted artifacts; primary optimality not proven and this is not an infeasibility proof |
 
 The official judge was not run. `judge_validation` remains `not_run` and all scores remain
-`internal_only`. The new guarded PostgreSQL tests cover Scenario B ECLO/objective/physical
-row retention, exact CSV retention, migration 0008, the duplicate-trigger regression,
+`internal_only`. The guarded PostgreSQL tests cover Scenario C ECLO windows, objective and physical
+row retention, exact CSV retention, migration 0009, the duplicate-trigger regression,
 repeat upgrade and both seed commands, but they are among the skipped tests above.
 
 ## Previous optimiser-persistence verification

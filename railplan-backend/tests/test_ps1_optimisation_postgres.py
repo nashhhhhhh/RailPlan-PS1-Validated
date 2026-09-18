@@ -66,7 +66,7 @@ def committed_engine():
         require_empty(conn)
         with Operations.context(MigrationContext.configure(conn)):
             for name in ('0001_initial','0002_api_support','0003_conflict_scoring','0004_analysis_history',
-                         '0005_ps1_instances','0006_ps1_validations','0007_ps1_optimisation_runs','0008_ps1_scenario_b'):
+                         '0005_ps1_instances','0006_ps1_validations','0007_ps1_optimisation_runs','0008_ps1_scenario_b','0009_ps1_scenario_c'):
                 importlib.import_module('migrations.versions.'+name).upgrade()
         seed(conn)
     yield eng
@@ -145,6 +145,24 @@ def test_scenario_b_api_persists_eclo_objective_physical_rows_and_exact_csvs(com
     assert run['scenario']=='B' and run['accepted_csvs']==body['submission_files']
     assert [row.eclo for row in rows]==[1,1]
     assert all(1<=row.physical_night<=7 for row in rows)
+
+def test_scenario_c_api_persists_windows_weighted_objective_and_exact_csvs(committed_engine,api):
+    source=files()
+    source['08_ACTIVITY_DETAILS.csv']=source['08_ACTIVITY_DETAILS.csv'].replace(',1,2027-01-04',',3,2027-01-04')
+    source['07_PROJECT_DETAILS.csv']=source['07_PROJECT_DETAILS.csv'].replace('Non-live (Others),3,2027','Non-live (Others),1,2027')
+    created=api.post('/api/ps1/instances',json={'files':source})
+    assert created.status_code==201,created.text
+    response=api.post(f"/api/ps1/instances/{created.json()['id']}/optimise/scenario-c",json={'time_limit_seconds':5,'random_seed':23})
+    assert response.status_code==200,response.text
+    body=response.json()
+    assert body['scenario']=='C' and body['publishable'] and body['eclo_windows']['ALP']['active']
+    assert body['objective_components']['eclo_nights_total']==2
+    with Session(committed_engine) as db:
+        run=store.get_run(db,ACTOR,body['run_id'])
+        rows=list(db.execute(text('SELECT eclo,physical_night FROM railplan.ps1_optimisation_accesses WHERE run_id=:id ORDER BY access_seq'),{'id':body['run_id']}))
+    assert run['scenario']=='C' and run['accepted_csvs']==body['submission_files']
+    assert run['result_snapshot']['eclo_windows']==body['eclo_windows']
+    assert [row.eclo for row in rows]==[1,1] and all(1<=row.physical_night<=7 for row in rows)
 
 def test_precision_and_primary_flags_roundtrip(committed_engine,fixture_instance):
     payload=SavedOptimiseInput(locked_placements=[{'activity_id':'SMOKE-A1','access_seq':1,'week':2,'physical_night':6,'access_night':1}])
@@ -311,9 +329,9 @@ def test_migration_upgrade_and_deliberate_downgrade_refusal():
         seeded=subprocess.run([sys.executable,'-m',module],cwd=ROOT,env=env,capture_output=True,text=True)
         assert seeded.returncode==0,seeded.stderr
     with eng.connect() as conn:
-        assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0008'
+        assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0009'
         assert conn.execute(text("SELECT count(*) FROM pg_tables WHERE schemaname='railplan' AND tablename LIKE 'ps1_optimisation_%'")).scalar_one()==5
-    refused=subprocess.run([sys.executable,'-m','alembic','downgrade','0007'],cwd=ROOT,env=env,capture_output=True,text=True)
-    assert refused.returncode!=0 and 'Archive sealed Scenario B optimisation evidence' in refused.stderr
-    with eng.connect() as conn:assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0008'
+    refused=subprocess.run([sys.executable,'-m','alembic','downgrade','0008'],cwd=ROOT,env=env,capture_output=True,text=True)
+    assert refused.returncode!=0 and 'Archive sealed Scenario C optimisation evidence' in refused.stderr
+    with eng.connect() as conn:assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0009'
     eng.dispose()

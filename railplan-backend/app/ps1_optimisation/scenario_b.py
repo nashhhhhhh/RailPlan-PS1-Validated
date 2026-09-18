@@ -1,4 +1,4 @@
-"""Scenario B CP-SAT model: fixed dates, flexible supply and optional ECLO."""
+"""Shared elastic CP-SAT core for Scenario B (fixed dates) and C (balanced)."""
 from collections import defaultdict
 from datetime import date
 from time import monotonic
@@ -6,7 +6,8 @@ from ortools.sat.python import cp_model
 from .contracts import Placement
 
 
-def solve(dataset, data, options):
+def solve(dataset, data, options, scenario='B'):
+    if scenario not in ('B','C'):raise ValueError('Elastic model supports Scenario B or C')
     built_at=monotonic(); model=cp_model.CpModel()
     activities,projects=data['activities'],data['projects']
     horizon,nights=data['horizon'],options.physical_nights_per_week
@@ -115,21 +116,62 @@ def solve(dataset, data, options):
         for w in weeks:
             for n in night_ids:enforce(x[aid,w,n]+x[bid,w,n]<=1,'physical_closure')
 
+    line_windows={}
+    if scenario=='C':
+        for line in ('ALP','BET'):
+            keys=[key for key in sorted(E) if line in data['footprints'][key[0]]['lines']]
+            enabled=[E[key] for key in keys]
+            line_active=model.NewBoolVar(f'eclo_window_active:{line}')
+            if enabled:model.AddMaxEquality(line_active,enabled)
+            else:model.Add(line_active==0)
+            candidates_min=[];candidates_max=[]
+            for key in keys:
+                low=model.NewIntVar(1,horizon+1,f'eclo_min_candidate:{line}:{key[0]}:{key[1]}')
+                high=model.NewIntVar(0,horizon,f'eclo_max_candidate:{line}:{key[0]}:{key[1]}')
+                model.Add(low==W[key]).OnlyEnforceIf(E[key]);model.Add(low==horizon+1).OnlyEnforceIf(E[key].Not())
+                model.Add(high==W[key]).OnlyEnforceIf(E[key]);model.Add(high==0).OnlyEnforceIf(E[key].Not())
+                candidates_min.append(low);candidates_max.append(high)
+            raw_start=model.NewIntVar(1,horizon+1,f'eclo_raw_start:{line}')
+            end=model.NewIntVar(0,horizon,f'eclo_end:{line}')
+            if candidates_min:
+                model.AddMinEquality(raw_start,candidates_min);model.AddMaxEquality(end,candidates_max)
+            else:
+                model.Add(raw_start==horizon+1);model.Add(end==0)
+            start=model.NewIntVar(0,horizon,f'eclo_start:{line}')
+            model.Add(start==raw_start).OnlyEnforceIf(line_active);model.Add(start==0).OnlyEnforceIf(line_active.Not())
+            enforce(end-start<=1,'eclo_window')
+            line_windows[line]={'active':line_active,'start':start,'end':end,'keys':keys}
+
     for placement in sorted(options.locked_placements,key=lambda r:(r.activity_id,r.access_seq)):
         key=placement.activity_id,placement.access_seq;code=f'lock:{key[0]}:{key[1]}'
         enforce(active[key]==1,code);enforce(W[key]==placement.week,code);enforce(N[key]==placement.physical_night,code)
         if placement.access_night is not None:enforce(L[key]==placement.access_night,code)
         if placement.eclo is not None:enforce(E[key]==placement.eclo,code)
 
-    origin=date.fromisoformat(dataset['parameters']['horizon_start']);contract_completion={}
+    origin=date.fromisoformat(dataset['parameters']['horizon_start']);contract_completion={};activity_overrun={};contract_overrun={}
+    weighted_overrun_scaled=0
+    for aid,a in activities.items():
+        project=projects[a['contract_number'],a['activity_type']]
+        offset=(origin-date.fromisoformat(project['planned_completion_date'])).days-1
+        maximum=max(0,7*horizon+offset)
+        activity_overrun[aid]=model.NewIntVar(0,maximum,f'activity_overrun:{aid}')
+        model.AddMaxEquality(activity_overrun[aid],[0,7*completion[aid]+offset])
+        multiplier={1:13,2:12,3:10}[a['activity_priority']]
+        tier={1:100,2:10,3:1}[project['contract_priority']]
+        weighted_overrun_scaled+=tier*multiplier*activity_overrun[aid]
     for contract in sorted({a['contract_number'] for a in activities.values()}):
         ids=[aid for aid,a in activities.items() if a['contract_number']==contract]
         end=model.NewIntVar(1,horizon,f'contract_end:{contract}')
         model.AddMaxEquality(end,[completion[aid] for aid in ids]);contract_completion[contract]=end
         project=next(p for p in projects.values() if p['contract_number']==contract)
-        last_week=(date.fromisoformat(project['planned_completion_date'])-origin).days
-        allowed=(last_week+1)//7
-        enforce(end<=allowed,'planned_date')
+        offset=(origin-date.fromisoformat(project['planned_completion_date'])).days-1
+        maximum=max(0,7*horizon+offset)
+        contract_overrun[contract]=model.NewIntVar(0,maximum,f'contract_overrun:{contract}')
+        model.AddMaxEquality(contract_overrun[contract],[0,7*end+offset])
+        if scenario=='B':
+            last_week=(date.fromisoformat(project['planned_completion_date'])-origin).days
+            allowed=(last_week+1)//7
+            enforce(end<=allowed,'planned_date')
 
     movement=[]
     for placement in sorted(options.baseline_placements,key=lambda r:(r.activity_id,r.access_seq)):
@@ -143,14 +185,24 @@ def solve(dataset, data, options):
         else:model.Add(moved==0)
         movement.append(moved)
 
-    total_excess=sum(excess.values());total_eclo=sum(E.values());official=7*total_excess+5*total_eclo
-    objectives=[('official_scenario_b_objective',official),('excess_access_nights_total',total_excess),
-        ('eclo_nights_total',total_eclo),('workload_over_delivery_scaled',sum(over_delivery.values())),
-        ('completion_weeks',sum(completion.values())+sum(contract_completion.values())),('baseline_movements',sum(movement)),
-        ('stable_placement_rank',sum((i+1)*(W[key]*(nights+1)*2003+N[key]*2003+L[key]*2+E[key]) for i,key in enumerate(sorted(W))))]
+    total_excess=sum(excess.values());total_eclo=sum(E.values())
+    stable=sum((i+1)*(W[key]*(nights+1)*2003+N[key]*2003+L[key]*2+E[key]) for i,key in enumerate(sorted(W)))
+    if scenario=='C':
+        for value in excess.values():enforce(value<=1,'capacity')
+        official=weighted_overrun_scaled+70*total_excess+50*total_eclo
+        objectives=[('official_scenario_c_objective_scaled_10',official),('priority_weighted_overrun_scaled_10',weighted_overrun_scaled),
+            ('excess_access_nights_total',total_excess),('eclo_nights_total',total_eclo),('raw_contract_overrun_days',sum(contract_overrun.values())),
+            ('workload_over_delivery_scaled',sum(over_delivery.values())),('completion_weeks',sum(completion.values())+sum(contract_completion.values())),
+            ('baseline_movements',sum(movement)),('stable_placement_rank',stable)]
+    else:
+        official=7*total_excess+5*total_eclo
+        objectives=[('official_scenario_b_objective',official),('excess_access_nights_total',total_excess),
+            ('eclo_nights_total',total_eclo),('workload_over_delivery_scaled',sum(over_delivery.values())),
+            ('completion_weeks',sum(completion.values())+sum(contract_completion.values())),('baseline_movements',sum(movement)),
+            ('stable_placement_rank',stable)]
     build_seconds=monotonic()-built_at;error=model.Validate()
     if error:return {'status':'MODEL_INVALID','placements':None,'diagnostics':[{'code':'model_invalid','message':error}], 'stages':[], 'solve_time_seconds':0,'primary_optimal':False,'lexicographic_complete':False,'build_seconds':build_seconds,'baseline_movement':0}
-    solved_at=monotonic();deterministic_used=0.0;candidate=None;status='UNKNOWN';primary_optimal=False;stages=[];diagnostics=[];movement_value=0
+    solved_at=monotonic();deterministic_used=0.0;candidate=None;status='UNKNOWN';primary_optimal=False;stages=[];diagnostics=[];movement_value=0;window_values={};cross_line=[]
     for name,objective in objectives:
         wall=options.time_limit_seconds-(monotonic()-solved_at);det=options.deterministic_time_limit-deterministic_used
         if wall<=0 or det<=0:break
@@ -177,6 +229,11 @@ def solve(dataset, data, options):
                 if solver.Value(active[aid,k]):
                     seq+=1;candidate.append(Placement(activity_id=aid,access_seq=seq,week=solver.Value(W[aid,k]),physical_night=solver.Value(N[aid,k]),access_night=solver.Value(L[aid,k]),eclo=solver.Value(E[aid,k])))
         candidate.sort(key=lambda r:(r.activity_id,r.access_seq));movement_value=sum(solver.Value(v) for v in movement)
+        if scenario=='C':
+            window_values={line:{'active':bool(solver.Value(values['active'])),'start_week':solver.Value(values['start']) or None,
+                'end_week':solver.Value(values['end']) or None,
+                'activity_ids':sorted({key[0] for key in values['keys'] if solver.Value(E[key])})} for line,values in line_windows.items()}
+            cross_line=sorted({key[0] for key in E if solver.Value(E[key]) and data['footprints'][key[0]]['lines']=={'ALP','BET'}})
         status='FEASIBLE'
         if name==objectives[0][0]:primary_optimal=result==cp_model.OPTIMAL
         if result!=cp_model.OPTIMAL:break
@@ -187,4 +244,5 @@ def solve(dataset, data, options):
     if candidate is None and status=='UNKNOWN':diagnostics.append({'code':'search_limit','message':'No incumbent within the configured solve budgets. This does not prove infeasibility.'})
     if candidate is None:diagnostics.append({'code':'physical_pair_constraints','incompatible_pairs':data['pairs']})
     return {'status':status,'placements':candidate,'diagnostics':diagnostics,'stages':stages,'primary_optimal':primary_optimal,
-        'lexicographic_complete':complete,'solve_time_seconds':monotonic()-solved_at,'build_seconds':build_seconds,'baseline_movement':movement_value}
+        'lexicographic_complete':complete,'solve_time_seconds':monotonic()-solved_at,'build_seconds':build_seconds,'baseline_movement':movement_value,
+        'eclo_windows':window_values,'cross_line_eclo_activities':cross_line}

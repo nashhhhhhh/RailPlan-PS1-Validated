@@ -13,10 +13,10 @@ from app.dependencies import Actor, DB, Limit, Offset, role, identity
 from app.ps1_validation.persistence import get_instance
 from app.ps1 import parse_instance, InstanceError
 from app.ps1_validation.submission import fingerprint
-from app.ps1_optimisation.contracts import OptimiseResult, ScenarioBPreviewInput, ScenarioBOptimiseInput
+from app.ps1_optimisation.contracts import OptimiseResult, ScenarioBPreviewInput, ScenarioBOptimiseInput, ScenarioCPreviewInput, ScenarioCOptimiseInput
 from app.ps1_optimisation.saved_contracts import SavedOptimiseInput, SavedOptimiseResult, OptimisationPage, OptimisationDetail, OptimisationArtifacts
 from app.ps1_optimisation.preprocessing import InputError
-from app.ps1_optimisation.service import optimise, optimise_scenario_b
+from app.ps1_optimisation.service import optimise, optimise_scenario_b, optimise_scenario_c
 from app.ps1_optimisation import persistence as store
 
 router=APIRouter(prefix='/api/ps1',tags=['PS1 optimisation'])
@@ -40,6 +40,12 @@ def scenario_b(instance_id:UUID,payload:SavedOptimiseInput,request:Request,
                x_demo_user_id:Annotated[UUID|None,Header()]=None):
     return _saved_scenario(instance_id,payload,request,factory,x_demo_user_id,'B')
 
+@router.post('/instances/{instance_id}/optimise/scenario-c',response_model=SavedOptimiseResult)
+def scenario_c(instance_id:UUID,payload:SavedOptimiseInput,request:Request,
+               factory=Depends(optimisation_session_factory),
+               x_demo_user_id:Annotated[UUID|None,Header()]=None):
+    return _saved_scenario(instance_id,payload,request,factory,x_demo_user_id,'C')
+
 def _saved_scenario(instance_id,payload,request,factory,x_demo_user_id,scenario):
     try:
         with factory() as db:
@@ -57,7 +63,7 @@ def _saved_scenario(instance_id,payload,request,factory,x_demo_user_id,scenario)
         started=datetime.now(timezone.utc); clock=monotonic()
         computed=None
         try:
-            computed=(optimise_scenario_b if scenario=='B' else optimise)(instance['dataset'],options)
+            computed={'A':optimise,'B':optimise_scenario_b,'C':optimise_scenario_c}[scenario](instance['dataset'],options)
             result=computed
             records=store.schedule_records(instance,options,result) if scenario=='A' else store.schedule_records(instance,options,result,scenario)
         except InputError:
@@ -96,9 +102,19 @@ def scenario_b_preview(payload:ScenarioBPreviewInput):
     except (InstanceError,InputError,UnicodeEncodeError) as exc:
         raise HTTPException(422,str(exc)) from exc
 
+@router.post('/optimise/scenario-c/preview',response_model=OptimiseResult)
+def scenario_c_preview(payload:ScenarioCPreviewInput):
+    """Pure bounded Scenario C preview: no identity, database, or history."""
+    try:
+        dataset=parse_instance(payload.instance_files)
+        options=ScenarioCOptimiseInput.model_validate(payload.model_dump(exclude={'instance_files'}))
+        return optimise_scenario_c(dataset,options)
+    except (InstanceError,InputError,UnicodeEncodeError) as exc:
+        raise HTTPException(422,str(exc)) from exc
+
 @router.get('/instances/{instance_id}/optimisations',response_model=OptimisationPage)
 def history(instance_id:UUID,db:DB,actor:Actor,limit:Limit=50,offset:Offset=0,
-            scenario:Literal['A','B']|None=Query(default=None)):
+            scenario:Literal['A','B','C']|None=Query(default=None)):
     get_instance(db,actor,instance_id)
     return repository.page(db,'''SELECT id,instance_id,baseline_run_id,scenario,solver_status,terminal_outcome,
         primary_optimal,lexicographic_complete,physical_validation_complete,publishable,

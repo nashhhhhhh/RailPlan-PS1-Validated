@@ -40,7 +40,7 @@ export const summarySchema = z
     primary_objective_gap: z.string().nullable(),
     solve_duration_seconds: z.number(),
     created_at: z.string(),
-    scenario: z.enum(["A", "B"]).default("A"),
+    scenario: z.enum(["A", "B", "C"]).default("A"),
   })
   .passthrough();
 export const detailSchema = z.object({
@@ -48,7 +48,7 @@ export const detailSchema = z.object({
   result: z
     .object({
       solver_status: z.string(),
-      scenario: z.enum(["A", "B"]).default("A"),
+      scenario: z.enum(["A", "B", "C"]).default("A"),
       publishable: z.boolean(),
       primary_optimal: z.boolean(),
       lexicographic_complete: z.boolean(),
@@ -61,6 +61,8 @@ export const detailSchema = z.object({
       capacity_hotspots: z.array(record).default([]),
       baseline_movement: z.number().int().default(0),
       contract_completion_gate: z.boolean().default(false),
+      eclo_windows: z.record(record).default({}),
+      cross_line_eclo_activities: z.array(z.string()).default([]),
       stages: z.array(record),
       judge_validation: z.literal("not_run"),
       score_verification: z.literal("internal_only"),

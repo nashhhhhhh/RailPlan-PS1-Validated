@@ -70,6 +70,16 @@ test("Scenario B exposes saved and database-free preview paths",async()=>{
  assert.equal(calls[0].body.random_seed,7);
  assert.equal(calls[1].body.instance_files.h,"8");
 });
+test("Scenario C exposes saved and database-free preview paths",async()=>{
+ const calls=[];
+ const api=new RailPlanClient({baseUrl:"http://localhost:8000",fetcher:async(url,init)=>{
+  calls.push({url,body:JSON.parse(init.body)});return Response.json({scenario:"C",solver_status:"FEASIBLE",publishable:true});
+ }});
+ await api.optimisePs1ScenarioC("instance",{random_seed:11});
+ await api.previewPs1ScenarioC({random_seed:11,instance_files:{a:"1",b:"2",c:"3",d:"4",e:"5",f:"6",g:"7",h:"8"}});
+ assert.equal(calls[0].url.pathname,"/api/ps1/instances/instance/optimise/scenario-c");
+ assert.equal(calls[1].url.pathname,"/api/ps1/optimise/scenario-c/preview");
+});
 test("saved PS1 retrieval filters and artifact errors remain explicit",async()=>{
  const calls=[];
  const api=new RailPlanClient({baseUrl:"http://localhost:8000",fetcher:async(url)=>{

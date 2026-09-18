@@ -15,7 +15,7 @@ const steps: { target: string; view: TourView; kicker: string; title: string; co
   { target: "[data-tour='horizon']", view: "overview", kicker: "06 / SCHEDULE", title: "Move across the 30-week horizon", copy: "Choose any bar to inspect that week’s scheduled access load and open an activity from the queue." },
   { target: "[data-tour='navigation']", view: "overview", kicker: "07 / DETAIL", title: "Change analytical views", copy: "Open full activity and contract tables, inspect the 30-week activity grid, or trace every visual back to its CSV source." },
   { target: "[data-tour='data-catalog']", view: "data", kicker: "08 / PROVENANCE", title: "Trace and download the data", copy: "The lineage catalogue explains where each CSV appears in the dashboard and provides a direct link to the exact file served by the app." },
-  { target: "[data-tour='optimizer']", view: "data", kicker: "09 / OPTIMISE", title: "Move from insight to a plan", copy: "Open the optimiser to generate a new schedule. Scenario B permits ECLO and scored capacity excess while enforcing planned dates. Internal rich validation remains separate from official judge validation." },
+  { target: "[data-tour='optimizer']", view: "data", kicker: "09 / OPTIMISE", title: "Move from insight to a plan", copy: "Open the optimiser to generate a new schedule. Scenario B enforces planned dates; Scenario C balances weighted delay with bounded excess and independent two-week ECLO windows. Internal rich validation remains separate from official judge validation." },
 ];
 
 export default function PS1Tour({ open, onClose, onNavigate }: Props) {

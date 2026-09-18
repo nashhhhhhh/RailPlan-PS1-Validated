@@ -2,7 +2,7 @@ from typing import Any, Literal, Annotated
 from pydantic import BaseModel, ConfigDict, Field
 from app.ps1_validation.contracts import ValidationReport
 
-VERSION = 'ps1-optimiser/1.1.0'
+VERSION = 'ps1-optimiser/1.2.0'
 
 class Placement(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True)
@@ -29,8 +29,14 @@ class ScenarioBOptimiseInput(OptimiseInput):
 class ScenarioBPreviewInput(ScenarioBOptimiseInput):
     instance_files: dict[str, Annotated[str, Field(max_length=4_000_000)]] = Field(min_length=8, max_length=8)
 
+class ScenarioCOptimiseInput(OptimiseInput):
+    """Scenario C adds line-scoped ECLO windows and bounded supply elasticity."""
+
+class ScenarioCPreviewInput(ScenarioCOptimiseInput):
+    instance_files: dict[str, Annotated[str, Field(max_length=4_000_000)]] = Field(min_length=8, max_length=8)
+
 class OptimiseResult(BaseModel):
-    scenario: Literal['A', 'B'] = 'A'
+    scenario: Literal['A', 'B', 'C'] = 'A'
     optimiser_version: str = VERSION
     solver_status: str
     publishable: bool = False
@@ -47,6 +53,8 @@ class OptimiseResult(BaseModel):
     capacity_hotspots: list[dict[str, Any]] = Field(default_factory=list)
     baseline_movement: int = 0
     contract_completion_gate: bool = False
+    eclo_windows: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    cross_line_eclo_activities: list[str] = Field(default_factory=list)
     diagnostics: list[dict[str, Any]] = Field(default_factory=list)
     stages: list[dict[str, Any]] = Field(default_factory=list)
     settings: dict[str, Any]

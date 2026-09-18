@@ -1,6 +1,6 @@
 # API follow-up fixes
 
-Scenario B generation, stateless preview, saved persistence, filtered history, UI mode selection, migration `0008`, and regenerated contracts are implemented. Scenario C generation remains intentionally disabled. The uniform 1–7 physical-night domain and Sunday completion conversion remain versioned provisional assumptions pending official clarification.
+Scenario A/B/C generation, Scenario B/C stateless previews, saved persistence, filtered history, A/B/C comparison, UI mode selection, migration `0009`, and regenerated contracts are implemented. Scenario C uses independent two-week line windows and the official scaled weighted-overrun/excess/ECLO objective. The uniform 1–7 physical-night domain and Sunday completion conversion remain versioned provisional assumptions pending official clarification.
 
 ## PS1 terminal optimiser persistence (current)
 
@@ -35,7 +35,7 @@ Scenario B generation, stateless preview, saved persistence, filtered history, U
 - See PS1_OPTIMISATION.md and VALIDATION.md for bounds, assumptions and exact checks.
 - Follow-up: official comparison, PostgreSQL verification, dated engineering calendars,
   optimisation persistence if requested, UI controls, production load/cancellation handling.
-  B/C optimisation and operational approval remain out of scope.
+  This paragraph is historical: B/C optimisation is now implemented; operational approval remains out of scope.
 
 ## PS1 validator 1.1.0 (preserved)
 

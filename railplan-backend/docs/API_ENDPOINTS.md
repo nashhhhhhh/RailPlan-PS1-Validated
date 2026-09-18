@@ -1,10 +1,13 @@
 # API endpoint inventory
 
-## Scenario B optimisation
+## Scenario B and C optimisation
 
 - `POST /api/ps1/optimise/scenario-b/preview` — stateless, unauthenticated, no PostgreSQL/history; accepts `instance_files` and bounded solver options.
 - `POST /api/ps1/instances/{instance_id}/optimise/scenario-b` — planner/admin, immutable PostgreSQL terminal history.
 - `GET /api/ps1/instances/{instance_id}/optimisations?scenario=B` — scenario-filtered history.
+- `POST /api/ps1/optimise/scenario-c/preview` — stateless Scenario C solve with the same upload and solver bounds.
+- `POST /api/ps1/instances/{instance_id}/optimise/scenario-c` — planner/admin, immutable Scenario C history.
+- `GET /api/ps1/instances/{instance_id}/optimisations?scenario=C` — Scenario C-filtered history.
 
 Responses distinguish solver status, primary optimality, lexicographic completion, physical validation, publication state, judge validation, and internal-only score verification.
 
@@ -45,7 +48,7 @@ migration; no original schema tables were rebuilt and no frontend visual compone
 | TypeScript client/adapters | Implemented and tested | Compiler and 12 client tests |
 | CRUD, scenario persistence, locks, activity, scoped reads | Implemented; database integration testing pending | 28 PostgreSQL/PostGIS tests provided |
 | Production OIDC | Contract/boundary only | Production fails closed |
-| Analysis/optimisation workers | Intentionally unavailable | POST returns 503; no queue insert |
+| Generic analysis/optimisation workers | Intentionally unavailable | POST returns 503; PS1 A/B/C routes are synchronous and separate |
 | Copilot | Contract only | Capability false; no fake responses |
 | Operational approval/publication | Intentionally unavailable | Write routes return 501 |
 | Hosted UI wiring | Adapter delivery only | Copy data-layer client and connect existing handlers |

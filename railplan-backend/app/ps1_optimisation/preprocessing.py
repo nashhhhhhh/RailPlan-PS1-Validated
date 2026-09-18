@@ -38,7 +38,7 @@ def prepare(dataset, options, scenario='A'):
         a,b = footprints[aid],footprints[bid]
         kinds = [projects[activities[i]['contract_number'],activities[i]['activity_type']]['access_type'] for i in (aid,bid)]
         shared_overlap=a['occupied'] & b['occupied'] if legal_mix(kinds) else set()
-        if scenario!='B' and shared_overlap:
+        if scenario=='A' and shared_overlap:
             continue # Preserve the established Scenario A possession policy.
         collisions = {
             # A legal possession exempts only its common occupied locations. Its
@@ -51,11 +51,11 @@ def prepare(dataset, options, scenario='A'):
         collisions = {code:sorted(locs) for code,locs in collisions.items() if locs}
         if collisions: pairs.append({'activity_ids':[aid,bid], 'collisions':collisions})
     for aid,a in activities.items():
-        minimum_accesses=(2*a['total_accesses']+2)//3 if scenario=='B' else a['total_accesses']
+        minimum_accesses=(2*a['total_accesses']+2)//3 if scenario in ('B','C') else a['total_accesses']
         if a['planned_start_week']+minimum_accesses-1 > horizon:
             diagnostics.append({'code':'workload','activity_ids':[aid],'message':'Required weekly accesses do not fit after planned start.'})
         for loc in sorted(footprints[aid]['occupied']):
-            if scenario!='B' and supply[loc] == 0: diagnostics.append({'code':'capacity','activity_ids':[aid],'location_ids':[loc],'message':'Required location has zero supply.'})
+            if scenario=='A' and supply[loc] == 0: diagnostics.append({'code':'capacity','activity_ids':[aid],'location_ids':[loc],'message':'Required location has zero supply.'})
     for contract in sorted({p['contract_number'] for p in projects.values()}):
         records=[p for p in projects.values() if p['contract_number']==contract]
         if len({(p['contract_priority'],p['planned_completion_date']) for p in records}) != 1:

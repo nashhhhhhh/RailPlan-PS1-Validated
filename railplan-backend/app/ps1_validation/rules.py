@@ -185,7 +185,7 @@ def evaluate(dataset, tables, scenario, physical_nights: dict[tuple[str, int], i
         common=sa['occupied'] & sb['occupied']
         shared={loc for loc in common if assignment[a,week,loc]==assignment[b,week,loc]
                 and legal[loc,week,assignment[a,week,loc]]}
-        if scenario!='B' and common and shared==common:
+        if scenario=='A' and common and shared==common:
             continue
         # Different local groups establish separate possession slots at that location only.
         same={loc for loc in common if assignment[a,week,loc]==assignment[b,week,loc]}-shared

@@ -1,8 +1,8 @@
 # Data dictionary
 
-## Scenario B optimisation fields
+## Scenario B/C optimisation fields
 
-`scenario=B`; `eclo` is 0/1; `physical_night` is a network-wide weekly slot; `access_night` is local to contract/activity-type/week; `co_share_group` is local to location/week. `objective_score = 7×excess_access_nights_total + 5×eclo_nights_total`. Required, delivered, standard/ECLO contribution, and over-delivery are retained in the result snapshot.
+`scenario` is A/B/C; `eclo` is 0/1; `physical_night` is a network-wide weekly slot; `access_night` is local to contract/activity-type/week; `co_share_group` is local to location/week. Scenario B uses `7×excess_access_nights_total + 5×eclo_nights_total`. Scenario C uses `priority_weighted_overrun + 7×excess_access_nights_total + 5×eclo_nights_total`, caps each location/week excess at one, and retains Alpha/Beta window active/start/end/activity IDs plus cross-line ECLO activity IDs in the immutable result JSON. Required, delivered, standard/ECLO contribution, and over-delivery are also retained there.
 
 ## PS1 optimiser additions: migration 0007
 

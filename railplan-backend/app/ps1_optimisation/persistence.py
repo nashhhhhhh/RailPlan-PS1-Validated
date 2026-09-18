@@ -8,12 +8,12 @@ from sqlalchemy import text
 from app import repository
 from app.ps1_validation.contracts import VERSION as VALIDATOR_VERSION, POLICY, snapshot
 from app.ps1_validation.submission import fingerprint
-from .contracts import OptimiseInput, ScenarioBOptimiseInput, Placement, VERSION
+from .contracts import OptimiseInput, ScenarioBOptimiseInput, ScenarioCOptimiseInput, Placement, VERSION
 from .saved_contracts import SavedOptimiseResult
 from .exporter import export_bundle
 from .preprocessing import prepare, InputError
 
-OBJECTIVE_POLICIES={'A':'ps1-objective/scenario-a-scale10-lex5/1','B':'ps1-objective/scenario-b-official-lex7/1'}
+OBJECTIVE_POLICIES={'A':'ps1-objective/scenario-a-scale10-lex5/1','B':'ps1-objective/scenario-b-official-lex7/1','C':'ps1-objective/scenario-c-scale10-lex9/1'}
 OBJECTIVE_POLICY=OBJECTIVE_POLICIES['A']
 OUTCOMES={s:('bounded' if s=='UNKNOWN' else s.lower()) for s in
           ('OPTIMAL','FEASIBLE','INFEASIBLE','UNKNOWN','MODEL_LIMIT','VALIDATION_FAILED','ERROR','MODEL_INVALID')}
@@ -26,7 +26,7 @@ def get_run(db,actor,run_id,instance_id=None):
     return dict(row)
 
 def resolve(db,actor,instance,payload,scenario='A'):
-    option_type=ScenarioBOptimiseInput if scenario=='B' else OptimiseInput
+    option_type={'A':OptimiseInput,'B':ScenarioBOptimiseInput,'C':ScenarioCOptimiseInput}[scenario]
     options=option_type.model_validate({k:getattr(payload,k) for k in option_type.model_fields})
     if payload.baseline_run_id:
         baseline=get_run(db,actor,payload.baseline_run_id,instance['id'])
@@ -34,6 +34,7 @@ def resolve(db,actor,instance,payload,scenario='A'):
         baseline_scenario=baseline.get('scenario','A') # Pre-0008/test rows are Scenario A.
         if scenario=='A' and baseline_scenario!='A':raise HTTPException(422,'Scenario A requires a Scenario A baseline')
         if scenario=='B' and baseline_scenario not in ('A','B'):raise HTTPException(422,'Baseline scenario is incompatible with Scenario B')
+        if scenario=='C' and baseline_scenario not in ('A','B','C'):raise HTTPException(422,'Baseline scenario is incompatible with Scenario C')
         rows=db.execute(text('''SELECT activity_id,access_seq,week,physical_night,access_night,eclo
           FROM railplan.ps1_optimisation_accesses WHERE run_id=:id AND operator_id=:op AND instance_id=:instance
           ORDER BY activity_id,access_seq'''),{'id':baseline['id'],'op':actor['operator_id'],'instance':instance['id']}).mappings()
@@ -57,7 +58,9 @@ def effective_configuration(instance,options,baseline_run_id=None,scenario='A'):
     config=options.model_dump(mode='json')
     for key in ('locked_placements','baseline_placements'):
         config[key]=sorted(config[key],key=lambda p:(p['activity_id'],p['access_seq']))
-    stage_order=['weighted_overrun_scaled_10','raw_contract_overrun_days','completion_weeks','baseline_movements','stable_placement_rank'] if scenario=='A' else ['official_scenario_b_objective','excess_access_nights_total','eclo_nights_total','workload_over_delivery_scaled','completion_weeks','baseline_movements','stable_placement_rank']
+    stage_order={'A':['weighted_overrun_scaled_10','raw_contract_overrun_days','completion_weeks','baseline_movements','stable_placement_rank'],
+        'B':['official_scenario_b_objective','excess_access_nights_total','eclo_nights_total','workload_over_delivery_scaled','completion_weeks','baseline_movements','stable_placement_rank'],
+        'C':['official_scenario_c_objective_scaled_10','priority_weighted_overrun_scaled_10','excess_access_nights_total','eclo_nights_total','raw_contract_overrun_days','workload_over_delivery_scaled','completion_weeks','baseline_movements','stable_placement_rank']}[scenario]
     return {'instance_id':str(instance['id']),'dataset_fingerprint':instance['dataset']['fingerprint'],'scenario':scenario,
         'optimiser_version':VERSION,'validator_version':VALIDATOR_VERSION,'policy_version':POLICY.version,
         'policy_snapshot':snapshot(),'objective_policy':OBJECTIVE_POLICY if scenario=='A' else OBJECTIVE_POLICIES[scenario],'ortools_version':ortools.__version__,
@@ -91,11 +94,11 @@ def accepted(result):
 def primary_metrics(result,is_accepted):
     score=Decimal(result.validation_report.objective_score) if is_accepted else None
     bound=gap=None
-    primary_name='weighted_overrun_scaled_10' if result.scenario=='A' else 'official_scenario_b_objective'
+    primary_name={'A':'weighted_overrun_scaled_10','B':'official_scenario_b_objective','C':'official_scenario_c_objective_scaled_10'}[result.scenario]
     stages=[s for s in result.stages if s.get('name')==primary_name]
     if len(stages)==1 and stages[0].get('status') in ('OPTIMAL','FEASIBLE'):
         try:
-            value=Decimal(str(stages[0]['best_bound']))/(Decimal(10) if result.scenario=='A' else Decimal(1))
+            value=Decimal(str(stages[0]['best_bound']))/(Decimal(10) if result.scenario in ('A','C') else Decimal(1))
             if value.is_finite() and value>=0 and (score is None or value<=score):bound=value
         except (KeyError,InvalidOperation,ValueError):pass
     if score is not None and bound is not None:

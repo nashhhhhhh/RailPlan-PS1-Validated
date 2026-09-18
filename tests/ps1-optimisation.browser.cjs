@@ -309,11 +309,11 @@ fs.mkdirSync(screenshots, { recursive: true });
       await opt()
         .getByRole("button", { name: "Generate schedule", exact: true })
         .isDisabled(),
-      true,
+      false,
     );
     assert.equal(posts.length, 0);
     await page.getByRole("button", { name: "Scenario A", exact: true }).click();
-    check("B is enabled, C remains disabled, and neither generates Scenario A requests");
+    check("B and C generation are enabled without generating Scenario A requests");
     delayPost = true;
     await opt()
       .getByRole("button", { name: "Generate schedule", exact: true })

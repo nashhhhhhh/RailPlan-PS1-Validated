@@ -1,14 +1,14 @@
 # PS1 optimiser UI integration
 
-Current workflow: load/import all eight source CSVs, then choose Scenario A or B. Scenario B can run as a stateless local preview; saved Scenario A/B runs additionally require a configured FastAPI connection, planner identity, and saved instance.
+Current workflow: load/import all eight source CSVs, then choose Scenario A, B or C. Scenario B/C can run as stateless local previews; saved Scenario A/B/C runs additionally require a configured FastAPI connection, planner identity, and saved instance.
 
-Scenario B is enabled in the optimiser reached from the command dashboard. The panel shows ECLO permission, the hard completion gate, official objective components, workload delivery, capacity hotspots, explicit physical/access nights, co-share groups, solver proof status, physical validation, filtered history, downloads, and failed-run diagnostics. Local preview is not a browser-only solver: it calls FastAPI but does not require PostgreSQL.
+Scenario C is enabled in the optimiser reached from the command dashboard. The panel shows its weighted-overrun/excess/ECLO formula, independent Alpha/Beta ECLO windows, cross-line ECLO activities, workload delivery, capacity hotspots, explicit physical/access nights, co-share groups, solver proof status, physical validation, filtered history, A/B/C comparison, downloads, and failed-run diagnostics. Local preview is not a browser-only solver: it calls FastAPI but does not require PostgreSQL.
 
 Open **PS1 · Hackathon dataset** in the existing main page. Load the organiser dataset or import the eight input CSVs, open **Connection and saved instances**, set the FastAPI address and planner identity, then explicitly **Save dataset**. The Scenario A planning engine appears inside the PS1 workspace.
 
 ## Workflow
 
-1. Select Scenario A or Scenario B. Scenario C still supports submission validation but cannot generate schedules.
+1. Select Scenario A, Scenario B or Scenario C. Scenario objectives differ, so the comparison view presents their components without directly ranking unlike scores.
 2. Set solver time, physical-night count and optional advanced settings. Generate a schedule.
 3. The synchronous request returns only after the backend saves its terminal result. The UI then loads the saved detail, all accesses and all occupancy pages.
 4. Select any saved run. The six tabs contain schedule, occupancy, contract results, validation, diagnostics and exact saved CSV downloads.
@@ -32,7 +32,7 @@ Open **PS1 · Hackathon dataset** in the existing main page. Load the organiser 
 
 ## Local setup
 
-Use the existing backend `docs/PS1_PERSISTENCE_TEST_GUIDE.md` first. Apply migration 0008/current head to your development database, seed the development planner identity, then start FastAPI. The UI requires the existing CORS settings to allow its local origin. The default UI backend is `http://127.0.0.1:8000`.
+Use the existing backend `docs/PS1_PERSISTENCE_TEST_GUIDE.md` first. Apply migration 0009/current head to your development database, seed the development planner identity, then start FastAPI. The UI requires the existing CORS settings to allow its local origin. The default UI backend is `http://127.0.0.1:8000`.
 
 From the project root, install using the existing pnpm lockfile and start:
 
@@ -99,4 +99,4 @@ Override `RAILPLAN_UI_URL` if the development URL differs. The script intercepts
 
 ## Still separate work
 
-Live PostgreSQL migration/persistence verification, operational approval, production authentication, Scenario B/C optimisation, background jobs and Ollama/Qwen3 copilot are outside this integration. No backend solver, validator, organiser CSV or migration is changed.
+Operational approval, production authentication, background jobs and Ollama/Qwen3 copilot remain outside this integration. PostgreSQL checks still require explicitly configured disposable test databases; Scenario A/B/C optimisation is synchronous and bounded.

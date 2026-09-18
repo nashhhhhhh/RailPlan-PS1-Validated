@@ -125,7 +125,9 @@ def test_openapi_and_health():
         schema=client.get("/openapi.json").json()
         assert "/api/maintenance-requests" in schema["paths"]
         assert "/api/ps1/optimise/scenario-b/preview" in schema["paths"]
+        assert "/api/ps1/optimise/scenario-c/preview" in schema["paths"]
         assert client.get("/health").json()["scenario_b_solver_available"] is True
+        assert client.get("/health").json()["scenario_c_solver_available"] is True
 
 def test_scoring_trigger_prefixes_are_literal_and_scenarios_not_duplicated():
     sql=(ROOT/'sql/005_scoring.sql').read_text()
@@ -140,6 +142,12 @@ def test_scenario_b_migration_is_additive_and_refuses_downgrade():
     revision=importlib.import_module('migrations.versions.0008_ps1_scenario_b')
     assert revision.down_revision=='0007'
     with pytest.raises(RuntimeError,match='Archive sealed Scenario B'):revision.downgrade()
+
+def test_scenario_c_migration_is_additive_and_refuses_downgrade():
+    import importlib
+    revision=importlib.import_module('migrations.versions.0009_ps1_scenario_c')
+    assert revision.down_revision=='0008'
+    with pytest.raises(RuntimeError,match='Archive sealed Scenario C'):revision.downgrade()
 
 def test_default_auth_fails_closed(monkeypatch):
     from app.database import session

@@ -1,8 +1,8 @@
 # PS1 dataset integration
 
-## Scenario B integration
+## Scenario A/B/C integration
 
-The command dashboard still reads bundled official source CSVs and organiser Scenario A reference output. **Open optimiser** opens `PS1Workspace`, where Scenario B runs as a database-free local preview or a saved PostgreSQL optimisation. Preview is stateless but still calls FastAPI. Scenario C generation remains disabled; A/B/C submission validation remains available.
+The command dashboard still reads bundled official source CSVs and organiser Scenario A reference output. **Open optimiser** opens `PS1Workspace`, where Scenario B and C run as database-free local previews or saved PostgreSQL optimisations. Preview is stateless but still calls FastAPI. A/B/C submission validation remains available, and organiser samples remain labelled as reference output.
 
 Optimiser-run persistence is now included in migration **0007**, with dedicated sealed
 PS1 tables and retrieval APIs. It preserves the importer, validator and CSV schemas;
@@ -17,9 +17,9 @@ immutable history (migration **0006**). See
 Version `ps1-validator/1.1.0` is **not** the judge's validator. The sample has
 full workload, consistent results, zero hard violations and 70 alignment warnings.
 Its internal objective is 48.30. CSV-only feasibility does not establish physical safety.
-Scenario A CP-SAT optimisation is now available via API/offline CLI; see
+Scenario A/B/C CP-SAT optimisation is now available; see
 [PS1_OPTIMISATION.md](railplan-backend/docs/PS1_OPTIMISATION.md). Generated candidates
-must pass rich validation. Official comparison and B/C optimisation remain outstanding.
+must pass rich validation. Official-judge comparison remains outstanding.
 The input-only release notes
 and verification counts below are historical; current checks are in `docs/VALIDATION.md`.
 

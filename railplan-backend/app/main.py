@@ -76,7 +76,7 @@ async def unhandled(request,exc):
 @app.get("/health/live")
 def health():
     return {"status":"ok","scope":"data-api","conflict_engine_available":True,"validator_available":True,
-        "solver_available":True,"scenario_a_solver_available":True,"scenario_b_solver_available":True,
+        "solver_available":True,"scenario_a_solver_available":True,"scenario_b_solver_available":True,"scenario_c_solver_available":True,
         "database_readiness":"see /health/ready","operational_approval_available":False}
 
 @app.get("/health/ready")
@@ -85,11 +85,11 @@ def readiness():
         with engine().connect() as db:
             db.execute(text("SELECT 1"))
             revision=db.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-            if revision!="0008":raise HTTPException(503,"Database migration required")
+            if revision!="0009":raise HTTPException(503,"Database migration required")
     except HTTPException:raise
     except Exception:raise HTTPException(503,"Database is not ready")
     return {"status":"ready","database_ready":True,"migration":revision,"validator_available":True,
-        "scenario_a_solver_available":True,"scenario_b_solver_available":True}
+        "scenario_a_solver_available":True,"scenario_b_solver_available":True,"scenario_c_solver_available":True}
 
 app.include_router(requests.router)
 app.include_router(scenarios.router)

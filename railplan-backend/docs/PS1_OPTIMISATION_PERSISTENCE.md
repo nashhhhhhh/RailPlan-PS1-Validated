@@ -1,14 +1,14 @@
 # Immutable PS1 optimiser-run persistence
 
-## Scenario B additive persistence
+## Scenario B/C additive persistence
 
-Migration `0008` expands the sealed run scenario check to `A/B` and the child access ECLO check to `0/1`. Existing rows and sealing/audit/immutability triggers are unchanged. Scenario-specific fingerprints include scenario and objective policy, preventing A/B collisions. Result JSON retains workload, ECLO, excess, objective stages, hotspots, physical nights, validation, diagnostics, and exact accepted CSV text.
+Migration `0008` expanded the sealed run scenario check to `A/B` and the child access ECLO check to `0/1`. Migration `0009` additively expands the scenario check to `A/B/C`; it changes no rows or sealing/audit/immutability triggers and intentionally refuses downgrade. Scenario-specific fingerprints include scenario and objective policy, preventing A/B/C collisions. Result JSON retains workload, ECLO, Scenario C line windows and cross-line activities, excess, objective stages, hotspots, physical nights, validation, diagnostics, and exact accepted CSV text.
 
 The original persistence release added terminal history to the synchronous Scenario A endpoint;
-Scenario B now uses the same transaction boundary and sealed evidence model. Pure optimiser
-version `ps1-optimiser/1.1.0`, validator 1.1.0, explicit-night-domain policy 3, the
+Scenario B and C use the same transaction boundary and sealed evidence model. Pure optimiser
+version `ps1-optimiser/1.2.0`, validator 1.1.0, Scenario-C-line-window policy 4, the
 Scenario A offline CLI and organiser CSV schemas remain database-independent. Historical
-migration **0007** follows **0006**, while current head is **0008**. Neither reuses legacy nightly
+migration **0007** follows **0006**, while current head is **0009**. None reuses legacy nightly
 `optimisation_runs`, scenarios or CSV-only PS1 validation history.
 
 ## Transaction ownership and terminal lifecycle
@@ -48,7 +48,7 @@ may produce a different incumbent.
 | Table | Contents / key |
 |---|---|
 | `ps1_optimisation_runs` | UUID; operator, immutable instance, creator, optional baseline; exact solver status/outcome; all versions/fingerprints; original parsed request (including which fields were supplied), effective configuration; complete result/validation/diagnostic JSONB; distinct optimality/physical/accepted flags; exact numeric metrics; solve time and start/completion/creation times; accepted CSV text; canonical schedule manifest; creating transaction ID. |
-| `ps1_optimisation_accesses` | `(run_id, activity_id, access_seq)`; unique `(run_id, activity_id, week)`; physical night, local night, ECLO=0, lock indicator, optional baseline week/night. |
+| `ps1_optimisation_accesses` | `(run_id, activity_id, access_seq)`; unique `(run_id, activity_id, week)`; physical night, local night, ECLO=0/1, lock indicator, optional baseline week/night. |
 | `ps1_optimisation_occupancies` | `(run_id, activity_id, week, location_id)`; co-share group; FK to an access of the same activity/week. |
 | `ps1_optimisation_contract_results` | `(run_id, contract_number)`; completion date and raw overrun. Optional weighted overrun is deliberately NULL; exact weighted activity components remain in the validation snapshot. |
 | `ps1_optimisation_keys` | `(operator_id, instance_id, idempotency_key)`; run and input fingerprint. |
@@ -136,8 +136,8 @@ Publishable describes the internal gate, not operational authority or official a
 
 | Endpoint | Response / access |
 |---|---|
-| POST `/api/ps1/instances/{id}/optimise/scenario-a` | Existing top-level OptimiseResult plus `run_id`, `created`, `reused`, `created_at`, `terminal_outcome`, `input_fingerprint`; planner/admin. |
-| GET `/api/ps1/instances/{id}/optimisations` | Lightweight paginated summaries, newest first. |
+| POST `/api/ps1/instances/{id}/optimise/scenario-{a,b,c}` | Existing top-level OptimiseResult plus `run_id`, `created`, `reused`, `created_at`, `terminal_outcome`, `input_fingerprint`; planner/admin. |
+| GET `/api/ps1/instances/{id}/optimisations` | Lightweight paginated summaries, newest first; optional `scenario=A|B|C`. |
 | GET `/api/ps1/optimisations/{run_id}` | `run` metadata/request/configuration; exact `result`, `validation`, `diagnostics`, ordered `contract_results`. |
 | GET `/api/ps1/optimisations/{run_id}/accesses` | Paginated rows ordered week/activity/sequence; optional week and activity_id. |
 | GET `/api/ps1/optimisations/{run_id}/occupancies` | Paginated rows ordered week/location/activity; optional week, activity_id, location_id. |
