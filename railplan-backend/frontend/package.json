@@ -1,0 +1,10 @@
+{
+  "name": "railplan-api-client",
+  "version": "0.3.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "test": "npm run build && node --test *.test.cjs"
+  },
+  "devDependencies": {"typescript": "^5.0.0"}
+}

@@ -1,0 +1,2225 @@
+{
+  "name": "Organiser PS1 public instance",
+  "files": {
+    "01_LINES.csv": "line_code,line_name\nALP,Line Alpha\nBET,Line Beta\n",
+    "02_STATIONS.csv": "station_id,line_code,seq,is_interchange\nS01,ALP,1,0\nS02,ALP,2,0\nS03,ALP,3,0\nS04,ALP,4,0\nH01,ALP,5,1\nH02,ALP,6,1\nS05,ALP,7,0\nS06,ALP,8,0\nS07,ALP,9,0\nS08,ALP,10,0\nS11,BET,1,0\nS12,BET,2,0\nS13,BET,3,0\nS14,BET,4,0\nH01,BET,5,1\nH02,BET,6,1\nS15,BET,7,0\nS16,BET,8,0\nS17,BET,9,0\nS18,BET,10,0\n",
+    "03_SECTORS.csv": "sector_id,line_code,from_station_id,to_station_id,seq,is_shared\nSEC:ALP:S01_S02,ALP,S01,S02,1,0\nSEC:ALP:S02_S03,ALP,S02,S03,2,0\nSEC:ALP:S03_S04,ALP,S03,S04,3,0\nSEC:ALP:S04_H01,ALP,S04,H01,4,0\nSEC:ALP:H01_H02,ALP,H01,H02,5,0\nSEC:ALP:H02_S05,ALP,H02,S05,6,0\nSEC:ALP:S05_S06,ALP,S05,S06,7,0\nSEC:ALP:S06_S07,ALP,S06,S07,8,0\nSEC:ALP:S07_S08,ALP,S07,S08,9,0\nSEC:BET:S11_S12,BET,S11,S12,10,0\nSEC:BET:S12_S13,BET,S12,S13,11,0\nSEC:BET:S13_S14,BET,S13,S14,12,0\nSEC:BET:S14_H01,BET,S14,H01,13,0\nSEC:BET:H01_H02,BET,H01,H02,14,0\nSEC:BET:H02_S15,BET,H02,S15,15,0\nSEC:BET:S15_S16,BET,S15,S16,16,0\nSEC:BET:S16_S17,BET,S16,S17,17,0\nSEC:BET:S17_S18,BET,S17,S18,18,0\n",
+    "04_LOCATION_SUPPLY.csv": "location_id,location_kind,line_code,bound,supply_capacity\nSEC:ALP:S01_S02:EB,tunnel sector,ALP,EB,4\nSEC:ALP:S01_S02:WB,tunnel sector,ALP,WB,4\nSEC:ALP:S02_S03:EB,tunnel sector,ALP,EB,4\nSEC:ALP:S02_S03:WB,tunnel sector,ALP,WB,4\nSEC:ALP:S03_S04:EB,tunnel sector,ALP,EB,4\nSEC:ALP:S03_S04:WB,tunnel sector,ALP,WB,4\nSEC:ALP:S04_H01:EB,tunnel sector,ALP,EB,2\nSEC:ALP:S04_H01:WB,tunnel sector,ALP,WB,2\nSEC:ALP:H01_H02:EB,tunnel sector,ALP,EB,1\nSEC:ALP:H01_H02:WB,tunnel sector,ALP,WB,1\nSEC:ALP:H02_S05:EB,tunnel sector,ALP,EB,2\nSEC:ALP:H02_S05:WB,tunnel sector,ALP,WB,2\nSEC:ALP:S05_S06:EB,tunnel sector,ALP,EB,4\nSEC:ALP:S05_S06:WB,tunnel sector,ALP,WB,4\nSEC:ALP:S06_S07:EB,tunnel sector,ALP,EB,4\nSEC:ALP:S06_S07:WB,tunnel sector,ALP,WB,4\nSEC:ALP:S07_S08:EB,tunnel sector,ALP,EB,4\nSEC:ALP:S07_S08:WB,tunnel sector,ALP,WB,4\nSEC:BET:S11_S12:EB,tunnel sector,BET,EB,4\nSEC:BET:S11_S12:WB,tunnel sector,BET,WB,4\nSEC:BET:S12_S13:EB,tunnel sector,BET,EB,4\nSEC:BET:S12_S13:WB,tunnel sector,BET,WB,4\nSEC:BET:S13_S14:EB,tunnel sector,BET,EB,4\nSEC:BET:S13_S14:WB,tunnel sector,BET,WB,4\nSEC:BET:S14_H01:EB,tunnel sector,BET,EB,2\nSEC:BET:S14_H01:WB,tunnel sector,BET,WB,2\nSEC:BET:H01_H02:EB,tunnel sector,BET,EB,1\nSEC:BET:H01_H02:WB,tunnel sector,BET,WB,1\nSEC:BET:H02_S15:EB,tunnel sector,BET,EB,2\nSEC:BET:H02_S15:WB,tunnel sector,BET,WB,2\nSEC:BET:S15_S16:EB,tunnel sector,BET,EB,4\nSEC:BET:S15_S16:WB,tunnel sector,BET,WB,4\nSEC:BET:S16_S17:EB,tunnel sector,BET,EB,4\nSEC:BET:S16_S17:WB,tunnel sector,BET,WB,4\nSEC:BET:S17_S18:EB,tunnel sector,BET,EB,4\nSEC:BET:S17_S18:WB,tunnel sector,BET,WB,4\nPLAT:ALP:S01:EB,platform sector,ALP,EB,2\nPLAT:ALP:S01:WB,platform sector,ALP,WB,2\nPLAT:ALP:S02:EB,platform sector,ALP,EB,2\nPLAT:ALP:S02:WB,platform sector,ALP,WB,2\nPLAT:ALP:S03:EB,platform sector,ALP,EB,2\nPLAT:ALP:S03:WB,platform sector,ALP,WB,2\nPLAT:ALP:S04:EB,platform sector,ALP,EB,2\nPLAT:ALP:S04:WB,platform sector,ALP,WB,2\nPLAT:ALP:H01:EB,platform sector,ALP,EB,1\nPLAT:ALP:H01:WB,platform sector,ALP,WB,1\nPLAT:ALP:H02:EB,platform sector,ALP,EB,1\nPLAT:ALP:H02:WB,platform sector,ALP,WB,1\nPLAT:ALP:S05:EB,platform sector,ALP,EB,2\nPLAT:ALP:S05:WB,platform sector,ALP,WB,2\nPLAT:ALP:S06:EB,platform sector,ALP,EB,2\nPLAT:ALP:S06:WB,platform sector,ALP,WB,2\nPLAT:ALP:S07:EB,platform sector,ALP,EB,2\nPLAT:ALP:S07:WB,platform sector,ALP,WB,2\nPLAT:ALP:S08:EB,platform sector,ALP,EB,2\nPLAT:ALP:S08:WB,platform sector,ALP,WB,2\nPLAT:BET:S11:EB,platform sector,BET,EB,2\nPLAT:BET:S11:WB,platform sector,BET,WB,2\nPLAT:BET:S12:EB,platform sector,BET,EB,2\nPLAT:BET:S12:WB,platform sector,BET,WB,2\nPLAT:BET:S13:EB,platform sector,BET,EB,2\nPLAT:BET:S13:WB,platform sector,BET,WB,2\nPLAT:BET:S14:EB,platform sector,BET,EB,2\nPLAT:BET:S14:WB,platform sector,BET,WB,2\nPLAT:BET:H01:EB,platform sector,BET,EB,1\nPLAT:BET:H01:WB,platform sector,BET,WB,1\nPLAT:BET:H02:EB,platform sector,BET,EB,1\nPLAT:BET:H02:WB,platform sector,BET,WB,1\nPLAT:BET:S15:EB,platform sector,BET,EB,2\nPLAT:BET:S15:WB,platform sector,BET,WB,2\nPLAT:BET:S16:EB,platform sector,BET,EB,2\nPLAT:BET:S16:WB,platform sector,BET,WB,2\nPLAT:BET:S17:EB,platform sector,BET,EB,2\nPLAT:BET:S17:WB,platform sector,BET,WB,2\nPLAT:BET:S18:EB,platform sector,BET,EB,2\nPLAT:BET:S18:WB,platform sector,BET,WB,2\n",
+    "05_BUFFER_LOCATION.csv": "nature_of_works,up_to_buffer_sectors,opposite_bound_required\nLive,2,1\nNon-live (Consist),1,0\nNon-live (Others),0,0",
+    "06_PARAMETERS.csv": "key,value\nhorizon_start,2027-01-04\nhorizon_weeks,30\n",
+    "07_PROJECT_DETAILS.csv": "contract_number,contract_description,contract_award_date,activity_type,nature_of_activity,contract_priority,contract_completion_date,planned_completion_date,number_of_workfronts,access_type,number_of_maximum_access_per_week\nC001,Renewal programme 1,2026-10-02,Renewal,Non-live (Consist),3,2027-08-01,2027-06-13,2,C,3\nC002,Renewal programme 2,2026-06-25,Renewal,Non-live (Consist),2,2027-08-08,2027-07-04,1,C,3\nC003,Construction programme 3,2026-02-01,Construction,Non-live (Others),1,2027-07-18,2027-07-04,1,C,3\nC004,Renewal programme 4,2026-01-16,Renewal,Non-live (Consist),1,2027-08-08,2027-07-25,1,PC,3\nC005,Renewal programme 5,2026-10-25,Renewal,Non-live (Consist),3,2027-08-22,2027-03-21,2,PC,3\nC006,Construction programme 6,2026-07-12,Construction,Non-live (Others),3,2027-08-15,2027-07-04,1,C,3\nC007,Renewal programme 7,2026-01-13,Renewal,Non-live (Consist),1,2027-07-25,2027-07-11,1,C,3\nC008,Renewal programme 8,2026-08-03,Renewal,Non-live (Consist),3,2027-08-22,2027-07-18,1,C,3\nC009,Construction programme 9,2026-02-09,Construction,Non-live (Others),3,2027-07-25,2027-06-27,1,PC,3\nC010,Construction programme 10,2026-05-18,Construction,Non-live (Others),3,2027-07-25,2027-05-16,2,C,3\nC011,Renewal programme 11,2026-04-20,Renewal,Non-live (Consist),2,2027-08-15,2027-07-11,1,C,3\nC012,Construction programme 12,2026-06-07,Construction,Non-live (Others),1,2027-07-25,2027-07-11,1,C,3\nC013,Live-rail renewal programme 13,2026-03-10,Renewal,Live,2,2027-08-01,2027-05-30,1,PC,2\nC014,Live-rail construction programme 14,2026-05-05,Construction,Live,3,2027-08-15,2027-07-18,1,PM,2\n",
+    "08_ACTIVITY_DETAILS.csv": "activity_id,contract_number,activity_type,start_location_id,end_location_id,total_accesses,planned_start_date,predecessor_activity_id,activity_priority\nA001,C001,Renewal,SEC:BET:S15_S16:EB,SEC:BET:S16_S17:EB,2,2027-05-24,,2\nA002,C001,Renewal,SEC:BET:S11_S12:WB,SEC:BET:S12_S13:WB,1,2027-01-04,,3\nA003,C001,Renewal,SEC:BET:H01_H02:EB,SEC:BET:S15_S16:EB,5,2027-03-15,,1\nA004,C001,Renewal,SEC:ALP:S03_S04:EB,SEC:ALP:S04_H01:EB,3,2027-04-12,A003,2\nA006,C001,Renewal,SEC:ALP:S03_S04:WB,SEC:ALP:H01_H02:WB,2,2027-01-11,,2\nA007,C001,Renewal,SEC:BET:H01_H02:EB,SEC:BET:H01_H02:EB,7,2027-04-12,,1\nA008,C002,Renewal,SEC:BET:S17_S18:EB,SEC:BET:S17_S18:EB,5,2027-04-19,,1\nA009,C002,Renewal,SEC:ALP:S05_S06:EB,SEC:ALP:S05_S06:EB,7,2027-01-11,,3\nA011,C002,Renewal,SEC:BET:S15_S16:EB,SEC:BET:S16_S17:EB,2,2027-04-12,,2\nA012,C002,Renewal,SEC:BET:H01_H02:WB,SEC:BET:H02_S15:WB,7,2027-01-11,,1\nA013,C002,Renewal,SEC:ALP:S05_S06:WB,SEC:ALP:S05_S06:WB,5,2027-05-24,A012,2\nA014,C003,Construction,SEC:ALP:S07_S08:EB,SEC:ALP:S07_S08:EB,7,2027-03-29,,3\nA017,C003,Construction,SEC:BET:H01_H02:EB,SEC:BET:S15_S16:EB,7,2027-04-26,,2\nA019,C003,Construction,SEC:BET:S16_S17:EB,SEC:BET:S16_S17:EB,2,2027-03-15,,3\nA020,C003,Construction,SEC:ALP:S04_H01:WB,SEC:ALP:H02_S05:WB,2,2027-03-29,,2\nA021,C004,Renewal,SEC:BET:S11_S12:WB,SEC:BET:S12_S13:WB,3,2027-01-18,,2\nA023,C004,Renewal,SEC:ALP:S03_S04:WB,SEC:ALP:S03_S04:WB,7,2027-05-24,,1\nA025,C004,Renewal,SEC:ALP:S01_S02:EB,SEC:ALP:S02_S03:EB,7,2027-02-22,,1\nA028,C005,Renewal,SEC:ALP:S03_S04:EB,SEC:ALP:S04_H01:EB,2,2027-03-01,,2\nA031,C005,Renewal,SEC:ALP:S06_S07:WB,SEC:ALP:S07_S08:WB,2,2027-01-04,,3\nA035,C006,Construction,SEC:ALP:S02_S03:WB,SEC:ALP:S03_S04:WB,3,2027-01-04,,1\nA036,C006,Construction,SEC:BET:S14_H01:EB,SEC:BET:S14_H01:EB,7,2027-05-31,,1\nA037,C006,Construction,SEC:BET:S15_S16:EB,SEC:BET:S16_S17:EB,2,2027-02-22,,1\nA038,C006,Construction,SEC:BET:S17_S18:EB,SEC:BET:S17_S18:EB,3,2027-01-18,A037,3\nA039,C006,Construction,SEC:BET:S11_S12:WB,SEC:BET:S13_S14:WB,7,2027-02-22,,2\nA040,C007,Renewal,SEC:BET:H01_H02:EB,SEC:BET:S15_S16:EB,7,2027-03-29,,1\nA041,C007,Renewal,SEC:BET:S15_S16:EB,SEC:BET:S15_S16:EB,2,2027-03-15,,3\nA042,C007,Renewal,SEC:BET:S15_S16:EB,SEC:BET:S17_S18:EB,3,2027-06-07,,2\nA043,C007,Renewal,SEC:BET:H02_S15:EB,SEC:BET:S16_S17:EB,2,2027-03-29,,3\nA046,C007,Renewal,SEC:ALP:S05_S06:WB,SEC:ALP:S05_S06:WB,5,2027-03-01,,3\nA047,C008,Renewal,SEC:ALP:H02_S05:EB,SEC:ALP:S05_S06:EB,2,2027-03-29,,3\nA048,C008,Renewal,SEC:BET:S13_S14:EB,SEC:BET:S13_S14:EB,3,2027-01-04,,3\nA049,C008,Renewal,SEC:BET:H02_S15:WB,SEC:BET:S15_S16:WB,5,2027-02-22,A048,2\nA050,C008,Renewal,SEC:ALP:S03_S04:WB,SEC:ALP:S04_H01:WB,2,2027-04-26,,3\nA051,C008,Renewal,SEC:BET:S17_S18:WB,SEC:BET:S17_S18:WB,2,2027-06-28,A050,1\nA054,C009,Construction,SEC:ALP:S04_H01:EB,SEC:ALP:H02_S05:EB,2,2027-04-26,,2\nA055,C009,Construction,SEC:BET:S13_S14:EB,SEC:BET:H01_H02:EB,1,2027-04-19,,1\nA056,C009,Construction,SEC:ALP:H02_S05:WB,SEC:ALP:S06_S07:WB,2,2027-05-03,,2\nA057,C009,Construction,SEC:BET:H02_S15:EB,SEC:BET:S15_S16:EB,7,2027-04-12,,3\nA058,C010,Construction,SEC:ALP:S03_S04:WB,SEC:ALP:H01_H02:WB,7,2027-01-11,,3\nA059,C010,Construction,SEC:ALP:S06_S07:WB,SEC:ALP:S07_S08:WB,7,2027-04-05,,3\nA060,C010,Construction,SEC:BET:H02_S15:EB,SEC:BET:S15_S16:EB,3,2027-03-29,,2\nA061,C010,Construction,SEC:BET:H01_H02:EB,SEC:BET:H02_S15:EB,7,2027-01-25,,1\nA063,C010,Construction,SEC:BET:S14_H01:EB,SEC:BET:H01_H02:EB,1,2027-02-01,,3\nA064,C010,Construction,SEC:BET:S15_S16:WB,SEC:BET:S15_S16:WB,1,2027-04-19,,3\nA065,C011,Renewal,SEC:BET:S12_S13:WB,SEC:BET:S12_S13:WB,1,2027-05-10,,2\nA066,C011,Renewal,SEC:ALP:S02_S03:WB,SEC:ALP:S04_H01:WB,1,2027-06-21,A065,3\nA069,C011,Renewal,SEC:ALP:S03_S04:WB,SEC:ALP:H01_H02:WB,2,2027-03-01,,2\nA070,C011,Renewal,SEC:ALP:S03_S04:WB,SEC:ALP:S04_H01:WB,5,2027-03-15,,1\nA071,C011,Renewal,SEC:BET:S15_S16:EB,SEC:BET:S16_S17:EB,1,2027-04-12,,1\nA072,C012,Construction,SEC:ALP:S04_H01:EB,SEC:ALP:H01_H02:EB,1,2027-06-07,,2\nA073,C012,Construction,SEC:BET:H01_H02:EB,SEC:BET:H02_S15:EB,1,2027-05-31,,3\nA074,C013,Renewal,SEC:ALP:H01_H02:EB,SEC:ALP:H01_H02:EB,1,2027-05-10,,2\nA075,C014,Construction,SEC:BET:H01_H02:WB,SEC:BET:H01_H02:WB,1,2027-06-14,,3\n"
+  },
+  "dataset": {
+    "format_version": "ps1-instance/1",
+    "fingerprint": "a5d66aa95c814376c0ca006ac966bef4982b45d00ac23d72fd3d7a39cf660e7b",
+    "summary": {
+      "lines": 2,
+      "station_records": 20,
+      "unique_station_ids": 18,
+      "tunnel_sectors": 18,
+      "locations": 76,
+      "contracts": 14,
+      "activities": 54,
+      "total_access_workload": 192,
+      "dependencies": 6,
+      "horizon_start": "2027-01-04",
+      "horizon_weeks": 30,
+      "horizon_end": "2027-08-01",
+      "weekly_supply_distribution": {
+        "1": 12,
+        "2": 40,
+        "4": 24
+      }
+    },
+    "tables": {
+      "lines": [
+        {
+          "line_code": "ALP",
+          "line_name": "Line Alpha"
+        },
+        {
+          "line_code": "BET",
+          "line_name": "Line Beta"
+        }
+      ],
+      "stations": [
+        {
+          "station_id": "S01",
+          "line_code": "ALP",
+          "seq": 1,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S02",
+          "line_code": "ALP",
+          "seq": 2,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S03",
+          "line_code": "ALP",
+          "seq": 3,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S04",
+          "line_code": "ALP",
+          "seq": 4,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "H01",
+          "line_code": "ALP",
+          "seq": 5,
+          "is_interchange": 1
+        },
+        {
+          "station_id": "H02",
+          "line_code": "ALP",
+          "seq": 6,
+          "is_interchange": 1
+        },
+        {
+          "station_id": "S05",
+          "line_code": "ALP",
+          "seq": 7,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S06",
+          "line_code": "ALP",
+          "seq": 8,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S07",
+          "line_code": "ALP",
+          "seq": 9,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S08",
+          "line_code": "ALP",
+          "seq": 10,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S11",
+          "line_code": "BET",
+          "seq": 1,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S12",
+          "line_code": "BET",
+          "seq": 2,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S13",
+          "line_code": "BET",
+          "seq": 3,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S14",
+          "line_code": "BET",
+          "seq": 4,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "H01",
+          "line_code": "BET",
+          "seq": 5,
+          "is_interchange": 1
+        },
+        {
+          "station_id": "H02",
+          "line_code": "BET",
+          "seq": 6,
+          "is_interchange": 1
+        },
+        {
+          "station_id": "S15",
+          "line_code": "BET",
+          "seq": 7,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S16",
+          "line_code": "BET",
+          "seq": 8,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S17",
+          "line_code": "BET",
+          "seq": 9,
+          "is_interchange": 0
+        },
+        {
+          "station_id": "S18",
+          "line_code": "BET",
+          "seq": 10,
+          "is_interchange": 0
+        }
+      ],
+      "sectors": [
+        {
+          "sector_id": "SEC:ALP:S01_S02",
+          "line_code": "ALP",
+          "from_station_id": "S01",
+          "to_station_id": "S02",
+          "seq": 1,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:ALP:S02_S03",
+          "line_code": "ALP",
+          "from_station_id": "S02",
+          "to_station_id": "S03",
+          "seq": 2,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:ALP:S03_S04",
+          "line_code": "ALP",
+          "from_station_id": "S03",
+          "to_station_id": "S04",
+          "seq": 3,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:ALP:S04_H01",
+          "line_code": "ALP",
+          "from_station_id": "S04",
+          "to_station_id": "H01",
+          "seq": 4,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:ALP:H01_H02",
+          "line_code": "ALP",
+          "from_station_id": "H01",
+          "to_station_id": "H02",
+          "seq": 5,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:ALP:H02_S05",
+          "line_code": "ALP",
+          "from_station_id": "H02",
+          "to_station_id": "S05",
+          "seq": 6,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:ALP:S05_S06",
+          "line_code": "ALP",
+          "from_station_id": "S05",
+          "to_station_id": "S06",
+          "seq": 7,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:ALP:S06_S07",
+          "line_code": "ALP",
+          "from_station_id": "S06",
+          "to_station_id": "S07",
+          "seq": 8,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:ALP:S07_S08",
+          "line_code": "ALP",
+          "from_station_id": "S07",
+          "to_station_id": "S08",
+          "seq": 9,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:BET:S11_S12",
+          "line_code": "BET",
+          "from_station_id": "S11",
+          "to_station_id": "S12",
+          "seq": 10,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:BET:S12_S13",
+          "line_code": "BET",
+          "from_station_id": "S12",
+          "to_station_id": "S13",
+          "seq": 11,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:BET:S13_S14",
+          "line_code": "BET",
+          "from_station_id": "S13",
+          "to_station_id": "S14",
+          "seq": 12,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:BET:S14_H01",
+          "line_code": "BET",
+          "from_station_id": "S14",
+          "to_station_id": "H01",
+          "seq": 13,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:BET:H01_H02",
+          "line_code": "BET",
+          "from_station_id": "H01",
+          "to_station_id": "H02",
+          "seq": 14,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:BET:H02_S15",
+          "line_code": "BET",
+          "from_station_id": "H02",
+          "to_station_id": "S15",
+          "seq": 15,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:BET:S15_S16",
+          "line_code": "BET",
+          "from_station_id": "S15",
+          "to_station_id": "S16",
+          "seq": 16,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:BET:S16_S17",
+          "line_code": "BET",
+          "from_station_id": "S16",
+          "to_station_id": "S17",
+          "seq": 17,
+          "is_shared": 0
+        },
+        {
+          "sector_id": "SEC:BET:S17_S18",
+          "line_code": "BET",
+          "from_station_id": "S17",
+          "to_station_id": "S18",
+          "seq": 18,
+          "is_shared": 0
+        }
+      ],
+      "location_supply": [
+        {
+          "location_id": "SEC:ALP:S01_S02:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S01_S02:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S02_S03:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S02_S03:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S03_S04:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S03_S04:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S04_H01:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "SEC:ALP:S04_H01:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "SEC:ALP:H01_H02:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "SEC:ALP:H01_H02:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "SEC:ALP:H02_S05:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "SEC:ALP:H02_S05:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "SEC:ALP:S05_S06:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S05_S06:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S06_S07:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S06_S07:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S07_S08:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:ALP:S07_S08:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S11_S12:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S11_S12:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S12_S13:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S12_S13:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S13_S14:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S13_S14:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S14_H01:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "SEC:BET:S14_H01:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "SEC:BET:H01_H02:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "SEC:BET:H01_H02:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "SEC:BET:H02_S15:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "SEC:BET:H02_S15:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "SEC:BET:S15_S16:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S15_S16:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S16_S17:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S16_S17:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S17_S18:EB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "SEC:BET:S17_S18:WB",
+          "location_kind": "tunnel sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 4
+        },
+        {
+          "location_id": "PLAT:ALP:S01:EB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S01:WB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S02:EB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S02:WB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S03:EB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S03:WB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S04:EB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S04:WB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:H01:EB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "PLAT:ALP:H01:WB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "PLAT:ALP:H02:EB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "PLAT:ALP:H02:WB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "PLAT:ALP:S05:EB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S05:WB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S06:EB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S06:WB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S07:EB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S07:WB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S08:EB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:ALP:S08:WB",
+          "location_kind": "platform sector",
+          "line_code": "ALP",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S11:EB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S11:WB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S12:EB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S12:WB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S13:EB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S13:WB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S14:EB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S14:WB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:H01:EB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "PLAT:BET:H01:WB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "PLAT:BET:H02:EB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "PLAT:BET:H02:WB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 1
+        },
+        {
+          "location_id": "PLAT:BET:S15:EB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S15:WB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S16:EB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S16:WB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S17:EB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S17:WB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S18:EB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "EB",
+          "supply_capacity": 2
+        },
+        {
+          "location_id": "PLAT:BET:S18:WB",
+          "location_kind": "platform sector",
+          "line_code": "BET",
+          "bound": "WB",
+          "supply_capacity": 2
+        }
+      ],
+      "buffer_location": [
+        {
+          "nature_of_works": "Live",
+          "up_to_buffer_sectors": 2,
+          "opposite_bound_required": 1
+        },
+        {
+          "nature_of_works": "Non-live (Consist)",
+          "up_to_buffer_sectors": 1,
+          "opposite_bound_required": 0
+        },
+        {
+          "nature_of_works": "Non-live (Others)",
+          "up_to_buffer_sectors": 0,
+          "opposite_bound_required": 0
+        }
+      ],
+      "parameters": [
+        {
+          "key": "horizon_start",
+          "value": "2027-01-04"
+        },
+        {
+          "key": "horizon_weeks",
+          "value": "30"
+        }
+      ],
+      "project_details": [
+        {
+          "contract_number": "C001",
+          "contract_description": "Renewal programme 1",
+          "contract_award_date": "2026-10-02",
+          "activity_type": "Renewal",
+          "nature_of_activity": "Non-live (Consist)",
+          "contract_priority": 3,
+          "contract_completion_date": "2027-08-01",
+          "planned_completion_date": "2027-06-13",
+          "number_of_workfronts": 2,
+          "access_type": "C",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C002",
+          "contract_description": "Renewal programme 2",
+          "contract_award_date": "2026-06-25",
+          "activity_type": "Renewal",
+          "nature_of_activity": "Non-live (Consist)",
+          "contract_priority": 2,
+          "contract_completion_date": "2027-08-08",
+          "planned_completion_date": "2027-07-04",
+          "number_of_workfronts": 1,
+          "access_type": "C",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C003",
+          "contract_description": "Construction programme 3",
+          "contract_award_date": "2026-02-01",
+          "activity_type": "Construction",
+          "nature_of_activity": "Non-live (Others)",
+          "contract_priority": 1,
+          "contract_completion_date": "2027-07-18",
+          "planned_completion_date": "2027-07-04",
+          "number_of_workfronts": 1,
+          "access_type": "C",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C004",
+          "contract_description": "Renewal programme 4",
+          "contract_award_date": "2026-01-16",
+          "activity_type": "Renewal",
+          "nature_of_activity": "Non-live (Consist)",
+          "contract_priority": 1,
+          "contract_completion_date": "2027-08-08",
+          "planned_completion_date": "2027-07-25",
+          "number_of_workfronts": 1,
+          "access_type": "PC",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C005",
+          "contract_description": "Renewal programme 5",
+          "contract_award_date": "2026-10-25",
+          "activity_type": "Renewal",
+          "nature_of_activity": "Non-live (Consist)",
+          "contract_priority": 3,
+          "contract_completion_date": "2027-08-22",
+          "planned_completion_date": "2027-03-21",
+          "number_of_workfronts": 2,
+          "access_type": "PC",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C006",
+          "contract_description": "Construction programme 6",
+          "contract_award_date": "2026-07-12",
+          "activity_type": "Construction",
+          "nature_of_activity": "Non-live (Others)",
+          "contract_priority": 3,
+          "contract_completion_date": "2027-08-15",
+          "planned_completion_date": "2027-07-04",
+          "number_of_workfronts": 1,
+          "access_type": "C",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C007",
+          "contract_description": "Renewal programme 7",
+          "contract_award_date": "2026-01-13",
+          "activity_type": "Renewal",
+          "nature_of_activity": "Non-live (Consist)",
+          "contract_priority": 1,
+          "contract_completion_date": "2027-07-25",
+          "planned_completion_date": "2027-07-11",
+          "number_of_workfronts": 1,
+          "access_type": "C",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C008",
+          "contract_description": "Renewal programme 8",
+          "contract_award_date": "2026-08-03",
+          "activity_type": "Renewal",
+          "nature_of_activity": "Non-live (Consist)",
+          "contract_priority": 3,
+          "contract_completion_date": "2027-08-22",
+          "planned_completion_date": "2027-07-18",
+          "number_of_workfronts": 1,
+          "access_type": "C",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C009",
+          "contract_description": "Construction programme 9",
+          "contract_award_date": "2026-02-09",
+          "activity_type": "Construction",
+          "nature_of_activity": "Non-live (Others)",
+          "contract_priority": 3,
+          "contract_completion_date": "2027-07-25",
+          "planned_completion_date": "2027-06-27",
+          "number_of_workfronts": 1,
+          "access_type": "PC",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C010",
+          "contract_description": "Construction programme 10",
+          "contract_award_date": "2026-05-18",
+          "activity_type": "Construction",
+          "nature_of_activity": "Non-live (Others)",
+          "contract_priority": 3,
+          "contract_completion_date": "2027-07-25",
+          "planned_completion_date": "2027-05-16",
+          "number_of_workfronts": 2,
+          "access_type": "C",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C011",
+          "contract_description": "Renewal programme 11",
+          "contract_award_date": "2026-04-20",
+          "activity_type": "Renewal",
+          "nature_of_activity": "Non-live (Consist)",
+          "contract_priority": 2,
+          "contract_completion_date": "2027-08-15",
+          "planned_completion_date": "2027-07-11",
+          "number_of_workfronts": 1,
+          "access_type": "C",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C012",
+          "contract_description": "Construction programme 12",
+          "contract_award_date": "2026-06-07",
+          "activity_type": "Construction",
+          "nature_of_activity": "Non-live (Others)",
+          "contract_priority": 1,
+          "contract_completion_date": "2027-07-25",
+          "planned_completion_date": "2027-07-11",
+          "number_of_workfronts": 1,
+          "access_type": "C",
+          "number_of_maximum_access_per_week": 3
+        },
+        {
+          "contract_number": "C013",
+          "contract_description": "Live-rail renewal programme 13",
+          "contract_award_date": "2026-03-10",
+          "activity_type": "Renewal",
+          "nature_of_activity": "Live",
+          "contract_priority": 2,
+          "contract_completion_date": "2027-08-01",
+          "planned_completion_date": "2027-05-30",
+          "number_of_workfronts": 1,
+          "access_type": "PC",
+          "number_of_maximum_access_per_week": 2
+        },
+        {
+          "contract_number": "C014",
+          "contract_description": "Live-rail construction programme 14",
+          "contract_award_date": "2026-05-05",
+          "activity_type": "Construction",
+          "nature_of_activity": "Live",
+          "contract_priority": 3,
+          "contract_completion_date": "2027-08-15",
+          "planned_completion_date": "2027-07-18",
+          "number_of_workfronts": 1,
+          "access_type": "PM",
+          "number_of_maximum_access_per_week": 2
+        }
+      ],
+      "activity_details": [
+        {
+          "activity_id": "A001",
+          "contract_number": "C001",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S15_S16:EB",
+          "end_location_id": "SEC:BET:S16_S17:EB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-05-24",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 21,
+          "span_location_ids": [
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB",
+            "SEC:BET:S16_S17:EB",
+            "PLAT:BET:S17:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A002",
+          "contract_number": "C001",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S11_S12:WB",
+          "end_location_id": "SEC:BET:S12_S13:WB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-01-04",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 1,
+          "span_location_ids": [
+            "PLAT:BET:S11:WB",
+            "SEC:BET:S11_S12:WB",
+            "PLAT:BET:S12:WB",
+            "SEC:BET:S12_S13:WB",
+            "PLAT:BET:S13:WB"
+          ],
+          "line_code": "BET",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A003",
+          "contract_number": "C001",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:H01_H02:EB",
+          "end_location_id": "SEC:BET:S15_S16:EB",
+          "total_accesses": 5,
+          "planned_start_date": "2027-03-15",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 11,
+          "span_location_ids": [
+            "PLAT:BET:H01:EB",
+            "SEC:BET:H01_H02:EB",
+            "PLAT:BET:H02:EB",
+            "SEC:BET:H02_S15:EB",
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A004",
+          "contract_number": "C001",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S03_S04:EB",
+          "end_location_id": "SEC:ALP:S04_H01:EB",
+          "total_accesses": 3,
+          "planned_start_date": "2027-04-12",
+          "predecessor_activity_id": "A003",
+          "activity_priority": 2,
+          "planned_start_week": 15,
+          "span_location_ids": [
+            "PLAT:ALP:S03:EB",
+            "SEC:ALP:S03_S04:EB",
+            "PLAT:ALP:S04:EB",
+            "SEC:ALP:S04_H01:EB",
+            "PLAT:ALP:H01:EB"
+          ],
+          "line_code": "ALP",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A006",
+          "contract_number": "C001",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S03_S04:WB",
+          "end_location_id": "SEC:ALP:H01_H02:WB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-01-11",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 2,
+          "span_location_ids": [
+            "PLAT:ALP:S03:WB",
+            "SEC:ALP:S03_S04:WB",
+            "PLAT:ALP:S04:WB",
+            "SEC:ALP:S04_H01:WB",
+            "PLAT:ALP:H01:WB",
+            "SEC:ALP:H01_H02:WB",
+            "PLAT:ALP:H02:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A007",
+          "contract_number": "C001",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:H01_H02:EB",
+          "end_location_id": "SEC:BET:H01_H02:EB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-04-12",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 15,
+          "span_location_ids": [
+            "PLAT:BET:H01:EB",
+            "SEC:BET:H01_H02:EB",
+            "PLAT:BET:H02:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A008",
+          "contract_number": "C002",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S17_S18:EB",
+          "end_location_id": "SEC:BET:S17_S18:EB",
+          "total_accesses": 5,
+          "planned_start_date": "2027-04-19",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 16,
+          "span_location_ids": [
+            "PLAT:BET:S17:EB",
+            "SEC:BET:S17_S18:EB",
+            "PLAT:BET:S18:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A009",
+          "contract_number": "C002",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S05_S06:EB",
+          "end_location_id": "SEC:ALP:S05_S06:EB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-01-11",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 2,
+          "span_location_ids": [
+            "PLAT:ALP:S05:EB",
+            "SEC:ALP:S05_S06:EB",
+            "PLAT:ALP:S06:EB"
+          ],
+          "line_code": "ALP",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A011",
+          "contract_number": "C002",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S15_S16:EB",
+          "end_location_id": "SEC:BET:S16_S17:EB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-04-12",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 15,
+          "span_location_ids": [
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB",
+            "SEC:BET:S16_S17:EB",
+            "PLAT:BET:S17:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A012",
+          "contract_number": "C002",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:H01_H02:WB",
+          "end_location_id": "SEC:BET:H02_S15:WB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-01-11",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 2,
+          "span_location_ids": [
+            "PLAT:BET:H01:WB",
+            "SEC:BET:H01_H02:WB",
+            "PLAT:BET:H02:WB",
+            "SEC:BET:H02_S15:WB",
+            "PLAT:BET:S15:WB"
+          ],
+          "line_code": "BET",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A013",
+          "contract_number": "C002",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S05_S06:WB",
+          "end_location_id": "SEC:ALP:S05_S06:WB",
+          "total_accesses": 5,
+          "planned_start_date": "2027-05-24",
+          "predecessor_activity_id": "A012",
+          "activity_priority": 2,
+          "planned_start_week": 21,
+          "span_location_ids": [
+            "PLAT:ALP:S05:WB",
+            "SEC:ALP:S05_S06:WB",
+            "PLAT:ALP:S06:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A014",
+          "contract_number": "C003",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:ALP:S07_S08:EB",
+          "end_location_id": "SEC:ALP:S07_S08:EB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-03-29",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 13,
+          "span_location_ids": [
+            "PLAT:ALP:S07:EB",
+            "SEC:ALP:S07_S08:EB",
+            "PLAT:ALP:S08:EB"
+          ],
+          "line_code": "ALP",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A017",
+          "contract_number": "C003",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:H01_H02:EB",
+          "end_location_id": "SEC:BET:S15_S16:EB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-04-26",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 17,
+          "span_location_ids": [
+            "PLAT:BET:H01:EB",
+            "SEC:BET:H01_H02:EB",
+            "PLAT:BET:H02:EB",
+            "SEC:BET:H02_S15:EB",
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A019",
+          "contract_number": "C003",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:S16_S17:EB",
+          "end_location_id": "SEC:BET:S16_S17:EB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-03-15",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 11,
+          "span_location_ids": [
+            "PLAT:BET:S16:EB",
+            "SEC:BET:S16_S17:EB",
+            "PLAT:BET:S17:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A020",
+          "contract_number": "C003",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:ALP:S04_H01:WB",
+          "end_location_id": "SEC:ALP:H02_S05:WB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-03-29",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 13,
+          "span_location_ids": [
+            "PLAT:ALP:S04:WB",
+            "SEC:ALP:S04_H01:WB",
+            "PLAT:ALP:H01:WB",
+            "SEC:ALP:H01_H02:WB",
+            "PLAT:ALP:H02:WB",
+            "SEC:ALP:H02_S05:WB",
+            "PLAT:ALP:S05:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A021",
+          "contract_number": "C004",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S11_S12:WB",
+          "end_location_id": "SEC:BET:S12_S13:WB",
+          "total_accesses": 3,
+          "planned_start_date": "2027-01-18",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 3,
+          "span_location_ids": [
+            "PLAT:BET:S11:WB",
+            "SEC:BET:S11_S12:WB",
+            "PLAT:BET:S12:WB",
+            "SEC:BET:S12_S13:WB",
+            "PLAT:BET:S13:WB"
+          ],
+          "line_code": "BET",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A023",
+          "contract_number": "C004",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S03_S04:WB",
+          "end_location_id": "SEC:ALP:S03_S04:WB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-05-24",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 21,
+          "span_location_ids": [
+            "PLAT:ALP:S03:WB",
+            "SEC:ALP:S03_S04:WB",
+            "PLAT:ALP:S04:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A025",
+          "contract_number": "C004",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S01_S02:EB",
+          "end_location_id": "SEC:ALP:S02_S03:EB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-02-22",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 8,
+          "span_location_ids": [
+            "PLAT:ALP:S01:EB",
+            "SEC:ALP:S01_S02:EB",
+            "PLAT:ALP:S02:EB",
+            "SEC:ALP:S02_S03:EB",
+            "PLAT:ALP:S03:EB"
+          ],
+          "line_code": "ALP",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A028",
+          "contract_number": "C005",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S03_S04:EB",
+          "end_location_id": "SEC:ALP:S04_H01:EB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-03-01",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 9,
+          "span_location_ids": [
+            "PLAT:ALP:S03:EB",
+            "SEC:ALP:S03_S04:EB",
+            "PLAT:ALP:S04:EB",
+            "SEC:ALP:S04_H01:EB",
+            "PLAT:ALP:H01:EB"
+          ],
+          "line_code": "ALP",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A031",
+          "contract_number": "C005",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S06_S07:WB",
+          "end_location_id": "SEC:ALP:S07_S08:WB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-01-04",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 1,
+          "span_location_ids": [
+            "PLAT:ALP:S06:WB",
+            "SEC:ALP:S06_S07:WB",
+            "PLAT:ALP:S07:WB",
+            "SEC:ALP:S07_S08:WB",
+            "PLAT:ALP:S08:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A035",
+          "contract_number": "C006",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:ALP:S02_S03:WB",
+          "end_location_id": "SEC:ALP:S03_S04:WB",
+          "total_accesses": 3,
+          "planned_start_date": "2027-01-04",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 1,
+          "span_location_ids": [
+            "PLAT:ALP:S02:WB",
+            "SEC:ALP:S02_S03:WB",
+            "PLAT:ALP:S03:WB",
+            "SEC:ALP:S03_S04:WB",
+            "PLAT:ALP:S04:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A036",
+          "contract_number": "C006",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:S14_H01:EB",
+          "end_location_id": "SEC:BET:S14_H01:EB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-05-31",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 22,
+          "span_location_ids": [
+            "PLAT:BET:S14:EB",
+            "SEC:BET:S14_H01:EB",
+            "PLAT:BET:H01:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A037",
+          "contract_number": "C006",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:S15_S16:EB",
+          "end_location_id": "SEC:BET:S16_S17:EB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-02-22",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 8,
+          "span_location_ids": [
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB",
+            "SEC:BET:S16_S17:EB",
+            "PLAT:BET:S17:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A038",
+          "contract_number": "C006",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:S17_S18:EB",
+          "end_location_id": "SEC:BET:S17_S18:EB",
+          "total_accesses": 3,
+          "planned_start_date": "2027-01-18",
+          "predecessor_activity_id": "A037",
+          "activity_priority": 3,
+          "planned_start_week": 3,
+          "span_location_ids": [
+            "PLAT:BET:S17:EB",
+            "SEC:BET:S17_S18:EB",
+            "PLAT:BET:S18:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A039",
+          "contract_number": "C006",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:S11_S12:WB",
+          "end_location_id": "SEC:BET:S13_S14:WB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-02-22",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 8,
+          "span_location_ids": [
+            "PLAT:BET:S11:WB",
+            "SEC:BET:S11_S12:WB",
+            "PLAT:BET:S12:WB",
+            "SEC:BET:S12_S13:WB",
+            "PLAT:BET:S13:WB",
+            "SEC:BET:S13_S14:WB",
+            "PLAT:BET:S14:WB"
+          ],
+          "line_code": "BET",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A040",
+          "contract_number": "C007",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:H01_H02:EB",
+          "end_location_id": "SEC:BET:S15_S16:EB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-03-29",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 13,
+          "span_location_ids": [
+            "PLAT:BET:H01:EB",
+            "SEC:BET:H01_H02:EB",
+            "PLAT:BET:H02:EB",
+            "SEC:BET:H02_S15:EB",
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A041",
+          "contract_number": "C007",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S15_S16:EB",
+          "end_location_id": "SEC:BET:S15_S16:EB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-03-15",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 11,
+          "span_location_ids": [
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A042",
+          "contract_number": "C007",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S15_S16:EB",
+          "end_location_id": "SEC:BET:S17_S18:EB",
+          "total_accesses": 3,
+          "planned_start_date": "2027-06-07",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 23,
+          "span_location_ids": [
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB",
+            "SEC:BET:S16_S17:EB",
+            "PLAT:BET:S17:EB",
+            "SEC:BET:S17_S18:EB",
+            "PLAT:BET:S18:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A043",
+          "contract_number": "C007",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:H02_S15:EB",
+          "end_location_id": "SEC:BET:S16_S17:EB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-03-29",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 13,
+          "span_location_ids": [
+            "PLAT:BET:H02:EB",
+            "SEC:BET:H02_S15:EB",
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB",
+            "SEC:BET:S16_S17:EB",
+            "PLAT:BET:S17:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A046",
+          "contract_number": "C007",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S05_S06:WB",
+          "end_location_id": "SEC:ALP:S05_S06:WB",
+          "total_accesses": 5,
+          "planned_start_date": "2027-03-01",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 9,
+          "span_location_ids": [
+            "PLAT:ALP:S05:WB",
+            "SEC:ALP:S05_S06:WB",
+            "PLAT:ALP:S06:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A047",
+          "contract_number": "C008",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:H02_S05:EB",
+          "end_location_id": "SEC:ALP:S05_S06:EB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-03-29",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 13,
+          "span_location_ids": [
+            "PLAT:ALP:H02:EB",
+            "SEC:ALP:H02_S05:EB",
+            "PLAT:ALP:S05:EB",
+            "SEC:ALP:S05_S06:EB",
+            "PLAT:ALP:S06:EB"
+          ],
+          "line_code": "ALP",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A048",
+          "contract_number": "C008",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S13_S14:EB",
+          "end_location_id": "SEC:BET:S13_S14:EB",
+          "total_accesses": 3,
+          "planned_start_date": "2027-01-04",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 1,
+          "span_location_ids": [
+            "PLAT:BET:S13:EB",
+            "SEC:BET:S13_S14:EB",
+            "PLAT:BET:S14:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A049",
+          "contract_number": "C008",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:H02_S15:WB",
+          "end_location_id": "SEC:BET:S15_S16:WB",
+          "total_accesses": 5,
+          "planned_start_date": "2027-02-22",
+          "predecessor_activity_id": "A048",
+          "activity_priority": 2,
+          "planned_start_week": 8,
+          "span_location_ids": [
+            "PLAT:BET:H02:WB",
+            "SEC:BET:H02_S15:WB",
+            "PLAT:BET:S15:WB",
+            "SEC:BET:S15_S16:WB",
+            "PLAT:BET:S16:WB"
+          ],
+          "line_code": "BET",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A050",
+          "contract_number": "C008",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S03_S04:WB",
+          "end_location_id": "SEC:ALP:S04_H01:WB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-04-26",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 17,
+          "span_location_ids": [
+            "PLAT:ALP:S03:WB",
+            "SEC:ALP:S03_S04:WB",
+            "PLAT:ALP:S04:WB",
+            "SEC:ALP:S04_H01:WB",
+            "PLAT:ALP:H01:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A051",
+          "contract_number": "C008",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S17_S18:WB",
+          "end_location_id": "SEC:BET:S17_S18:WB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-06-28",
+          "predecessor_activity_id": "A050",
+          "activity_priority": 1,
+          "planned_start_week": 26,
+          "span_location_ids": [
+            "PLAT:BET:S17:WB",
+            "SEC:BET:S17_S18:WB",
+            "PLAT:BET:S18:WB"
+          ],
+          "line_code": "BET",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A054",
+          "contract_number": "C009",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:ALP:S04_H01:EB",
+          "end_location_id": "SEC:ALP:H02_S05:EB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-04-26",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 17,
+          "span_location_ids": [
+            "PLAT:ALP:S04:EB",
+            "SEC:ALP:S04_H01:EB",
+            "PLAT:ALP:H01:EB",
+            "SEC:ALP:H01_H02:EB",
+            "PLAT:ALP:H02:EB",
+            "SEC:ALP:H02_S05:EB",
+            "PLAT:ALP:S05:EB"
+          ],
+          "line_code": "ALP",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A055",
+          "contract_number": "C009",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:S13_S14:EB",
+          "end_location_id": "SEC:BET:H01_H02:EB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-04-19",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 16,
+          "span_location_ids": [
+            "PLAT:BET:S13:EB",
+            "SEC:BET:S13_S14:EB",
+            "PLAT:BET:S14:EB",
+            "SEC:BET:S14_H01:EB",
+            "PLAT:BET:H01:EB",
+            "SEC:BET:H01_H02:EB",
+            "PLAT:BET:H02:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A056",
+          "contract_number": "C009",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:ALP:H02_S05:WB",
+          "end_location_id": "SEC:ALP:S06_S07:WB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-05-03",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 18,
+          "span_location_ids": [
+            "PLAT:ALP:H02:WB",
+            "SEC:ALP:H02_S05:WB",
+            "PLAT:ALP:S05:WB",
+            "SEC:ALP:S05_S06:WB",
+            "PLAT:ALP:S06:WB",
+            "SEC:ALP:S06_S07:WB",
+            "PLAT:ALP:S07:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A057",
+          "contract_number": "C009",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:H02_S15:EB",
+          "end_location_id": "SEC:BET:S15_S16:EB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-04-12",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 15,
+          "span_location_ids": [
+            "PLAT:BET:H02:EB",
+            "SEC:BET:H02_S15:EB",
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A058",
+          "contract_number": "C010",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:ALP:S03_S04:WB",
+          "end_location_id": "SEC:ALP:H01_H02:WB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-01-11",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 2,
+          "span_location_ids": [
+            "PLAT:ALP:S03:WB",
+            "SEC:ALP:S03_S04:WB",
+            "PLAT:ALP:S04:WB",
+            "SEC:ALP:S04_H01:WB",
+            "PLAT:ALP:H01:WB",
+            "SEC:ALP:H01_H02:WB",
+            "PLAT:ALP:H02:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A059",
+          "contract_number": "C010",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:ALP:S06_S07:WB",
+          "end_location_id": "SEC:ALP:S07_S08:WB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-04-05",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 14,
+          "span_location_ids": [
+            "PLAT:ALP:S06:WB",
+            "SEC:ALP:S06_S07:WB",
+            "PLAT:ALP:S07:WB",
+            "SEC:ALP:S07_S08:WB",
+            "PLAT:ALP:S08:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A060",
+          "contract_number": "C010",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:H02_S15:EB",
+          "end_location_id": "SEC:BET:S15_S16:EB",
+          "total_accesses": 3,
+          "planned_start_date": "2027-03-29",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 13,
+          "span_location_ids": [
+            "PLAT:BET:H02:EB",
+            "SEC:BET:H02_S15:EB",
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A061",
+          "contract_number": "C010",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:H01_H02:EB",
+          "end_location_id": "SEC:BET:H02_S15:EB",
+          "total_accesses": 7,
+          "planned_start_date": "2027-01-25",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 4,
+          "span_location_ids": [
+            "PLAT:BET:H01:EB",
+            "SEC:BET:H01_H02:EB",
+            "PLAT:BET:H02:EB",
+            "SEC:BET:H02_S15:EB",
+            "PLAT:BET:S15:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A063",
+          "contract_number": "C010",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:S14_H01:EB",
+          "end_location_id": "SEC:BET:H01_H02:EB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-02-01",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 5,
+          "span_location_ids": [
+            "PLAT:BET:S14:EB",
+            "SEC:BET:S14_H01:EB",
+            "PLAT:BET:H01:EB",
+            "SEC:BET:H01_H02:EB",
+            "PLAT:BET:H02:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A064",
+          "contract_number": "C010",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:S15_S16:WB",
+          "end_location_id": "SEC:BET:S15_S16:WB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-04-19",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 16,
+          "span_location_ids": [
+            "PLAT:BET:S15:WB",
+            "SEC:BET:S15_S16:WB",
+            "PLAT:BET:S16:WB"
+          ],
+          "line_code": "BET",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A065",
+          "contract_number": "C011",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S12_S13:WB",
+          "end_location_id": "SEC:BET:S12_S13:WB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-05-10",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 19,
+          "span_location_ids": [
+            "PLAT:BET:S12:WB",
+            "SEC:BET:S12_S13:WB",
+            "PLAT:BET:S13:WB"
+          ],
+          "line_code": "BET",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A066",
+          "contract_number": "C011",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S02_S03:WB",
+          "end_location_id": "SEC:ALP:S04_H01:WB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-06-21",
+          "predecessor_activity_id": "A065",
+          "activity_priority": 3,
+          "planned_start_week": 25,
+          "span_location_ids": [
+            "PLAT:ALP:S02:WB",
+            "SEC:ALP:S02_S03:WB",
+            "PLAT:ALP:S03:WB",
+            "SEC:ALP:S03_S04:WB",
+            "PLAT:ALP:S04:WB",
+            "SEC:ALP:S04_H01:WB",
+            "PLAT:ALP:H01:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A069",
+          "contract_number": "C011",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S03_S04:WB",
+          "end_location_id": "SEC:ALP:H01_H02:WB",
+          "total_accesses": 2,
+          "planned_start_date": "2027-03-01",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 9,
+          "span_location_ids": [
+            "PLAT:ALP:S03:WB",
+            "SEC:ALP:S03_S04:WB",
+            "PLAT:ALP:S04:WB",
+            "SEC:ALP:S04_H01:WB",
+            "PLAT:ALP:H01:WB",
+            "SEC:ALP:H01_H02:WB",
+            "PLAT:ALP:H02:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A070",
+          "contract_number": "C011",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:S03_S04:WB",
+          "end_location_id": "SEC:ALP:S04_H01:WB",
+          "total_accesses": 5,
+          "planned_start_date": "2027-03-15",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 11,
+          "span_location_ids": [
+            "PLAT:ALP:S03:WB",
+            "SEC:ALP:S03_S04:WB",
+            "PLAT:ALP:S04:WB",
+            "SEC:ALP:S04_H01:WB",
+            "PLAT:ALP:H01:WB"
+          ],
+          "line_code": "ALP",
+          "bound": "WB"
+        },
+        {
+          "activity_id": "A071",
+          "contract_number": "C011",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:BET:S15_S16:EB",
+          "end_location_id": "SEC:BET:S16_S17:EB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-04-12",
+          "predecessor_activity_id": "",
+          "activity_priority": 1,
+          "planned_start_week": 15,
+          "span_location_ids": [
+            "PLAT:BET:S15:EB",
+            "SEC:BET:S15_S16:EB",
+            "PLAT:BET:S16:EB",
+            "SEC:BET:S16_S17:EB",
+            "PLAT:BET:S17:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A072",
+          "contract_number": "C012",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:ALP:S04_H01:EB",
+          "end_location_id": "SEC:ALP:H01_H02:EB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-06-07",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 23,
+          "span_location_ids": [
+            "PLAT:ALP:S04:EB",
+            "SEC:ALP:S04_H01:EB",
+            "PLAT:ALP:H01:EB",
+            "SEC:ALP:H01_H02:EB",
+            "PLAT:ALP:H02:EB"
+          ],
+          "line_code": "ALP",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A073",
+          "contract_number": "C012",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:H01_H02:EB",
+          "end_location_id": "SEC:BET:H02_S15:EB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-05-31",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 22,
+          "span_location_ids": [
+            "PLAT:BET:H01:EB",
+            "SEC:BET:H01_H02:EB",
+            "PLAT:BET:H02:EB",
+            "SEC:BET:H02_S15:EB",
+            "PLAT:BET:S15:EB"
+          ],
+          "line_code": "BET",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A074",
+          "contract_number": "C013",
+          "activity_type": "Renewal",
+          "start_location_id": "SEC:ALP:H01_H02:EB",
+          "end_location_id": "SEC:ALP:H01_H02:EB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-05-10",
+          "predecessor_activity_id": "",
+          "activity_priority": 2,
+          "planned_start_week": 19,
+          "span_location_ids": [
+            "PLAT:ALP:H01:EB",
+            "SEC:ALP:H01_H02:EB",
+            "PLAT:ALP:H02:EB"
+          ],
+          "line_code": "ALP",
+          "bound": "EB"
+        },
+        {
+          "activity_id": "A075",
+          "contract_number": "C014",
+          "activity_type": "Construction",
+          "start_location_id": "SEC:BET:H01_H02:WB",
+          "end_location_id": "SEC:BET:H01_H02:WB",
+          "total_accesses": 1,
+          "planned_start_date": "2027-06-14",
+          "predecessor_activity_id": "",
+          "activity_priority": 3,
+          "planned_start_week": 24,
+          "span_location_ids": [
+            "PLAT:BET:H01:WB",
+            "SEC:BET:H01_H02:WB",
+            "PLAT:BET:H02:WB"
+          ],
+          "line_code": "BET",
+          "bound": "WB"
+        }
+      ]
+    },
+    "parameters": {
+      "horizon_start": "2027-01-04",
+      "horizon_weeks": 30
+    },
+    "scenario_policies": {
+      "A": {
+        "name": "Strict supply",
+        "allow_eclo": false,
+        "excess_capacity_limit": 0,
+        "planned_deadline_hard": false,
+        "objective": "priority_weighted_overrun"
+      },
+      "B": {
+        "name": "Strict schedule",
+        "allow_eclo": true,
+        "excess_capacity_limit": null,
+        "planned_deadline_hard": true,
+        "objective": "7 * excess_access_nights + 5 * eclo_nights"
+      },
+      "C": {
+        "name": "Balanced",
+        "allow_eclo": true,
+        "excess_capacity_limit": 1,
+        "planned_deadline_hard": false,
+        "eclo_window_weeks_per_line": 2,
+        "objective": "priority_weighted_overrun + 7 * excess_access_nights + 5 * eclo_nights"
+      }
+    },
+    "warnings": [],
+    "data_status": "valid_instance",
+    "schedule_status": "not_generated",
+    "judge_validation": "not_run",
+    "span_semantics": "Inclusive tunnel span with book-in, intermediate and book-out platforms; buffers, opposite bound and Live interchange closures require the PS1 solver/validator.",
+    "source": "Uploaded PS1 instance; fictional network, no geospatial coordinates"
+  }
+}
