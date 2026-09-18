@@ -1,20 +1,21 @@
 """Create a source-only release ZIP. Never packages environment files or dependencies."""
 import argparse
+from hashlib import sha256
 import os
 from pathlib import Path
 import zipfile
 
 EXCLUDED_DIRS = {'node_modules','dist','.next','.git','.venv','venv','__pycache__',
                  '.pytest_cache','.mypy_cache','.ruff_cache','.cache','.wrangler','.vite',
-                 '.openai','coverage','htmlcov'}
+                 '.vinext','.sites-runtime','.test-artifacts','.openai','coverage','htmlcov',
+                 'build','logs','ui-screenshots','pgdata','postgres-data'}
 
 def excluded(path):
     name=path.name
-    return (any(p in EXCLUDED_DIRS or p.endswith('.egg-info') for p in path.parts)
-            # Root build/ contains licensed build-plugin SOURCE, not build output.
-            or 'frontend/build' in path.as_posix()
+    return (any(p in EXCLUDED_DIRS or p.endswith('.egg-info') or
+                p.startswith('.test-tmp') or p.startswith('pytest-cache-files-') for p in path.parts)
             or name.startswith('.env') or name in {'.DS_Store','.npmrc','.coverage','next-env.d.ts'}
-            or path.suffix in {'.pyc','.pyo','.tsbuildinfo','.log','.pem','.key','.zip'}
+            or path.suffix.lower() in {'.pyc','.pyo','.tsbuildinfo','.log','.out','.pem','.key','.zip'}
             or name.startswith('credentials') or name.startswith('secrets'))
 
 def main():
@@ -35,7 +36,10 @@ def main():
     with zipfile.ZipFile(args.output) as archive:
         assert archive.testzip() is None
         assert all(not excluded(Path(name)) for name in archive.namelist())
+        assert {Path(name).parts[0] for name in archive.namelist()} == {'RailPlan-PS1-Validated'}
+    digest=sha256(args.output.read_bytes()).hexdigest()
     print(f'Packaged {len(files)} source files: {args.output} ({args.output.stat().st_size} bytes)')
+    print(f'SHA-256: {digest}')
 
 if __name__=='__main__':
     main()

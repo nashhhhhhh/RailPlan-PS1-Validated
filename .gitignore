@@ -183,9 +183,26 @@ node_modules/
 .next/
 .sites-runtime/
 .wrangler/
+.vinext/
+.test-artifacts/
+.test-tmp*/
+pytest-cache-files-*/
 *.tsbuildinfo
+*.zip
+
+# Generated output, local evidence and database volumes
+build/
+logs/
+docs/ui-screenshots/
+railplan-backend/release-pytest.out
+pgdata/
+postgres-data/
+*.sqlite
+*.sqlite3
 
 # Local configuration and merge scratch space
 .env.local
+.env.*
+!.env.example
 .env.*.local
 _incoming_nebula/

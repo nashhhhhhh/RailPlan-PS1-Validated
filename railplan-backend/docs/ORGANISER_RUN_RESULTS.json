@@ -1,0 +1,72 @@
+{
+  "dataset": "bundled organiser PS1 input (eight files under data/PS1/01_data)",
+  "dataset_fingerprint": "a5d66aa95c814376c0ca006ac966bef4982b45d00ac23d72fd3d7a39cf660e7b",
+  "notes": [
+    "Organiser submission samples are reference inputs to validation and are never treated as RailPlan-generated candidates.",
+    "Only rich-validator-accepted candidates may be written."
+  ],
+  "scenario_results": {
+    "A": {
+      "available": true,
+      "configured_deterministic_limit": 30.0,
+      "configured_wall_limit_seconds": 60.0,
+      "csv_files_written": [
+        "RESULTS.csv",
+        "SCHEDULE_ACCESS.csv",
+        "SCHEDULE_OCCUPANCY.csv"
+      ],
+      "deterministic_seed": 0,
+      "diagnostics": [],
+      "elapsed_seconds": 65.235,
+      "execution_status": "COMPLETED",
+      "judge_validation": "not_run",
+      "objective_bound_internal": 25.2,
+      "objective_bound_scaled_10": 252.0,
+      "objective_score": "79.10",
+      "objective_value_scaled_10": 791,
+      "physical_validation_complete": true,
+      "physical_validation_status": "feasible",
+      "publishable": true,
+      "score_verification": "internal_only",
+      "solver_elapsed_seconds": 60.187,
+      "solver_status": "FEASIBLE",
+      "validator_violations": []
+    },
+    "B": {
+      "available": false,
+      "configured_wall_limit_seconds": 60.0,
+      "csv_files_written": [],
+      "diagnostics": [
+        {
+          "code": "optimiser_source_absent",
+          "message": "Scenario B optimiser source is not present in this authoritative checkout; no schedule was fabricated."
+        }
+      ],
+      "execution_status": "NOT_AVAILABLE",
+      "judge_validation": "not_run",
+      "physical_validation_status": "not_run",
+      "publishable": false,
+      "score_verification": "internal_only",
+      "solver_status": null,
+      "validator_violations": []
+    },
+    "C": {
+      "available": false,
+      "configured_wall_limit_seconds": 60.0,
+      "csv_files_written": [],
+      "diagnostics": [
+        {
+          "code": "optimiser_source_absent",
+          "message": "Scenario C optimiser source is not present in this authoritative checkout; no schedule was fabricated."
+        }
+      ],
+      "execution_status": "NOT_AVAILABLE",
+      "judge_validation": "not_run",
+      "physical_validation_status": "not_run",
+      "publishable": false,
+      "score_verification": "internal_only",
+      "solver_status": null,
+      "validator_violations": []
+    }
+  }
+}

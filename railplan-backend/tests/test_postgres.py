@@ -37,6 +37,8 @@ def connection():
             importlib.import_module("migrations.versions.0005_ps1_instances").upgrade()
             importlib.import_module("migrations.versions.0006_ps1_validations").upgrade()
             importlib.import_module("migrations.versions.0007_ps1_optimisation_runs").upgrade()
+            importlib.import_module("migrations.versions.0008_ps1_optimisation_jobs").upgrade()
+            importlib.import_module("migrations.versions.0009_ps1_optimisation_job_guards").upgrade()
         seed(conn)
         from app.demo_rules import configure_demo_rules
         configure_demo_rules(conn)

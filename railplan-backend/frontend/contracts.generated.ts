@@ -300,6 +300,30 @@ export type OptimisationDetail = {
 })[];
 };
 
+export type OptimisationJob = {
+  "id": string;
+  "instance_id": string;
+  "scenario": "A" | "B" | "C";
+  "status": "QUEUED" | "RUNNING" | "CANCELLATION_REQUESTED" | "SUCCEEDED" | "FAILED" | "CANCELLED";
+  "progress": number;
+  "stage": string;
+  "cancel_requested": boolean;
+  "run_id"?: string | null;
+  "diagnostic"?: {
+  [key:string]: unknown;
+} | null;
+  "created_at": string;
+  "started_at"?: string | null;
+  "completed_at"?: string | null;
+  "updated_at": string;
+};
+
+export type OptimisationJobAccepted = {
+  "job": OptimisationJob;
+  "created": boolean;
+  "reused": boolean;
+};
+
 export type OptimisationPage = {
   "items": ({
   [key:string]: unknown;
@@ -603,6 +627,18 @@ export type SavedValidation = {
   "id": string;
   "created": boolean;
   "report": ValidationReport;
+};
+
+export type ScenarioAPreviewInput = {
+  "time_limit_seconds"?: number;
+  "deterministic_time_limit"?: number;
+  "random_seed"?: number;
+  "physical_nights_per_week"?: number;
+  "locked_placements"?: (Placement)[];
+  "baseline_placements"?: (Placement)[];
+  "instance_files": {
+  [key:string]: string;
+};
 };
 
 export type ScenarioClone = {

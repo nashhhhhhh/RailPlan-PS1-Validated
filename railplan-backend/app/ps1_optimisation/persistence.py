@@ -17,6 +17,10 @@ OBJECTIVE_POLICY='ps1-objective/scenario-a-scale10-lex5/1'
 OUTCOMES={s:('bounded' if s=='UNKNOWN' else s.lower()) for s in
           ('OPTIMAL','FEASIBLE','INFEASIBLE','UNKNOWN','MODEL_LIMIT','VALIDATION_FAILED','ERROR','MODEL_INVALID')}
 
+def resolve_options_snapshot(configuration):
+    """Rehydrate the already validated immutable options captured for a job."""
+    return OptimiseInput.model_validate(configuration['solver_options'])
+
 def get_run(db,actor,run_id,instance_id=None):
     row=db.execute(text('''SELECT * FROM railplan.ps1_optimisation_runs
         WHERE id=:id AND operator_id=:op AND (CAST(:instance AS uuid) IS NULL OR instance_id=:instance)'''),

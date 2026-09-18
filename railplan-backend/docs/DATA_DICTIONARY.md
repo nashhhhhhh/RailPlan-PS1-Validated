@@ -1,6 +1,10 @@
 # Data dictionary
 
-## PS1 optimiser additions: migration 0007
+## PS1 optimiser additions: migrations 0007–0009
+
+Migration 0007 stores sealed terminal runs and their exact accepted schedule evidence.
+Migration 0008 adds `ps1_optimisation_jobs`; migration 0009 adds lifecycle, audit and
+delete/truncate guards.
 
 Five dedicated tables: `ps1_optimisation_runs`, `ps1_optimisation_accesses`,
 `ps1_optimisation_occupancies`, `ps1_optimisation_contract_results`, `ps1_optimisation_keys`.
@@ -1427,6 +1431,26 @@ scope is location/week. `SavedOptimiseInput` adds only API baseline_run_id/idemp
 `SavedOptimiseResult` keeps all original top-level fields and adds run metadata. Pure
 solver/CLI contracts remain database-free; migration 0007 stores their terminal snapshots.
 See PS1_OPTIMISATION_PERSISTENCE.md.
+
+## ps1_optimisation_jobs
+
+Operator-scoped durable control/evidence for persisted optimiser execution.
+
+| Column | Meaning |
+|---|---|
+| `id` | Job UUID. |
+| `instance_id`, `operator_id`, `created_by` | Composite ownership and creator identity. |
+| `scenario` | `A`, with `B`/`C` reserved by the schema for their existing conventions. |
+| `status` | `QUEUED`, `RUNNING`, `CANCELLATION_REQUESTED`, `SUCCEEDED`, `FAILED` or `CANCELLED`. |
+| `progress`, `stage` | Monotonic 0–100 progress and bounded human-readable stage. |
+| `idempotency_key`, `input_fingerprint`, `request_snapshot` | Immutable request identity and exact request evidence. |
+| `cancel_requested` | Durable cooperative-cancellation request. |
+| `run_id` | Optional same-instance/operator terminal optimisation run. |
+| `diagnostic` | Sanitized job-control failure/cancellation evidence; never candidate CSV output. |
+| `created_at`, `started_at`, `completed_at`, `updated_at` | Lifecycle timestamps. |
+
+Lifecycle transitions and progress monotonicity are database-guarded. Terminal records
+are immutable; DELETE and TRUNCATE are denied. Inserts and changes create audit events.
 
 ## copilot_scenario_refs
 

@@ -17,7 +17,7 @@ python -m pytest -q
 python -m scripts.export_contracts
 ```
 
-From the project root: `npx tsc --noEmit --strict` and `npm run build`.
+From the project root: `corepack pnpm exec tsc --noEmit` and `corepack pnpm build`.
 From `railplan-backend/frontend`: `npm test`.
 
 ### Database test configuration — Bash
@@ -44,8 +44,9 @@ The three database names must differ and start with `railplan_test`. The old rol
 suite creates its schema inside a transaction and rolls it back. The committed suite
 uses real committed schema/data and separate connections for sealing, race and reload
 tests. The migration test uses its own fresh database, explicitly passes its URL as
-`DATABASE_URL` to Alembic subprocesses, upgrades to 0007, attempts the expected-refused
-downgrade to 0006 and verifies head remains 0007. Missing URLs cause explicit skips.
+`DATABASE_URL` to Alembic subprocesses, upgrades through 0009, attempts the
+expected-refused downgrade to 0008 and verifies head remains 0009. Missing URLs cause
+explicit skips.
 
 **Setting TEST_DATABASE_URL alone does not redirect Alembic.** Never run Alembic against
 an unintentionally inherited development/production DATABASE_URL. For a separate manual
@@ -56,10 +57,10 @@ Exact shell commands (only after confirming the variable points to that disposab
 # Inline assignment affects only the child command; it does not overwrite your shell's URL.
 DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic upgrade head
 DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic current
-DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic downgrade 0006
-# Expected: nonzero exit with "Archive sealed PS1 optimisation evidence...".
+DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic downgrade 0008
+# Expected: nonzero exit requiring job audit history to be archived first.
 DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic current
-# Expected: still 0007. Do not disable triggers or force history deletion.
+# Expected: still 0009. Do not disable triggers or force history deletion.
 ```
 
 ```powershell
@@ -69,9 +70,9 @@ try {
     python -m alembic upgrade head
     if ($LASTEXITCODE -ne 0) { throw 'Upgrade failed' }
     python -m alembic current
-    python -m alembic downgrade 0006
+    python -m alembic downgrade 0008
     if ($LASTEXITCODE -eq 0) { throw 'Unexpected destructive downgrade success' }
-    python -m alembic current  # Must still show 0007.
+    python -m alembic current  # Must still show 0009.
 } finally {
     $env:DATABASE_URL = $previousDatabaseUrl
 }

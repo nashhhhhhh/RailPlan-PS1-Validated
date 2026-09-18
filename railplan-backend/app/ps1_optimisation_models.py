@@ -91,3 +91,27 @@ class PS1OptimisationKeys(Base):
     idempotency_key:Mapped[str]=mapped_column(Text,primary_key=True)
     input_fingerprint:Mapped[str]=mapped_column(Text)
     run_id:Mapped[UUID]=mapped_column(PGUUID)
+
+class PS1OptimisationJobs(Base):
+    __tablename__='ps1_optimisation_jobs'
+    __table_args__=(ForeignKeyConstraint(['instance_id','operator_id'],['railplan.ps1_instances.id','railplan.ps1_instances.operator_id']),
+        ForeignKeyConstraint(['run_id','instance_id','operator_id'],['railplan.ps1_optimisation_runs.id','railplan.ps1_optimisation_runs.instance_id','railplan.ps1_optimisation_runs.operator_id']),
+        {'schema':'railplan'})
+    id:Mapped[UUID]=mapped_column(PGUUID,primary_key=True,server_default=text('gen_random_uuid()'))
+    instance_id:Mapped[UUID]=mapped_column(PGUUID)
+    operator_id:Mapped[UUID]=mapped_column(ForeignKey('railplan.operators.id'))
+    created_by:Mapped[UUID]=mapped_column(ForeignKey('railplan.users.id'))
+    scenario:Mapped[str]=mapped_column(Text)
+    status:Mapped[str]=mapped_column(Text)
+    progress:Mapped[int]=mapped_column(Integer,server_default=text('0'))
+    stage:Mapped[str]=mapped_column(Text,server_default=text("'queued'"))
+    idempotency_key:Mapped[str|None]=mapped_column(Text)
+    input_fingerprint:Mapped[str]=mapped_column(Text)
+    request_snapshot:Mapped[dict[str,Any]]=mapped_column(JSONB)
+    cancel_requested:Mapped[bool]=mapped_column(Boolean,server_default=text('false'))
+    run_id:Mapped[UUID|None]=mapped_column(PGUUID)
+    diagnostic:Mapped[dict[str,Any]|None]=mapped_column(JSONB)
+    created_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=text('clock_timestamp()'))
+    started_at:Mapped[datetime|None]=mapped_column(DateTime(timezone=True))
+    completed_at:Mapped[datetime|None]=mapped_column(DateTime(timezone=True))
+    updated_at:Mapped[datetime]=mapped_column(DateTime(timezone=True),server_default=text('clock_timestamp()'))

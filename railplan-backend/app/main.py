@@ -12,8 +12,8 @@ from app.database import engine
 from app.contracts import ErrorResponse
 from app.routers import requests,scenarios,network,operations,scoring,ps1,ps1_validations,ps1_optimisation
 
-app=FastAPI(title="RailPlan data API",version="0.4.0",
-    description="Persistent APIs with prototype conflict analysis and internal PS1 validation/optimisation. No operational approval, copilot or publication.",
+app=FastAPI(title="RailPlan data API",version="0.5.0",
+    description="Stateless and persisted APIs with conflict analysis, internal PS1 validation, Scenario A preview and durable optimisation jobs. No operational approval or publication.",
     responses={status:{"model":ErrorResponse} for status in (401,403,404,409,413,422,500,501,503)})
 origins=[x.strip() for x in os.getenv("RAILPLAN_CORS_ORIGINS","http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173").split(",") if x.strip()]
 if "*" in origins:raise RuntimeError("Configure explicit CORS origins")
@@ -75,18 +75,23 @@ async def unhandled(request,exc):
 @app.get("/health")
 @app.get("/health/live")
 def health():
-    return {"status":"ok","scope":"data-api","conflict_engine_available":True,"solver_available":False,"operational_approval_available":False}
+    return {"status":"ok","scope":"data-api","conflict_engine_available":True,"solver_available":True,
+        "stateless_scenario_a_preview":True,"persisted_mode":bool(os.environ.get("DATABASE_URL")),"operational_approval_available":False}
 
 @app.get("/health/ready")
 def readiness():
+    if not os.environ.get("DATABASE_URL"):
+        if os.environ.get("RAILPLAN_REQUIRE_DATABASE")=="1":raise HTTPException(503,"DATABASE_URL is required")
+        return {"status":"ready","mode":"stateless","migration":None,"capabilities":["ps1_preview","ps1_validation","scenario_a_preview"]}
     try:
         with engine().connect() as db:
             db.execute(text("SELECT 1"))
             revision=db.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-            if revision!="0007":raise HTTPException(503,"Database migration required")
+            if revision!="0009":raise HTTPException(503,"Database migration required")
     except HTTPException:raise
     except Exception:raise HTTPException(503,"Database is not ready")
-    return {"status":"ready","migration":revision}
+    return {"status":"ready","mode":"persisted","migration":revision,
+        "capabilities":["ps1_preview","ps1_validation","scenario_a_preview","scenario_a_saved_runs","scenario_a_jobs"]}
 
 app.include_router(requests.router)
 app.include_router(scenarios.router)

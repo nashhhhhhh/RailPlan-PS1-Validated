@@ -279,6 +279,27 @@ def test_public_dataset_bounded_solve_never_fabricates():
         assert result.submission_files is None and result.physical_nights==[]
         assert result.diagnostics
 
+def test_stateless_scenario_a_preview_without_database_or_auth(monkeypatch):
+    monkeypatch.delenv('DATABASE_URL',raising=False)
+    monkeypatch.delenv('RAILPLAN_DEMO_AUTH',raising=False)
+    payload={'instance_files':load_files(),'time_limit_seconds':3.0,'deterministic_time_limit':0.1}
+    with TestClient(app) as preview_client:
+        response=preview_client.post('/api/ps1/optimise/scenario-a/preview',json=payload)
+        assert response.status_code==200,response.text
+        result=response.json()
+        assert result['judge_validation']=='not_run' and result['score_verification']=='internal_only'
+        if result['publishable']:
+            assert result['physical_validation_complete']
+            assert result['validation_report']['validation_context']=='rich_schedule'
+            assert result['validation_report']['hard_violations']==[]
+            assert len(result['physical_nights'])==192
+            assert set(result['submission_files'])=={'SCHEDULE_ACCESS.csv','SCHEDULE_OCCUPANCY.csv','RESULTS.csv'}
+        else:
+            assert result['solver_status'] in {'UNKNOWN','INFEASIBLE','MODEL_INVALID','MODEL_LIMIT'}
+            assert result['submission_files'] is None and result['physical_nights']==[]
+        bad=preview_client.post('/api/ps1/optimise/scenario-a/preview',json={**payload,'instance_files':{'01_LINES.csv':'bad'}})
+        assert bad.status_code==422
+
 @pytest.fixture
 def client(monkeypatch):
     from app.routers import ps1_optimisation as router

@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Literal, Annotated
 from pydantic import BaseModel, ConfigDict, Field
 from app.ps1_validation.contracts import ValidationReport
 
@@ -20,6 +20,10 @@ class OptimiseInput(BaseModel):
     physical_nights_per_week: int = Field(default=7, ge=1, le=7)
     locked_placements: list[Placement] = Field(default_factory=list, max_length=2000)
     baseline_placements: list[Placement] = Field(default_factory=list, max_length=2000)
+
+class ScenarioAPreviewInput(OptimiseInput):
+    """Stateless optimiser input: the eight source CSVs plus bounded solver options."""
+    instance_files: dict[str, Annotated[str, Field(max_length=4_000_000)]] = Field(min_length=8, max_length=8)
 
 class OptimiseResult(BaseModel):
     scenario: Literal['A'] = 'A'

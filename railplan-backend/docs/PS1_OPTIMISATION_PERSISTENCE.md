@@ -28,9 +28,10 @@ Database read/insert/commit exceptions are never swallowed. They use existing er
 envelopes and roll back all new inserts, audit rows and activity events. The POST never
 returns a saved/publishable success if persistence fails. Computation exceptions derived
 from `Exception` are separately handled as terminal ERROR with sanitized diagnostics and
-server-side logging. Invalid options/references are 422, with no run. Process exit, native
-crash, termination or failure before the final commit cannot reliably be recorded. There
-are no queued/running rows, recovery worker or guarantee that every crashed attempt exists.
+server-side logging. Invalid options/references are 422, with no run. Process exit or native
+termination during synchronous execution can occur before a terminal run is recorded. The
+asynchronous route added in migrations 0008–0009 records queued, running,
+cancellation-requested and terminal state separately; restart recovery is not automatic.
 
 Concurrent identical-key requests can both solve before either saves. The final key lock,
 recheck and unique constraint guarantee **one committed result per scoped key, not one
@@ -47,6 +48,7 @@ may produce a different incumbent.
 | `ps1_optimisation_occupancies` | `(run_id, activity_id, week, location_id)`; co-share group; FK to an access of the same activity/week. |
 | `ps1_optimisation_contract_results` | `(run_id, contract_number)`; completion date and raw overrun. Optional weighted overrun is deliberately NULL; exact weighted activity components remain in the validation snapshot. |
 | `ps1_optimisation_keys` | `(operator_id, instance_id, idempotency_key)`; run and input fingerprint. |
+| `ps1_optimisation_jobs` | Operator-scoped queued/running/cancelled/terminal control record with immutable request identity, optional terminal run link and diagnostic JSON. Lifecycle changes are guarded and audited. |
 
 Composite FKs prevent cross-instance/operator children, baselines and key references.
 Creator membership and accepted baseline eligibility are checked on parent insertion.
@@ -137,6 +139,10 @@ Publishable describes the internal gate, not operational authority or official a
 | GET `/api/ps1/optimisations/{run_id}/accesses` | Paginated rows ordered week/activity/sequence; optional week and activity_id. |
 | GET `/api/ps1/optimisations/{run_id}/occupancies` | Paginated rows ordered week/location/activity; optional week, activity_id, location_id. |
 | GET `/api/ps1/optimisations/{run_id}/artifacts` | Exact saved filename-to-CSV-text `files` plus internal validation labels; 409 if visible run has no accepted files. |
+| POST `/api/ps1/instances/{id}/optimise/scenario-a/jobs` | Create or reuse an asynchronous job; returns 202 with durable status. |
+| GET `/api/ps1/instances/{id}/optimisation-jobs` | Paginated job history for the same operator instance. |
+| GET `/api/ps1/optimisation-jobs/{job_id}` | Poll status, progress, stage, diagnostics and terminal run link. |
+| POST `/api/ps1/optimisation-jobs/{job_id}/cancel` | Request cancellation at a safe solver/persistence boundary. |
 
 All reads require existing same-operator authentication. Missing/other-operator resources
 are 404. Wrong write role is 403; invalid JSON/options/baseline selection is 422. Key input
@@ -153,7 +159,8 @@ Example POST (all old options remain accepted):
  "baseline_run_id":null,"idempotency_key":"scenario-a-attempt-001"}
 ```
 
-No UI, worker/queue, comparison, replay, approval/publication, B/C optimiser or AI integration
-is added. See [manual test guide](PS1_PERSISTENCE_TEST_GUIDE.md) and
+The bounded job executor is in-process and intended for one API replica. A durable external
+queue is still needed for horizontal scaling and restart recovery. Approval/publication and
+optional AI integration remain separate. See [manual test guide](PS1_PERSISTENCE_TEST_GUIDE.md) and
 [current verification](VALIDATION.md). Real PostgreSQL execution is explicitly distinguished
 from SQL parsing and mocked transaction-boundary tests.

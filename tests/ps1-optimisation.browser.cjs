@@ -4,7 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { chromium } = require(
-  process.env.RAILPLAN_PLAYWRIGHT_MODULE || "playwright",
+  process.env.RAILPLAN_PLAYWRIGHT_MODULE || "playwright-core",
 );
 const base = process.env.RAILPLAN_UI_URL || "http://127.0.0.1:3011";
 const iid = "11111111-1111-4111-8111-111111111111",
@@ -113,10 +113,18 @@ function detail(run) {
   };
 }
 const csv = 'activity_id,note\r\nA1,"α,β"\r\n';
-const screenshots = path.join(__dirname, "../docs/ui-screenshots");
+const screenshots = path.resolve(
+  process.env.RAILPLAN_SCREENSHOT_DIR ||
+    path.join(__dirname, "../.test-artifacts/ui-screenshots"),
+);
 fs.mkdirSync(screenshots, { recursive: true });
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const executablePath =
+    process.env.RAILPLAN_BROWSER_PATH ||
+    (process.platform === "win32"
+      ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+      : undefined);
+  const browser = await chromium.launch({ headless: true, executablePath });
   const context = await browser.newContext({
     viewport: { width: 1440, height: 1050 },
     reducedMotion: "reduce",
@@ -279,7 +287,7 @@ fs.mkdirSync(screenshots, { recursive: true });
   };
   try {
     await page.goto(base, { waitUntil: "domcontentloaded" });
-    await page.getByRole("button", { name: "PS1 · Hackathon dataset" }).click();
+    await page.getByRole("button", { name: "Open optimiser", exact: true }).click();
     await page
       .getByRole("button", { name: "Load organiser dataset", exact: true })
       .click();
@@ -484,7 +492,7 @@ fs.mkdirSync(screenshots, { recursive: true });
     );
     check("stale run response cannot replace newer selection");
     await page.reload();
-    await page.getByRole("button", { name: "PS1 · Hackathon dataset" }).click();
+    await page.getByRole("button", { name: "Open optimiser", exact: true }).click();
     await page
       .getByText("Connection and saved instances", { exact: true })
       .click();
@@ -523,7 +531,7 @@ fs.mkdirSync(screenshots, { recursive: true });
     await shot("10-tablet");
     check("tablet viewport renders");
     console.log(
-      `${checks} browser checks passed; mock API screenshots saved in docs/ui-screenshots.`,
+      `${checks} browser checks passed; disposable mock screenshots saved in ${screenshots}.`,
     );
   } catch (e) {
     console.log("VISIBLE TEXT", await page.locator("body").innerText());

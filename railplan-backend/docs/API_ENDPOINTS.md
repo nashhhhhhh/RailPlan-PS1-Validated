@@ -2,12 +2,26 @@
 
 ## PS1 Scenario A optimisation
 
+`POST /api/ps1/optimise/scenario-a/preview` is stateless and unauthenticated. It accepts
+the eight source CSV strings plus bounded deterministic solver options, and only returns
+submission CSVs after explicit physical-night rich validation passes.
+
 `POST /api/ps1/instances/{instance_id}/optimise/scenario-a` computes a bounded CP-SAT
-candidate for a same-operator planner/administrator. It is separate from the unavailable
-legacy nightly worker. It now saves an immutable terminal run; no publication write.
+candidate for a same-operator planner/administrator and saves an immutable terminal run;
+there is no operational-publication write.
 Added GET history, detail, accesses, occupancies and accepted-artifact routes are documented
 in [PS1_OPTIMISATION_PERSISTENCE.md](PS1_OPTIMISATION_PERSISTENCE.md).
 Solver contracts/limits: [PS1_OPTIMISATION.md](PS1_OPTIMISATION.md).
+
+Persisted asynchronous execution uses:
+
+- `POST /api/ps1/instances/{instance_id}/optimise/scenario-a/jobs`
+- `GET /api/ps1/instances/{instance_id}/optimisation-jobs`
+- `GET /api/ps1/optimisation-jobs/{job_id}`
+- `POST /api/ps1/optimisation-jobs/{job_id}/cancel`
+
+Jobs are operator-scoped, idempotent when a key is supplied, audited, cancellable at
+solver transaction boundaries, and retain failed outcomes without CSV publication.
 
 ## PS1 validator additions
 
@@ -37,7 +51,8 @@ migration; no original schema tables were rebuilt and no frontend visual compone
 | TypeScript client/adapters | Implemented and tested | Compiler and 12 client tests |
 | CRUD, scenario persistence, locks, activity, scoped reads | Implemented; database integration testing pending | 28 PostgreSQL/PostGIS tests provided |
 | Production OIDC | Contract/boundary only | Production fails closed |
-| Analysis/optimisation workers | Intentionally unavailable | POST returns 503; no queue insert |
+| PS1 Scenario A persisted jobs | Implemented | Durable status/progress/cancellation records; in-process bounded executor |
+| Legacy generic optimisation worker | Intentionally unavailable | Capability remains false |
 | Copilot | Contract only | Capability false; no fake responses |
 | Operational approval/publication | Intentionally unavailable | Write routes return 501 |
 | Hosted UI wiring | Adapter delivery only | Copy data-layer client and connect existing handlers |

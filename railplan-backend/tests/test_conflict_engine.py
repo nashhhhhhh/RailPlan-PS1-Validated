@@ -264,7 +264,7 @@ def test_openapi_new_routes_and_health():
             assert path in paths
         health = client.get("/health").json()
         assert health["conflict_engine_available"]
-        assert not health["solver_available"]
+        assert health["solver_available"] and health["stateless_scenario_a_preview"]
         assert not health["operational_approval_available"]
 
 

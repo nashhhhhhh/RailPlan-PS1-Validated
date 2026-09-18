@@ -27,7 +27,7 @@ def test_query_parses(name):
     assert parse_sql(re.sub(r"(?<!:):([a-zA-Z_]\w*)",param,QUERIES[name]))
 
 def test_models_compile():
-    assert len(Base.metadata.tables)==102
+    assert len(Base.metadata.tables)==103
     for t in Base.metadata.sorted_tables:
         assert str(CreateTable(t).compile(dialect=postgresql.dialect()))
 
@@ -53,6 +53,7 @@ def test_schema_model_columns_agree():
     sql=(ROOT/"sql/001_schema.sql").read_text()+"\n"+(ROOT/"sql/005_scoring.sql").read_text().replace("CREATE TABLE railplan.","CREATE TABLE ")+"\n"+(ROOT/"sql/008_ps1_instances.sql").read_text().replace("CREATE TABLE railplan.","CREATE TABLE ")
     sql+='\n'+(ROOT/'sql/009_ps1_validations.sql').read_text().replace('CREATE TABLE railplan.','CREATE TABLE ')
     sql+='\n'+(ROOT/'sql/010_ps1_optimisation_runs.sql').read_text().replace('CREATE TABLE railplan.','CREATE TABLE ')
+    sql+='\n'+(ROOT/'sql/011_ps1_optimisation_jobs.sql').read_text().replace('CREATE TABLE railplan.','CREATE TABLE ')
     for table in Base.metadata.tables.values():
         body=re.search(r"CREATE TABLE "+table.name+r" \((.*?)\n\);",sql,re.S)[1]
         columns=[line.strip().split()[0] for line in body.splitlines()

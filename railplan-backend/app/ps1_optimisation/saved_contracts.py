@@ -1,6 +1,6 @@
 """HTTP persistence metadata stays outside pure solver and CLI contracts."""
 from datetime import datetime
-from typing import Any, Annotated
+from typing import Any, Annotated, Literal
 from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 from .contracts import OptimiseInput, OptimiseResult
@@ -42,3 +42,25 @@ class OptimisationArtifacts(BaseModel):
     physical_validation_complete: bool
     judge_validation: str = 'not_run'
     score_verification: str = 'internal_only'
+
+JobStatus = Literal['QUEUED','RUNNING','CANCELLATION_REQUESTED','SUCCEEDED','FAILED','CANCELLED']
+
+class OptimisationJob(BaseModel):
+    id: UUID
+    instance_id: UUID
+    scenario: Literal['A','B','C']
+    status: JobStatus
+    progress: int = Field(ge=0,le=100)
+    stage: str
+    cancel_requested: bool
+    run_id: UUID | None = None
+    diagnostic: dict[str,Any] | None = None
+    created_at: datetime
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    updated_at: datetime
+
+class OptimisationJobAccepted(BaseModel):
+    job: OptimisationJob
+    created: bool
+    reused: bool

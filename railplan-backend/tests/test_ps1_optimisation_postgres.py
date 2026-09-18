@@ -11,11 +11,12 @@ import json
 import os
 import subprocess
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime,timezone
 from decimal import Decimal
 from pathlib import Path
-from threading import Barrier
+from threading import Barrier,Event
 from uuid import uuid4
 import pytest
 from fastapi import HTTPException
@@ -66,7 +67,8 @@ def committed_engine():
         require_empty(conn)
         with Operations.context(MigrationContext.configure(conn)):
             for name in ('0001_initial','0002_api_support','0003_conflict_scoring','0004_analysis_history',
-                         '0005_ps1_instances','0006_ps1_validations','0007_ps1_optimisation_runs'):
+                         '0005_ps1_instances','0006_ps1_validations','0007_ps1_optimisation_runs',
+                         '0008_ps1_optimisation_jobs','0009_ps1_optimisation_job_guards'):
                 importlib.import_module('migrations.versions.'+name).upgrade()
         seed(conn)
     yield eng
@@ -138,6 +140,45 @@ def test_precision_and_primary_flags_roundtrip(committed_engine,fixture_instance
         assert run['objective_score']==Decimal('9.10')
         assert run['primary_objective_bound']==Decimal('9.10')
         assert run['primary_objective_gap']==0 and run['primary_optimal'] and not run['lexicographic_complete']
+
+def wait_job(api,job_id,terminal=('SUCCEEDED','FAILED','CANCELLED'),seconds=15):
+    deadline=time.monotonic()+seconds
+    while time.monotonic()<deadline:
+        response=api.get(f'/api/ps1/optimisation-jobs/{job_id}')
+        assert response.status_code==200,response.text
+        if response.json()['status'] in terminal:return response.json()
+        time.sleep(.05)
+    pytest.fail('Asynchronous optimisation job did not reach a terminal state')
+
+def test_async_job_status_progress_and_idempotent_replay(api,fixture_instance):
+    key=str(uuid4());path=f'/api/ps1/instances/{fixture_instance["id"]}/optimise/scenario-a/jobs'
+    first=api.post(path,json={'idempotency_key':key,'time_limit_seconds':5})
+    assert first.status_code==202,first.text
+    job=wait_job(api,first.json()['job']['id'])
+    assert job['status']=='SUCCEEDED' and job['progress']==100 and job['run_id']
+    assert job['stage'].startswith('completed:')
+    replay=api.post(path,json={'idempotency_key':key,'time_limit_seconds':5})
+    assert replay.status_code==202 and replay.json()['job']['id']==job['id'] and replay.json()['reused']
+    collision=api.post(path,json={'idempotency_key':key,'time_limit_seconds':6})
+    assert collision.status_code==409
+
+def test_async_job_cancellation_discards_candidate(api,fixture_instance,good_result,monkeypatch):
+    gate=Event()
+    def slow(*args,**kwargs):
+        gate.wait(5);return good_result.model_copy(deep=True)
+    monkeypatch.setattr(router,'optimise',slow)
+    path=f'/api/ps1/instances/{fixture_instance["id"]}/optimise/scenario-a/jobs'
+    started=api.post(path,json={'idempotency_key':str(uuid4()),'time_limit_seconds':5})
+    assert started.status_code==202,started.text
+    job_id=started.json()['job']['id']
+    deadline=time.monotonic()+5
+    while time.monotonic()<deadline:
+        if api.get(f'/api/ps1/optimisation-jobs/{job_id}').json()['status']=='RUNNING':break
+        time.sleep(.03)
+    cancelled=api.post(f'/api/ps1/optimisation-jobs/{job_id}/cancel')
+    assert cancelled.status_code==200 and cancelled.json()['cancel_requested']
+    gate.set();job=wait_job(api,job_id)
+    assert job['status']=='CANCELLED' and job['run_id'] is None
 
 @pytest.mark.parametrize('status',['FEASIBLE','UNKNOWN','INFEASIBLE','MODEL_LIMIT','VALIDATION_FAILED','ERROR','MODEL_INVALID'])
 def test_terminal_outcomes_and_failed_downloads(committed_engine,fixture_instance,good_result,api,status):
@@ -251,6 +292,10 @@ def test_api_baseline_pagination_download_and_no_reexecution(api,fixture_instanc
 
 def test_operator_and_instance_scope_all_routes(api,committed_engine,fixture_instance,good_result):
     saved=save(committed_engine,fixture_instance,good_result)
+    queued=api.post(f'/api/ps1/instances/{fixture_instance["id"]}/optimise/scenario-a/jobs',
+                    json={'idempotency_key':str(uuid4()),'time_limit_seconds':5})
+    assert queued.status_code==202,queued.text
+    job=wait_job(api,queued.json()['job']['id'])
     otherop,department,user=uuid4(),uuid4(),uuid4()
     source=files();dataset=parse_instance(source)
     with committed_engine.begin() as conn:
@@ -262,6 +307,9 @@ def test_operator_and_instance_scope_all_routes(api,committed_engine,fixture_ins
     for suffix in ('','/accesses','/occupancies','/artifacts'):
         assert api.get(f'/api/ps1/optimisations/{saved.run_id}{suffix}').status_code==404
     assert api.get(f'/api/ps1/instances/{fixture_instance["id"]}/optimisations').status_code==404
+    assert api.get(f'/api/ps1/instances/{fixture_instance["id"]}/optimisation-jobs').status_code==404
+    assert api.get(f'/api/ps1/optimisation-jobs/{job["id"]}').status_code==404
+    assert api.post(f'/api/ps1/optimisation-jobs/{job["id"]}/cancel').status_code==404
     assert api.post(f'/api/ps1/instances/{fixture_instance["id"]}/optimise/scenario-a',json={}).status_code==404
     other_instance=api.post('/api/ps1/instances',json={'files':source}).json()['id']
     assert api.post(f'/api/ps1/instances/{other_instance}/optimise/scenario-a',json={'baseline_run_id':str(saved.run_id)}).status_code==404
@@ -287,9 +335,9 @@ def test_migration_upgrade_and_deliberate_downgrade_refusal():
     upgraded=subprocess.run([sys.executable,'-m','alembic','upgrade','head'],cwd=ROOT,env=env,capture_output=True,text=True)
     assert upgraded.returncode==0,upgraded.stderr
     with eng.connect() as conn:
-        assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0007'
-        assert conn.execute(text("SELECT count(*) FROM pg_tables WHERE schemaname='railplan' AND tablename LIKE 'ps1_optimisation_%'")).scalar_one()==5
-    refused=subprocess.run([sys.executable,'-m','alembic','downgrade','0006'],cwd=ROOT,env=env,capture_output=True,text=True)
-    assert refused.returncode!=0 and 'Archive sealed PS1 optimisation evidence' in refused.stderr
-    with eng.connect() as conn:assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0007'
+        assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0009'
+        assert conn.execute(text("SELECT count(*) FROM pg_tables WHERE schemaname='railplan' AND tablename LIKE 'ps1_optimisation_%'")).scalar_one()==6
+    refused=subprocess.run([sys.executable,'-m','alembic','downgrade','0008'],cwd=ROOT,env=env,capture_output=True,text=True)
+    assert refused.returncode!=0 and 'Archive optimisation job audit history' in refused.stderr
+    with eng.connect() as conn:assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0009'
     eng.dispose()

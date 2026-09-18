@@ -75,12 +75,17 @@ erDiagram
     ps1_optimisation_runs ||--o{ ps1_optimisation_occupancies : contains
     ps1_optimisation_runs ||--o{ ps1_optimisation_contract_results : completes
     ps1_optimisation_runs ||--o{ ps1_optimisation_keys : identifies
+    ps1_instances ||--o{ ps1_optimisation_jobs : queues
+    ps1_optimisation_runs ||--o{ ps1_optimisation_jobs : completes_as
+    users ||--o{ ps1_optimisation_jobs : creates
 ```
 
 An optional run-to-baseline FK is constrained to the same operator and instance.
 Accepted occupancy rows also reference their activity/week access. Creation-transaction
 and manifest guards plus deferred checks seal the parent and all child content at commit.
 See PS1_OPTIMISATION_PERSISTENCE.md for the full transaction and audit design.
+Job request identity is immutable while status, monotonic progress, stage, cancellation
+and the final run link follow guarded transitions. Every insert/update is audited.
 
 ### PS1 immutable history (migration 0006)
 

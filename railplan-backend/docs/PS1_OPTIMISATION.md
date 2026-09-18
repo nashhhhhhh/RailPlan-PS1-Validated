@@ -141,7 +141,7 @@ deltas. Explanations describe derivation, not an unperformed causal sensitivity 
 
 ## API and offline use
 
-Install: `python -m pip install -e ".[test]"`. Migration head is **0007** for saved HTTP runs.
+Install: `python -m pip install -e ".[test]"`. Migration head is **0009** for saved HTTP runs and jobs.
 
 `POST /api/ps1/instances/{instance_id}/optimise/scenario-a` requires same-operator
 planner/administrator. Existing identity, transaction and error envelopes apply.

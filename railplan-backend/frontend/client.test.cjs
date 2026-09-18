@@ -58,6 +58,23 @@ test("saved PS1 client preserves additive response and baseline/key options",asy
  assert.equal(result.run_id,"run");assert.equal(result.reused,true);
  assert.equal(result.primary_optimal,true);assert.equal(result.lexicographic_complete,false);
 });
+test("stateless preview and persisted job routes remain distinct",async()=>{
+ const calls=[];
+ const api=new RailPlanClient({baseUrl:"http://localhost:8000",fetcher:async(url,init)=>{
+  calls.push({url,init});return Response.json(url.pathname.endsWith("/jobs")?{job:{id:"job"}}:{id:"job"});
+ }});
+ await api.optimisePs1ScenarioAPreview({instance_files:{},time_limit_seconds:2});
+ await api.startPs1ScenarioAJob("instance",{idempotency_key:"key"});
+ await api.ps1OptimisationJob("job");
+ await api.ps1OptimisationJobs("instance",{limit:5});
+ await api.cancelPs1OptimisationJob("job");
+ assert.equal(calls[0].url.pathname,"/api/ps1/optimise/scenario-a/preview");
+ assert.equal(calls[1].url.pathname,"/api/ps1/instances/instance/optimise/scenario-a/jobs");
+ assert.equal(calls[2].url.pathname,"/api/ps1/optimisation-jobs/job");
+ assert.equal(calls[3].url.searchParams.get("limit"),"5");
+ assert.equal(calls[4].url.pathname,"/api/ps1/optimisation-jobs/job/cancel");
+ assert.equal(calls[4].init.method,"POST");
+});
 test("saved PS1 retrieval filters and artifact errors remain explicit",async()=>{
  const calls=[];
  const api=new RailPlanClient({baseUrl:"http://localhost:8000",fetcher:async(url)=>{

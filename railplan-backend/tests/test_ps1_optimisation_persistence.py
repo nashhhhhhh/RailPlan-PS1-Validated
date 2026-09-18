@@ -249,3 +249,21 @@ def test_migration_seven_refuses_destructive_downgrade():
     revision=importlib.import_module('migrations.versions.0007_ps1_optimisation_runs')
     assert revision.down_revision=='0006'
     with pytest.raises(RuntimeError,match='Archive sealed'):revision.downgrade()
+
+@pytest.mark.parametrize(('module','parent','message'),[
+    ('0008_ps1_optimisation_jobs','0007','Archive optimisation jobs'),
+    ('0009_ps1_optimisation_job_guards','0008','Archive optimisation job audit history'),
+])
+def test_job_migrations_parse_and_refuse_destructive_downgrade(monkeypatch,module,parent,message):
+    import importlib
+    from pglast import parse_sql
+    revision=importlib.import_module('migrations.versions.'+module)
+    calls=[]
+    class Connection:
+        def exec_driver_sql(self,sql,**options):
+            assert options['execution_options']['no_parameters'] is True
+            assert parse_sql(sql);calls.append(sql)
+    monkeypatch.setattr(revision.op,'get_bind',lambda:Connection())
+    assert revision.down_revision==parent
+    revision.upgrade();assert calls
+    with pytest.raises(RuntimeError,match=message):revision.downgrade()

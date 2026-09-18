@@ -1,0 +1,52 @@
+name: railplan-production
+services:
+  db:
+    image: postgis/postgis:16-3.5
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: railplan
+      POSTGRES_USER: railplan_owner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the deployment environment}
+    volumes:
+      - railplan_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U railplan_owner -d railplan"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    networks: [railplan_internal]
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Set a percent-encoded PostgreSQL URL for the railplan_owner account}
+      RAILPLAN_ENV: production
+      RAILPLAN_DEMO_AUTH: "0"
+      RAILPLAN_REQUIRE_DATABASE: "1"
+      RAILPLAN_CORS_ORIGINS: ${RAILPLAN_CORS_ORIGINS:?Set the exact deployed frontend origin}
+      RAILPLAN_RUN_MIGRATIONS: "1"
+      RAILPLAN_API_WORKERS: ${RAILPLAN_API_WORKERS:-1}
+      RAILPLAN_OPTIMISER_WORKERS: ${RAILPLAN_OPTIMISER_WORKERS:-1}
+    ports:
+      - "${RAILPLAN_BIND_ADDRESS:-127.0.0.1}:${RAILPLAN_API_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready',timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    networks: [railplan_internal]
+
+volumes:
+  railplan_pgdata:
+
+networks:
+  railplan_internal:
+    driver: bridge

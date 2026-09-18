@@ -157,6 +157,8 @@ def test_second_migration_parses(monkeypatch):
 
 def test_readiness_does_not_leak_credentials(client,monkeypatch):
     import app.main as main
+    monkeypatch.setenv("RAILPLAN_REQUIRE_DATABASE","1")
+    monkeypatch.setenv("DATABASE_URL","postgresql://redacted")
     def broken():raise RuntimeError("postgresql://secret-password")
     monkeypatch.setattr(main,"engine",broken)
     response=client[0].get("/health/ready")
