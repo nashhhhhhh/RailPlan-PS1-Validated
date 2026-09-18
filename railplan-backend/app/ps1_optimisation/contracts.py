@@ -1,8 +1,8 @@
-from typing import Any, Literal
+from typing import Any, Literal, Annotated
 from pydantic import BaseModel, ConfigDict, Field
 from app.ps1_validation.contracts import ValidationReport
 
-VERSION = 'ps1-optimiser/1.0.0'
+VERSION = 'ps1-optimiser/1.1.0'
 
 class Placement(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True)
@@ -11,6 +11,8 @@ class Placement(BaseModel):
     week: int = Field(ge=1, le=520)
     physical_night: int = Field(ge=1, le=7)
     access_night: int | None = Field(default=None, ge=1, le=1000)
+    eclo: int | None = Field(default=None, ge=0, le=1)
+    co_share_group: str | None = Field(default=None, min_length=1, max_length=128)
 
 class OptimiseInput(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True)
@@ -21,8 +23,14 @@ class OptimiseInput(BaseModel):
     locked_placements: list[Placement] = Field(default_factory=list, max_length=2000)
     baseline_placements: list[Placement] = Field(default_factory=list, max_length=2000)
 
+class ScenarioBOptimiseInput(OptimiseInput):
+    """Scenario B uses the same bounded solver controls and richer placements."""
+
+class ScenarioBPreviewInput(ScenarioBOptimiseInput):
+    instance_files: dict[str, Annotated[str, Field(max_length=4_000_000)]] = Field(min_length=8, max_length=8)
+
 class OptimiseResult(BaseModel):
-    scenario: Literal['A'] = 'A'
+    scenario: Literal['A', 'B'] = 'A'
     optimiser_version: str = VERSION
     solver_status: str
     publishable: bool = False
@@ -35,6 +43,10 @@ class OptimiseResult(BaseModel):
     physical_validation_complete: bool = False
     validation_report: ValidationReport | None = None
     completion_changes: list[dict[str, Any]] = Field(default_factory=list)
+    workload_delivery: list[dict[str, Any]] = Field(default_factory=list)
+    capacity_hotspots: list[dict[str, Any]] = Field(default_factory=list)
+    baseline_movement: int = 0
+    contract_completion_gate: bool = False
     diagnostics: list[dict[str, Any]] = Field(default_factory=list)
     stages: list[dict[str, Any]] = Field(default_factory=list)
     settings: dict[str, Any]

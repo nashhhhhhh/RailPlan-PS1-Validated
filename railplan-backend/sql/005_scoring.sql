@@ -66,7 +66,7 @@ DO $$ DECLARE t text; BEGIN
  END LOOP;
  -- Resource/requirement/link edits are also dependencies, even if not yet scored.
  FOR t IN SELECT tablename FROM pg_tables WHERE schemaname='railplan' AND
- (tablename LIKE '%availability%' OR tablename LIKE 'request_%' OR tablename LIKE 'scenario_%' OR tablename='engineer_skills')
+ (tablename LIKE '%availability%' OR left(tablename,8)='request_' OR left(tablename,9)='scenario_' OR tablename='engineer_skills')
  AND tablename <> 'scenario_assignments' LOOP
  EXECUTE format('CREATE TRIGGER scoring_revision AFTER INSERT OR UPDATE OR DELETE OR TRUNCATE ON railplan.%I FOR EACH STATEMENT EXECUTE FUNCTION railplan.bump_scoring_revision()',t);
  END LOOP;

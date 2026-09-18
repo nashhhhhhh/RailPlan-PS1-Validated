@@ -1,6 +1,26 @@
 # Validation — merged FastAPI v0.4
 
-## Current optimiser-persistence verification
+## Current Scenario B verification (2026-09-19)
+
+| Command / check | Actual result |
+|---|---|
+| `python -m compileall -q app migrations tests scripts` | Passed |
+| `python -m pytest -q -p no:cacheprovider` | **451 passed, 93 skipped**, 0 failed; one Starlette/httpx deprecation warning |
+| `python -m pytest -q tests/test_ps1_scenario_b.py` | **12 passed**, included above |
+| PostgreSQL/PostGIS suites with `-rs` | **93 skipped** because `TEST_DATABASE_URL`, `TEST_COMMITTED_DATABASE_URL`, and `TEST_MIGRATION_DATABASE_URL` were not configured; no live migration/persistence claim |
+| `python scripts/export_contracts.py` | **66 paths, 76 schemas** |
+| API-client `tsc` build plus direct TAP files | Build passed; **19 passed**, 0 failed |
+| Modified root TS/TSX transpilation and frontend-test syntax | Passed |
+| Root strict typecheck / production build | Not completed: the clean dependency install exhausted available disk; the build attempt reports missing `vinext` |
+| Browser workflow | Not run because the root browser/build dependency tree is unavailable; browser test source parses |
+| Official dataset, wall budget 3 s / deterministic budget 0.1 | `UNKNOWN` after 1.906 s, no incumbent, no accepted artifacts; not an infeasibility proof |
+
+The official judge was not run. `judge_validation` remains `not_run` and all scores remain
+`internal_only`. The new guarded PostgreSQL tests cover Scenario B ECLO/objective/physical
+row retention, exact CSV retention, migration 0008, the duplicate-trigger regression,
+repeat upgrade and both seed commands, but they are among the skipped tests above.
+
+## Previous optimiser-persistence verification
 
 These checks were freshly executed for migration 0007 / saved optimiser-run APIs.
 Historical solver/validator results below are not presented as fresh persistence evidence.
@@ -97,7 +117,7 @@ and viewer rejection; they remain skipped alongside the existing database suite.
 
 Browser interaction, live PostgreSQL/PostGIS, production authentication, concurrent load,
 dated physical engineering calendars and official-validator comparison remain unverified.
-No new optimiser UI, persistence or operational approval is claimed. See
+That historical Scenario A release made no optimiser UI, persistence or operational approval claim. See
 [PS1_OPTIMISATION.md](PS1_OPTIMISATION.md) for all assumptions and model limits.
 
 The sections below describe historical verification of the preserved validator.

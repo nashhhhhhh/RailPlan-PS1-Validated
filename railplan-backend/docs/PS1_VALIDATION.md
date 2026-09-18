@@ -1,6 +1,10 @@
 # Internal provisional PS1 submission validator
 
-Version: `ps1-validator/1.1.0`. Policy: `ps1-policy/2-explicit-night-alignment`.
+## Scenario B optimiser gate
+
+Generated Scenario B candidates call `validate(dataset, files, "B", physical_nights=mapping)`. Artifacts are accepted only when `feasible`, `physical_validation_complete`, and an empty hard-violation list agree. Rejected candidates retain diagnostic physical assignments but expose no accepted CSVs. `judge_validation` remains `not_run`; `score_verification` remains `internal_only`.
+
+Version: `ps1-validator/1.1.0`. Policy: `ps1-policy/3-explicit-night-domain`.
 **Judge validation not run. Objectives are internal, not officially verified.**
 This validates uploaded schedules; it does not optimise, generate schedules, approve track
 access, use AI or translate PS1 activities into nightly maintenance requests. Input imports,

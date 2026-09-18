@@ -1,5 +1,9 @@
 # PS1 dataset integration
 
+## Scenario B integration
+
+The command dashboard still reads bundled official source CSVs and organiser Scenario A reference output. **Open optimiser** opens `PS1Workspace`, where Scenario B runs as a database-free local preview or a saved PostgreSQL optimisation. Preview is stateless but still calls FastAPI. Scenario C generation remains disabled; A/B/C submission validation remains available.
+
 Optimiser-run persistence is now included in migration **0007**, with dedicated sealed
 PS1 tables and retrieval APIs. It preserves the importer, validator and CSV schemas;
 see [persistence documentation](railplan-backend/docs/PS1_OPTIMISATION_PERSISTENCE.md).

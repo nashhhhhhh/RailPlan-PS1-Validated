@@ -1,5 +1,7 @@
 # API follow-up fixes
 
+Scenario B generation, stateless preview, saved persistence, filtered history, UI mode selection, migration `0008`, and regenerated contracts are implemented. Scenario C generation remains intentionally disabled. The uniform 1–7 physical-night domain and Sunday completion conversion remain versioned provisional assumptions pending official clarification.
+
 ## PS1 terminal optimiser persistence (current)
 
 - Migration 0007 / sql/010; five dedicated immutable tables with same-transaction child

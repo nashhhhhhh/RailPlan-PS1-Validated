@@ -1,5 +1,7 @@
 # RailPlan domain ER diagrams
 
+Scenario B reuses the sealed `ps1_optimisation_runs` parent and its access, occupancy, contract-result, and idempotency-key children. `scenario` discriminates A/B; `ps1_optimisation_accesses.eclo` retains `0/1`. Workload, excess, stage, policy, and validation structures remain immutable JSON snapshots on the parent.
+
 These are relationship-level diagrams. Full columns and subsidiary junctions are in DATA_DICTIONARY.md.
 
 ## Network and requested intent

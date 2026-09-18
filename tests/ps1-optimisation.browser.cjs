@@ -261,8 +261,7 @@ fs.mkdirSync(screenshots, { recursive: true });
       404,
     );
   });
-  const opt = () =>
-    page.getByRole("region", { name: "Scenario A optimisation workspace" });
+  const opt = () => page.locator('[aria-label$="optimisation workspace"]');
   const shot = async (name) => {
     const focus = name.startsWith("01")
       ? opt().locator(".opt-callout")
@@ -303,7 +302,7 @@ fs.mkdirSync(screenshots, { recursive: true });
       await opt()
         .getByRole("button", { name: "Generate schedule", exact: true })
         .isDisabled(),
-      true,
+      false,
     );
     await page.getByRole("button", { name: "Scenario C", exact: true }).click();
     assert.equal(
@@ -314,7 +313,7 @@ fs.mkdirSync(screenshots, { recursive: true });
     );
     assert.equal(posts.length, 0);
     await page.getByRole("button", { name: "Scenario A", exact: true }).click();
-    check("B and C cannot generate Scenario A requests");
+    check("B is enabled, C remains disabled, and neither generates Scenario A requests");
     delayPost = true;
     await opt()
       .getByRole("button", { name: "Generate schedule", exact: true })

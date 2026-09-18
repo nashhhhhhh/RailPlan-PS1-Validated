@@ -1,17 +1,21 @@
 # RailPlan FastAPI backend — v0.4
 
+## PS1 Scenario B
+
+Scenario B is available through a stateless preview and the auditable saved-run endpoint. It uses deterministic CP-SAT, scaled workload integers, explicit physical nights, canonical footprints, hard planned-date completion, flexible capacity excess, and Validator 1.1.0's rich publication gate. Apply migration `0008` before saved Scenario B optimisation. `/health` reports validator and Scenario A/B solver availability.
+
 Scenario A now has a separate OR-Tools CP-SAT optimiser with explicit physical nights,
 locks, lexicographic objectives and a fail-closed rich-validation gate. Read
 [PS1_OPTIMISATION.md](docs/PS1_OPTIMISATION.md) for API/offline use and limitations.
 The HTTP endpoint now saves sealed terminal optimisation history; the pure solver/CLI
-stays database-free. Migration head is **0007**. See
+stays database-free. Migration head is **0008**. See
 [persistence and transaction design](docs/PS1_OPTIMISATION_PERSISTENCE.md) and
 [manual verification](docs/PS1_PERSISTENCE_TEST_GUIDE.md). No schedule is published.
 
 New: deterministic conflict severity scoring, versioned policies, immutable evidence
 history, stale-input/idempotency checks, and UI scoring adapters. See
 [Conflict scoring setup and API workflow](docs/CONFLICT_SCORING.md). Run
-`alembic upgrade head` to install migrations through **0007**, then optionally
+`alembic upgrade head` to install migrations through **0008**, then optionally
 `python -m app.seed_scoring` after the normal demo seed.
 
 Prototype scores remain partial/unvalidated; blocking rules are never weakened.
@@ -41,10 +45,9 @@ control. UI colours, camera controls, animation and replay cursor remain fronten
 
 ## What remains unavailable
 
-The OR-Tools worker, real AI copilot, verified OIDC adapter and operational
-approval/publication are not implemented. Conflict analysis is available
-synchronously for this prototype. Optimisation POSTs return **503 without
-accepting a job** and approval write contracts return **501**. Synthetic seed
+A background optimiser worker/queue, real AI copilot, verified OIDC adapter and
+operational approval/publication are not implemented. PS1 Scenario A/B optimisation is
+synchronous and bounded. Generic non-PS1 optimisation remains unavailable. Synthetic seed
 scenarios remain clearly unvalidated UI presets.
 
 ## Local setup
@@ -60,7 +63,7 @@ migration account. The provided owner account is for local development only.
    - macOS/Linux: `source .venv/bin/activate`
 4. Run `python -m pip install -e ".[test]"`.
 5. Set the environment variables below. Python does not load `.env` automatically.
-6. Run `alembic upgrade head` to install the ordered migration chain through 0007.
+6. Run `alembic upgrade head` to install the ordered migration chain through 0008.
 7. Run `python -m app.seed` on a local demo database if synthetic fixtures and conflict rules are wanted.
 8. Run `uvicorn app.main:app --reload --host 127.0.0.1`.
 9. Open http://127.0.0.1:8000/docs.

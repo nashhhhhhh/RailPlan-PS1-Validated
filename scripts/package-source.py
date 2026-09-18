@@ -6,11 +6,11 @@ import zipfile
 
 EXCLUDED_DIRS = {'node_modules','dist','.next','.git','.venv','venv','__pycache__',
                  '.pytest_cache','.mypy_cache','.ruff_cache','.cache','.wrangler','.vite',
-                 '.openai','coverage','htmlcov'}
+                 '.openai','coverage','htmlcov','test-tmp','.test-tmp','ui-screenshots','logs'}
 
 def excluded(path):
     name=path.name
-    return (any(p in EXCLUDED_DIRS or p.endswith('.egg-info') for p in path.parts)
+    return (any(p in EXCLUDED_DIRS or p.endswith('.egg-info') or p.startswith('pytest-cache-files-') for p in path.parts)
             # Root build/ contains licensed build-plugin SOURCE, not build output.
             or 'frontend/build' in path.as_posix()
             or name.startswith('.env') or name in {'.DS_Store','.npmrc','.coverage','next-env.d.ts'}

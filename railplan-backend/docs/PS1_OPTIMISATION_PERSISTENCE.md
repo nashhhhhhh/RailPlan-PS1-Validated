@@ -1,9 +1,14 @@
 # Immutable PS1 optimiser-run persistence
 
-This release adds terminal history to the existing synchronous Scenario A endpoint.
-The pure `optimise(dataset, options)` function, solver version `ps1-optimiser/1.0.0`,
-validator 1.1.0, explicit-night policy 2, offline CLI and organiser CSV schemas remain
-unchanged. Migration **0007** follows **0006**. It does not reuse legacy nightly
+## Scenario B additive persistence
+
+Migration `0008` expands the sealed run scenario check to `A/B` and the child access ECLO check to `0/1`. Existing rows and sealing/audit/immutability triggers are unchanged. Scenario-specific fingerprints include scenario and objective policy, preventing A/B collisions. Result JSON retains workload, ECLO, excess, objective stages, hotspots, physical nights, validation, diagnostics, and exact accepted CSV text.
+
+The original persistence release added terminal history to the synchronous Scenario A endpoint;
+Scenario B now uses the same transaction boundary and sealed evidence model. Pure optimiser
+version `ps1-optimiser/1.1.0`, validator 1.1.0, explicit-night-domain policy 3, the
+Scenario A offline CLI and organiser CSV schemas remain database-independent. Historical
+migration **0007** follows **0006**, while current head is **0008**. Neither reuses legacy nightly
 `optimisation_runs`, scenarios or CSV-only PS1 validation history.
 
 ## Transaction ownership and terminal lifecycle

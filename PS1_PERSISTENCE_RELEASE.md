@@ -1,5 +1,7 @@
 # PS1 optimiser-run persistence release
 
+> Historical migration-0007 release record. Scenario B persistence is added by migration 0008; see `SCENARIO_B_RELEASE.md`.
+
 Built from `RailPlan-PS1-Scenario-A-Optimiser.zip`. This release saves immutable terminal
 results and adds retrieval APIs; it does not deploy the application.
 
@@ -69,5 +71,5 @@ internal rich gate passed. Always `judge_validation="not_run"`,
 `score_verification="internal_only"`; no official compatibility or operational approval.
 
 No worker, queue, optimiser UI, scenario comparison/replay, approval/publication, B/C
-optimisation or AI integration was added. Source-only archive excludes dependencies,
+optimisation or AI integration was added in this historical release. Source-only archive excludes dependencies,
 credentials, environment files, generated build output and caches.

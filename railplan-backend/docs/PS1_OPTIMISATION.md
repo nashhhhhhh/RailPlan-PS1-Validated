@@ -1,7 +1,13 @@
 # Scenario A optimiser — internal, validation-gated
 
-`ps1-optimiser/1.0.0` uses pinned Google OR-Tools **9.14.6206** CP-SAT and unchanged
-`ps1-validator/1.1.0`, policy `ps1-policy/2-explicit-night-alignment`. No LLM,
+## Scenario B
+
+Scenario B uses optional access rows with scaled work `normal=2`, `ECLO=3`, `required=2×total_accesses`. It enforces planned starts, dependencies, weekly allocation, workfronts, legal possession mixes, canonical closures/buffers, sufficient workload, and contract completion on or before the planned date. Supply excess is legal and summed across canonical location/week possession groups.
+
+Stages are official score (`7×excess + 5×ECLO`), excess, ECLO, workload over-delivery, completion weeks, baseline movement, and stable rank. A time-limited feasible primary stage is never labeled optimal. The physical-night domain remains provisional because the official package contains no dated night calendar.
+
+`ps1-optimiser/1.1.0` uses pinned Google OR-Tools **9.14.6206** CP-SAT and
+`ps1-validator/1.1.0`, policy `ps1-policy/3-explicit-night-domain`. No LLM,
 legacy nightly conflict engine or 0–100 severity score participates. Organiser
 inputs and sample files are unchanged; the sample is never used as a solver hint.
 
@@ -141,7 +147,7 @@ deltas. Explanations describe derivation, not an unperformed causal sensitivity 
 
 ## API and offline use
 
-Install: `python -m pip install -e ".[test]"`. Migration head is **0007** for saved HTTP runs.
+Install: `python -m pip install -e ".[test]"`. Migration head is **0008** for saved HTTP runs.
 
 `POST /api/ps1/instances/{instance_id}/optimise/scenario-a` requires same-operator
 planner/administrator. Existing identity, transaction and error envelopes apply.
@@ -158,7 +164,8 @@ planner/administrator. Existing identity, transaction and error envelopes apply.
 ```
 
 Placement fields: `activity_id`, `access_seq`, `week`, `physical_night`, optional
-`access_night`. Unknown, duplicate or out-of-domain placements return HTTP 422. Other
+`access_night` and Scenario B `eclo`. Possession labels are derived from physical-night
+concurrency and cannot be locked directly. Unknown, duplicate or out-of-domain placements return HTTP 422. Other
 operator/missing instance: 404; wrong role: 403. Bounded/infeasible solves return HTTP 200
 with status, not transport failure. Existing 10 MB wire limit applies.
 
@@ -166,10 +173,11 @@ Response includes solver status, publishable/optimality flags, solve time, stage
 and bounds, settings/policy, objective components, three CSV strings, explicit assignments,
 rich report, completion changes and diagnostics. Always `judge_validation:"not_run"`
 and `score_verification:"internal_only"`. Typed client:
-`RailPlanClient.optimisePs1ScenarioA(instanceId, options, signal)`.
+`RailPlanClient.optimisePs1ScenarioA(instanceId, options, signal)`,
+`optimisePs1ScenarioB(...)`, and `previewPs1ScenarioB(...)`.
 
-No new optimiser UI panel; existing style/behaviour is preserved. Legacy generic optimiser
-capability remains false and does not describe this PS1 route. Dedicated immutable
+The PS1 workspace exposes Scenario A/B generation while preserving the existing style and
+Scenario C validation-only state. Legacy generic optimiser capability remains false and does not describe these PS1 routes. Dedicated immutable
 optimisation history now retains rich results and physical assignments; see
 [persistence APIs](PS1_OPTIMISATION_PERSISTENCE.md) for additive request/response fields.
 There is no approval/publication write. Do not store rich results via the CSV-only

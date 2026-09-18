@@ -1,15 +1,21 @@
 # RailPlan
 
+## Scenario B track-access optimisation
+
+The PS1 workspace supports Scenario A and Scenario B generation. Scenario B enforces planned completion dates, permits ECLO and scored capacity excess, and minimises `7 × excess access nights + 5 × ECLO nights`. Choose **Local preview** for a stateless FastAPI solve or **Saved optimisation** for PostgreSQL-backed immutable history. See [SCENARIO_B_RELEASE.md](SCENARIO_B_RELEASE.md).
+
+`app.py` remains a frontend-only launcher; it does not start FastAPI. Internal validation is not official judge validation, and score verification remains internal only.
+
 
 The official **PS1 dataset is now integrated**. Open **PS1 · Hackathon dataset**
 in the app to inspect the organiser example or import its eight CSV files.
 See [PS1_INTEGRATION.md](PS1_INTEGRATION.md) for setup, dataset semantics,
 new APIs and PS1 integration. An **internal provisional submission validator**
 now checks uploaded A/B/C schedules; see [PS1 validation](railplan-backend/docs/PS1_VALIDATION.md).
-Database persistence requires `alembic upgrade head` (revision **0007**).
+Database persistence requires `alembic upgrade head` (revision **0008**).
 Validator 1.1.0 accepts the organiser sample with internal objective 48.30 and 70
 unverifiable physical-alignment warnings. CSV feasibility is not physical-night clearance.
-Judge validation has not run. A separate **Scenario A CP-SAT optimiser** now generates
+Judge validation has not run. Separate **Scenario A and Scenario B CP-SAT optimisers** generate
 explicit-physical-night candidates and releases CSVs only after rich validation passes.
 See [optimiser API, offline usage and limitations](railplan-backend/docs/PS1_OPTIMISATION.md).
 Scores remain internal-only; a bounded feasible result is not necessarily optimal.
@@ -18,7 +24,7 @@ Optimiser POSTs now save immutable terminal runs, rich reports, physical assignm
 and accepted CSVs, with idempotency and baseline references. See
 [persistence design](railplan-backend/docs/PS1_OPTIMISATION_PERSISTENCE.md) and
 [manual test guide](railplan-backend/docs/PS1_PERSISTENCE_TEST_GUIDE.md).
-The offline CLI remains database-free. No optimiser UI or publication workflow is added.
+The Scenario A offline CLI and Scenario B preview remain database-free. The PS1 workspace exposes both solvers; no operational publication workflow is added.
 
 RailPlan is a rail-maintenance planning prototype with a Vinext/React interface and a FastAPI/PostgreSQL/PostGIS backend. This merged build includes persistent maintenance data, deterministic conflict detection, conflict severity scoring, and an analysis dialog connected to the backend.
 
@@ -26,7 +32,7 @@ RailPlan is a rail-maintenance planning prototype with a Vinext/React interface 
 
 - `app/`: RailPlan planner interface
 - `railplan-backend/app/`: FastAPI API, conflict engine, and scoring service
-- `railplan-backend/migrations/`: one Alembic chain from `0001` through `0007`
+- `railplan-backend/migrations/`: one Alembic chain from `0001` through `0008`
 - `railplan-backend/sql/`: schema, guards, views, scoring, history, and demo rules
 - `railplan-backend/tests/`: API, rule-engine, scoring, and optional PostgreSQL tests
 - `MERGE_GUIDE.md`: what was merged and why

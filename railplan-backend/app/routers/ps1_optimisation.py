@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime, timezone
 from time import monotonic
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from sqlalchemy.orm import Session
@@ -11,14 +11,15 @@ from app import ps1_optimisation_models, repository
 from app.database import engine
 from app.dependencies import Actor, DB, Limit, Offset, role, identity
 from app.ps1_validation.persistence import get_instance
+from app.ps1 import parse_instance, InstanceError
 from app.ps1_validation.submission import fingerprint
-from app.ps1_optimisation.contracts import OptimiseResult
+from app.ps1_optimisation.contracts import OptimiseResult, ScenarioBPreviewInput, ScenarioBOptimiseInput
 from app.ps1_optimisation.saved_contracts import SavedOptimiseInput, SavedOptimiseResult, OptimisationPage, OptimisationDetail, OptimisationArtifacts
 from app.ps1_optimisation.preprocessing import InputError
-from app.ps1_optimisation.service import optimise
+from app.ps1_optimisation.service import optimise, optimise_scenario_b
 from app.ps1_optimisation import persistence as store
 
-router=APIRouter(prefix='/api/ps1',tags=['PS1 Scenario A optimisation'])
+router=APIRouter(prefix='/api/ps1',tags=['PS1 optimisation'])
 logger=logging.getLogger(__name__)
 
 def optimisation_session_factory():
@@ -31,14 +32,24 @@ def optimisation_session_factory():
 def scenario_a(instance_id:UUID,payload:SavedOptimiseInput,request:Request,
                factory=Depends(optimisation_session_factory),
                x_demo_user_id:Annotated[UUID|None,Header()]=None):
+    return _saved_scenario(instance_id,payload,request,factory,x_demo_user_id,'A')
+
+@router.post('/instances/{instance_id}/optimise/scenario-b',response_model=SavedOptimiseResult)
+def scenario_b(instance_id:UUID,payload:SavedOptimiseInput,request:Request,
+               factory=Depends(optimisation_session_factory),
+               x_demo_user_id:Annotated[UUID|None,Header()]=None):
+    return _saved_scenario(instance_id,payload,request,factory,x_demo_user_id,'B')
+
+def _saved_scenario(instance_id,payload,request,factory,x_demo_user_id,scenario):
     try:
         with factory() as db:
             with db.begin():
                 actor=identity(request,db,x_demo_user_id)
                 role(actor,'planner','administrator')
                 instance=get_instance(db,actor,instance_id)
-                options=store.resolve(db,actor,instance,payload)
-                configuration=store.effective_configuration(instance,options,payload.baseline_run_id)
+                options=store.resolve(db,actor,instance,payload) if scenario=='A' else store.resolve(db,actor,instance,payload,scenario)
+                configuration=(store.effective_configuration(instance,options,payload.baseline_run_id) if scenario=='A'
+                    else store.effective_configuration(instance,options,payload.baseline_run_id,scenario))
                 digest=fingerprint(configuration)
                 previous=store.existing_key(db,actor,instance_id,payload.idempotency_key,digest)
                 reused=store.response(previous,False) if previous else None
@@ -46,15 +57,15 @@ def scenario_a(instance_id:UUID,payload:SavedOptimiseInput,request:Request,
         started=datetime.now(timezone.utc); clock=monotonic()
         computed=None
         try:
-            computed=optimise(instance['dataset'],options)
+            computed=(optimise_scenario_b if scenario=='B' else optimise)(instance['dataset'],options)
             result=computed
-            records=store.schedule_records(instance,options,result)
+            records=store.schedule_records(instance,options,result) if scenario=='A' else store.schedule_records(instance,options,result,scenario)
         except InputError:
             raise
         except Exception as exc:
             # Catch computation only, never reads, inserts or transaction commit errors.
             logger.exception('PS1 optimisation computation failed (%s)',request.state.correlation_id)
-            result=OptimiseResult(solver_status='ERROR',solve_time_seconds=monotonic()-clock,
+            result=OptimiseResult(scenario=scenario,solver_status='ERROR',solve_time_seconds=monotonic()-clock,
                 failed_candidate={'diagnostic_only':True,'result_snapshot':computed.model_dump(mode='json')} if computed is not None else None,
                 settings=configuration,diagnostics=[{'code':'handled_solver_error','error_type':type(exc).__name__,
                     'message':'Optimisation computation failed; use the correlation ID for server diagnostics.',
@@ -69,20 +80,33 @@ def scenario_a(instance_id:UUID,payload:SavedOptimiseInput,request:Request,
                 get_instance(db,final_actor,instance_id)
                 if final_actor['operator_id']!=actor['operator_id']:
                     raise HTTPException(404,'PS1 instance not found')
-                saved=store.persist(db,final_actor,instance,payload,configuration,digest,result,records,started,completed)
+                saved=(store.persist(db,final_actor,instance,payload,configuration,digest,result,records,started,completed) if scenario=='A'
+                    else store.persist(db,final_actor,instance,payload,configuration,digest,result,records,started,completed,scenario))
             # Deferred sealing and commit have succeeded before any success is returned.
         return saved
     except InputError as exc:raise HTTPException(422,str(exc)) from exc
 
+@router.post('/optimise/scenario-b/preview',response_model=OptimiseResult)
+def scenario_b_preview(payload:ScenarioBPreviewInput):
+    """Pure bounded preview: no identity, PostgreSQL transaction, or history."""
+    try:
+        dataset=parse_instance(payload.instance_files)
+        options=ScenarioBOptimiseInput.model_validate(payload.model_dump(exclude={'instance_files'}))
+        return optimise_scenario_b(dataset,options)
+    except (InstanceError,InputError,UnicodeEncodeError) as exc:
+        raise HTTPException(422,str(exc)) from exc
+
 @router.get('/instances/{instance_id}/optimisations',response_model=OptimisationPage)
-def history(instance_id:UUID,db:DB,actor:Actor,limit:Limit=50,offset:Offset=0):
+def history(instance_id:UUID,db:DB,actor:Actor,limit:Limit=50,offset:Offset=0,
+            scenario:Literal['A','B']|None=Query(default=None)):
     get_instance(db,actor,instance_id)
     return repository.page(db,'''SELECT id,instance_id,baseline_run_id,scenario,solver_status,terminal_outcome,
         primary_optimal,lexicographic_complete,physical_validation_complete,publishable,
         objective_score::text AS objective_score,primary_objective_bound::text AS primary_objective_bound,
         primary_objective_gap::text AS primary_objective_gap,solve_duration_seconds,created_at
         FROM railplan.ps1_optimisation_runs WHERE instance_id=:instance AND operator_id=:op
-        ORDER BY created_at DESC,id DESC''',{'instance':instance_id,'op':actor['operator_id']},limit,offset)
+        AND (CAST(:scenario AS text) IS NULL OR scenario=:scenario)
+        ORDER BY created_at DESC,id DESC''',{'instance':instance_id,'op':actor['operator_id'],'scenario':scenario},limit,offset)
 
 @router.get('/optimisations/{run_id}',response_model=OptimisationDetail)
 def detail(run_id:UUID,db:DB,actor:Actor):

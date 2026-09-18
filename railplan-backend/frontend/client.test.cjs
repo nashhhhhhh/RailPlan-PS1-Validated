@@ -58,6 +58,18 @@ test("saved PS1 client preserves additive response and baseline/key options",asy
  assert.equal(result.run_id,"run");assert.equal(result.reused,true);
  assert.equal(result.primary_optimal,true);assert.equal(result.lexicographic_complete,false);
 });
+test("Scenario B exposes saved and database-free preview paths",async()=>{
+ const calls=[];
+ const api=new RailPlanClient({baseUrl:"http://localhost:8000",fetcher:async(url,init)=>{
+  calls.push({url,body:JSON.parse(init.body)});return Response.json({scenario:"B",solver_status:"FEASIBLE",publishable:true});
+ }});
+ await api.optimisePs1ScenarioB("instance",{random_seed:7});
+ await api.previewPs1ScenarioB({random_seed:7,instance_files:{a:"1",b:"2",c:"3",d:"4",e:"5",f:"6",g:"7",h:"8"}});
+ assert.equal(calls[0].url.pathname,"/api/ps1/instances/instance/optimise/scenario-b");
+ assert.equal(calls[1].url.pathname,"/api/ps1/optimise/scenario-b/preview");
+ assert.equal(calls[0].body.random_seed,7);
+ assert.equal(calls[1].body.instance_files.h,"8");
+});
 test("saved PS1 retrieval filters and artifact errors remain explicit",async()=>{
  const calls=[];
  const api=new RailPlanClient({baseUrl:"http://localhost:8000",fetcher:async(url)=>{
@@ -65,12 +77,13 @@ test("saved PS1 retrieval filters and artifact errors remain explicit",async()=>
   if(url.pathname.endsWith("/artifacts"))return Response.json({error:{code:"STATE_CONFLICT",message:"No accepted artifacts",fields:[],correlation_id:"test"}},{status:409});
   return Response.json({items:[],total:0});
  }});
- await api.ps1Optimisations("instance",{limit:1,offset:2});
+ await api.ps1Optimisations("instance",{limit:1,offset:2,scenario:"B"});
  await api.ps1Optimisation("run");
  await api.ps1OptimisationAccesses("run",{week:2,activity_id:"A1"});
  await api.ps1OptimisationOccupancies("run",{week:2,location_id:"PLAT:ALP:S01:EB"});
  await assert.rejects(()=>api.ps1OptimisationArtifacts("run"),e=>e instanceof ApiError&&e.status===409);
  assert.equal(calls[0].searchParams.get("offset"),"2");
+ assert.equal(calls[0].searchParams.get("scenario"),"B");
  assert.equal(calls[2].searchParams.get("activity_id"),"A1");
  assert.equal(calls[3].searchParams.get("location_id"),"PLAT:ALP:S01:EB");
  assert.equal(calls.length,5);

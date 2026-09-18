@@ -1,5 +1,13 @@
 # API endpoint inventory
 
+## Scenario B optimisation
+
+- `POST /api/ps1/optimise/scenario-b/preview` — stateless, unauthenticated, no PostgreSQL/history; accepts `instance_files` and bounded solver options.
+- `POST /api/ps1/instances/{instance_id}/optimise/scenario-b` — planner/admin, immutable PostgreSQL terminal history.
+- `GET /api/ps1/instances/{instance_id}/optimisations?scenario=B` — scenario-filtered history.
+
+Responses distinguish solver status, primary optimality, lexicographic completion, physical validation, publication state, judge validation, and internal-only score verification.
+
 ## PS1 Scenario A optimisation
 
 `POST /api/ps1/instances/{instance_id}/optimise/scenario-a` computes a bounded CP-SAT

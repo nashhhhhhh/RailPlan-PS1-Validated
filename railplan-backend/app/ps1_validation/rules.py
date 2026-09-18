@@ -45,11 +45,15 @@ def evaluate(dataset, tables, scenario, physical_nights: dict[tuple[str, int], i
     for aid,a in sorted(activities.items()):
         rows=by_activity[aid]
         delivered=sum((Decimal('1.5') if r['eclo'] else Decimal('1.0') for r in rows),Decimal(0))
+        standard=sum((Decimal('1.0') for r in rows if not r['eclo']),Decimal(0))
+        eclo=sum((Decimal('1.5') for r in rows if r['eclo']),Decimal(0))
         required=Decimal(a['total_accesses'])
         complete=delivered>=required
         workload.append({'activity_id':aid,'contract_number':a['contract_number'],
             'required':str(required.quantize(Decimal('0.1'),rounding=ROUND_HALF_UP)),
             'delivered':str(delivered.quantize(Decimal('0.1'),rounding=ROUND_HALF_UP)),
+            'standard_access_contribution':str(standard.quantize(Decimal('0.1'),rounding=ROUND_HALF_UP)),
+            'eclo_contribution':str(eclo.quantize(Decimal('0.1'),rounding=ROUND_HALF_UP)),
             'shortfall':str(max(Decimal(0),required-delivered).quantize(Decimal('0.1'),rounding=ROUND_HALF_UP)),
             'over_delivery':str(max(Decimal(0),delivered-required).quantize(Decimal('0.1'),rounding=ROUND_HALF_UP)),
             'present':bool(rows),'complete':complete})
@@ -181,7 +185,7 @@ def evaluate(dataset, tables, scenario, physical_nights: dict[tuple[str, int], i
         common=sa['occupied'] & sb['occupied']
         shared={loc for loc in common if assignment[a,week,loc]==assignment[b,week,loc]
                 and legal[loc,week,assignment[a,week,loc]]}
-        if common and shared==common:
+        if scenario!='B' and common and shared==common:
             continue
         # Different local groups establish separate possession slots at that location only.
         same={loc for loc in common if assignment[a,week,loc]==assignment[b,week,loc]}-shared

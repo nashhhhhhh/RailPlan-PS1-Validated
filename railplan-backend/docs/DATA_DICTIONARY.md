@@ -1,5 +1,9 @@
 # Data dictionary
 
+## Scenario B optimisation fields
+
+`scenario=B`; `eclo` is 0/1; `physical_night` is a network-wide weekly slot; `access_night` is local to contract/activity-type/week; `co_share_group` is local to location/week. `objective_score = 7×excess_access_nights_total + 5×eclo_nights_total`. Required, delivered, standard/ECLO contribution, and over-delivery are retained in the result snapshot.
+
 ## PS1 optimiser additions: migration 0007
 
 Five dedicated tables: `ps1_optimisation_runs`, `ps1_optimisation_accesses`,

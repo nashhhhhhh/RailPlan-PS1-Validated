@@ -7,7 +7,7 @@ type TourView = "overview" | "activities" | "contracts" | "schedule" | "data";
 type Props = { open: boolean; onClose: () => void; onNavigate: (view: TourView) => void };
 
 const steps: { target: string; view: TourView; kicker: string; title: string; copy: string }[] = [
-  { target: "[data-tour='welcome']", view: "overview", kicker: "01 / ORIENT", title: "Your PS1 planning command", copy: "This workspace turns the challenge inputs and organiser sample into an explorable operating picture." },
+  { target: "[data-tour='welcome']", view: "overview", kicker: "01 / ORIENT", title: "Your PS1 planning command", copy: "This workspace turns official challenge inputs and organiser reference output into an explorable operating picture. Dashboard data is reference data, not a newly generated RailPlan schedule." },
   { target: "[data-tour='filters']", view: "overview", kicker: "02 / FILTER", title: "Slice line, bound or location", copy: "Focus Line Alpha or Beta, switch Eastbound and Westbound, or search by activity, contract and location ID. Every metric below reacts to the same filter." },
   { target: "[data-tour='kpis']", view: "overview", kicker: "03 / READ", title: "Read the filtered workload", copy: "The KPI strip shows source activities, required access-nights, affected contracts, capacity locations and sample completion performance." },
   { target: "[data-tour='network']", view: "overview", kicker: "04 / EXPLORE", title: "Use the animated digital twin", copy: "Select a line directly on the map. The twin preserves each line’s own H01↔H02 capacity; the central bridge represents Live-only cross-line closure." },
@@ -15,7 +15,7 @@ const steps: { target: string; view: TourView; kicker: string; title: string; co
   { target: "[data-tour='horizon']", view: "overview", kicker: "06 / SCHEDULE", title: "Move across the 30-week horizon", copy: "Choose any bar to inspect that week’s scheduled access load and open an activity from the queue." },
   { target: "[data-tour='navigation']", view: "overview", kicker: "07 / DETAIL", title: "Change analytical views", copy: "Open full activity and contract tables, inspect the 30-week activity grid, or trace every visual back to its CSV source." },
   { target: "[data-tour='data-catalog']", view: "data", kicker: "08 / PROVENANCE", title: "Trace and download the data", copy: "The lineage catalogue explains where each CSV appears in the dashboard and provides a direct link to the exact file served by the app." },
-  { target: "[data-tour='optimizer']", view: "data", kicker: "09 / OPTIMISE", title: "Move from insight to a plan", copy: "Open the optimiser to import, validate, schedule and export a submission. Dashboard exploration and official verification remain clearly separated." },
+  { target: "[data-tour='optimizer']", view: "data", kicker: "09 / OPTIMISE", title: "Move from insight to a plan", copy: "Open the optimiser to generate a new schedule. Scenario B permits ECLO and scored capacity excess while enforcing planned dates. Internal rich validation remains separate from official judge validation." },
 ];
 
 export default function PS1Tour({ open, onClose, onNavigate }: Props) {

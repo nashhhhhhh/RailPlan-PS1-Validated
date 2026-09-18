@@ -1,5 +1,5 @@
 /** RailPlan v0.2 client. No automatic retries or mock fallback. */
-import type {ReferenceData,GeoFeature,Availability,ApprovalHistory,SavedOptimiseInput,SavedOptimiseResult,OptimisationPage,OptimisationDetail,OptimisationArtifacts} from "./contracts.generated";
+import type {ReferenceData,GeoFeature,Availability,ApprovalHistory,SavedOptimiseInput,SavedOptimiseResult,ScenarioBPreviewInput,OptimiseResult,OptimisationPage,OptimisationDetail,OptimisationArtifacts} from "./contracts.generated";
 export type UUID = string;
 export type Instant = string;
 export interface Page<T> {items:T[]; limit:number; offset:number; total:number}
@@ -68,7 +68,9 @@ export class RailPlanClient {
  }
  capabilities(signal?:AbortSignal){return this.call<Capabilities>("/api/capabilities",{signal});}
  optimisePs1ScenarioA(instanceId:UUID,options:SavedOptimiseInput={},signal?:AbortSignal){return this.call<SavedOptimiseResult>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimise/scenario-a",{method:"POST",body:options,signal});}
- ps1Optimisations(instanceId:UUID,query:{limit?:number;offset?:number}={},signal?:AbortSignal){return this.call<OptimisationPage>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimisations",{query,signal});}
+ optimisePs1ScenarioB(instanceId:UUID,options:SavedOptimiseInput={},signal?:AbortSignal){return this.call<SavedOptimiseResult>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimise/scenario-b",{method:"POST",body:options,signal});}
+ previewPs1ScenarioB(options:ScenarioBPreviewInput,signal?:AbortSignal){return this.call<OptimiseResult>("/api/ps1/optimise/scenario-b/preview",{method:"POST",body:options,signal});}
+ ps1Optimisations(instanceId:UUID,query:{limit?:number;offset?:number;scenario?:"A"|"B"}={},signal?:AbortSignal){return this.call<OptimisationPage>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimisations",{query,signal});}
  ps1Optimisation(runId:UUID,signal?:AbortSignal){return this.call<OptimisationDetail>("/api/ps1/optimisations/"+encodeURIComponent(runId),{signal});}
  ps1OptimisationAccesses(runId:UUID,query:{limit?:number;offset?:number;week?:number;activity_id?:string}={},signal?:AbortSignal){return this.call<OptimisationPage>("/api/ps1/optimisations/"+encodeURIComponent(runId)+"/accesses",{query,signal});}
  ps1OptimisationOccupancies(runId:UUID,query:{limit?:number;offset?:number;week?:number;activity_id?:string;location_id?:string}={},signal?:AbortSignal){return this.call<OptimisationPage>("/api/ps1/optimisations/"+encodeURIComponent(runId)+"/occupancies",{query,signal});}
