@@ -1,5 +1,6 @@
 # RailPlan
 
+
 The official **PS1 dataset is now integrated**. Open **PS1 · Hackathon dataset**
 in the app to inspect the organiser example or import its eight CSV files.
 See [PS1_INTEGRATION.md](PS1_INTEGRATION.md) for setup, dataset semantics,
@@ -14,29 +15,12 @@ See [optimiser API, offline usage and limitations](railplan-backend/docs/PS1_OPT
 Scores remain internal-only; a bounded feasible result is not necessarily optimal.
 
 Optimiser POSTs now save immutable terminal runs, rich reports, physical assignments
-and accepted CSVs, with idempotency and baseline references. The PS1 workspace includes
-a Scenario A UI for running and inspecting those saved optimisations. See
+and accepted CSVs, with idempotency and baseline references. See
 [persistence design](railplan-backend/docs/PS1_OPTIMISATION_PERSISTENCE.md) and
 [manual test guide](railplan-backend/docs/PS1_PERSISTENCE_TEST_GUIDE.md).
-The offline CLI remains database-free. No publication workflow is added.
+The offline CLI remains database-free. No optimiser UI or publication workflow is added.
 
 RailPlan is a rail-maintenance planning prototype with a Vinext/React interface and a FastAPI/PostgreSQL/PostGIS backend. This merged build includes persistent maintenance data, deterministic conflict detection, conflict severity scoring, and an analysis dialog connected to the backend.
-
-## Quick local dashboard (no Docker)
-
-On Windows, the interactive dashboard and bundled demonstration data can be
-started with one command from the project root:
-
-```powershell
-python app.py
-```
-
-The launcher installs the pinned frontend packages on its first run, starts the
-dashboard at `http://127.0.0.1:5173`, and opens it in the default browser. Node.js
-22.13 or newer and an internet connection for the first install are required.
-Docker and PostgreSQL are only needed for persistent records, saved conflict
-analysis, and saved PS1 history. Use `python app.py --help` for port and browser
-options.
 
 ## Included components
 
@@ -110,9 +94,7 @@ pnpm build
 5. `GET /api/analyses/{analysis_id}/conflicts`
 6. Optional scoring through `/api/conflicts/{conflict_id}/scoring-context` and `/scores`
 
-Background optimisation jobs, a real AI copilot, verified production authentication,
-and operational approval/publication services remain unavailable. Scenario A optimisation
-is available synchronously through the PS1 workspace and API.
+The optimisation, AI copilot, verified production authentication, and operational approval/publication services remain unavailable.
 
 ## Verify all four backend features
 
