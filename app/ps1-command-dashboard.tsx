@@ -199,7 +199,7 @@ export default function PS1CommandDashboard() {
   const lateResults = (sample?.results ?? []).filter(result => result.overrun_days > 0);
 
   const pressure = useMemo(() => {
-    if (!sample) return [];
+    if (!sample) return { rows: [], saturated: 0, monitored: 0 };
     const supply = new Map(filteredLocations.map(location => [location.location_id, location]));
     const groups = new Map<string, Set<string>>();
     const jobs = new Map<string, Set<string>>();
@@ -216,7 +216,10 @@ export default function PS1CommandDashboard() {
       const candidate = { location, week: Number(weekText), used: slots.size, activities: jobs.get(key)?.size ?? 0, ratio: slots.size / location.supply_capacity };
       if (!peak.has(locationId) || peak.get(locationId)!.ratio < candidate.ratio) peak.set(locationId, candidate);
     }
-    return [...peak.values()].sort((a, b) => b.ratio - a.ratio || b.activities - a.activities).slice(0, 7);
+    const ranked = [...peak.values()].sort((a, b) => b.ratio - a.ratio || b.activities - a.activities || a.location.location_id.localeCompare(b.location.location_id));
+    const saturated = ranked.filter(item => item.ratio >= 1);
+    const withHeadroom = ranked.filter(item => item.ratio < 1);
+    return { rows: [...saturated.slice(0, 3), ...withHeadroom.slice(0, 3)], saturated: saturated.length, monitored: ranked.length };
   }, [sample, filteredLocations, filteredIds]);
 
   const nav: { id: View; label: string; icon: ComponentType<{ size?: number }> }[] = [
@@ -272,11 +275,12 @@ export default function PS1CommandDashboard() {
             </article>
 
             <aside className="psd-card psd-pressure-card" data-tour="pressure">
-              <header><div><span className="psd-card-kicker">03_SUBMISSION_SAMPLE</span><h2>Peak location pressure</h2></div><AlertTriangle size={19}/></header>
+              <header><div><span className="psd-card-kicker">03_SUBMISSION_SAMPLE</span><h2>Weekly capacity hotspots</h2></div><AlertTriangle size={19}/></header>
               {sampleError && <div className="psd-empty">{sampleError}</div>}
               {!sample && !sampleError && <div className="psd-empty">Loading reference occupancy…</div>}
-              {pressure.map(item => <button key={item.location.location_id} onClick={() => { setLine(item.location.line_code); setBound(item.location.bound); setSelectedWeek(item.week); }}><div><span>{shortLocation(item.location.location_id)}</span><b>{Math.round(item.ratio * 100)}%</b></div><small>Week {item.week} · {item.used}/{item.location.supply_capacity} slots · {item.activities} activities</small><span className="psd-pressure-track"><i style={{ width: `${Math.min(100, item.ratio * 100)}%` }}/></span></button>)}
-              <footer>Utilisation counts distinct co-share groups against each location’s weekly supply.</footer>
+              {sample && <div className="psd-pressure-summary"><span><b>{pressure.saturated}</b> of {pressure.monitored} used locations reached full capacity</span><span>{pressure.monitored - pressure.saturated} retained headroom at their busiest week</span></div>}
+              {pressure.rows.map(item => { const free = Math.max(0, item.location.supply_capacity - item.used); return <button key={item.location.location_id} onClick={() => { setLine(item.location.line_code); setBound(item.location.bound); setSelectedWeek(item.week); }}><div><span>{shortLocation(item.location.location_id)}</span><b>{Math.round(item.ratio * 100)}% <em>{free === 0 ? "FULL" : `${free} free`}</em></b></div><small>Week {item.week} · {item.used}/{item.location.supply_capacity} possession slots used · {item.activities} activities</small><span className="psd-pressure-track"><i style={{ width: `${Math.min(100, item.ratio * 100)}%` }}/></span></button>})}
+              <footer>100% means that location used every weekly possession slot in its busiest week. It does not mean the whole network is overloaded. Counts use distinct co-share groups from the organiser sample.</footer>
             </aside>
           </section>
 
