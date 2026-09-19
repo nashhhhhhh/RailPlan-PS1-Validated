@@ -321,6 +321,7 @@ fs.mkdirSync(screenshots, { recursive: true });
     for (const heading of ["Load the planning inputs", "Choose a scenario", "Choose where the run lives", "Set the search", "Generate and verify"])
       assert.equal(await opt().getByText(heading, { exact: true }).count(), 1);
     assert.equal(await opt().getByText("8 input files loaded — stateless preview is ready.", { exact: true }).count(), 1);
+    assert.equal(await opt().getByRole("region", { name: "Scenario A rules" }).getByText("Fixed railway capacity", { exact: true }).count(), 1);
     check("Scenario A stateless preview and embedded guide are ready");
     await opt().getByLabel("Optimisation mode").selectOption("saved");
     assert.equal(
@@ -487,6 +488,9 @@ fs.mkdirSync(screenshots, { recursive: true });
       })
       .waitFor();
     assert.ok((await opt().getByText("No schedule was found or disproved within the configured search limit.").count())>0);
+    assert.equal(await opt().getByText("No candidate means no schedule totals yet", { exact: true }).count(), 1);
+    assert.equal(await opt().getByText("The dashes previously shown here did not mean zero.", { exact: false }).count(), 1);
+    assert.equal(await opt().getByRole("button", { name: "Use Thorough settings", exact: true }).count(), 1);
     await opt().getByRole("tab",{name:"Downloads",exact:true}).click();
     assert.ok((await opt().getByText(/CSV downloads disabled:/).count())>0);
     check("UNKNOWN has a distinct explanation and exact disabled download reason");

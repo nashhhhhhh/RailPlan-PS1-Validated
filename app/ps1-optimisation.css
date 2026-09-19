@@ -185,6 +185,40 @@
   flex: 1;
   min-width: 115px;
 }
+.opt-fields label > small {
+  color: var(--opt-muted);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.4;
+  max-width: 240px;
+}
+.opt-scenario-guide {
+  display: grid;
+  grid-template-columns: auto minmax(180px, .8fr) minmax(360px, 1.6fr);
+  align-items: center;
+  gap: 18px;
+  margin: 18px 28px;
+  padding: 16px;
+  border: 1px solid #6e58c52e;
+  border-radius: 14px;
+  background: #fff;
+}
+.opt-scenario-guide > span {
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: var(--opt-accent);
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .8px;
+}
+.opt-scenario-guide h3,
+.opt-scenario-guide p { margin: 0; }
+.opt-scenario-guide p { color: var(--opt-muted); font-size: 12px; }
+.opt-scenario-guide dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
+.opt-scenario-guide dl > div { padding-left: 12px; border-left: 2px solid #7258d12e; }
+.opt-scenario-guide dt { color: var(--opt-muted); font-size: 10px; }
+.opt-scenario-guide dd { margin: 3px 0 0; font-size: 12px; font-weight: 600; line-height: 1.45; }
 .opt-fields input,
 .opt-fields select,
 .opt-filters input,
@@ -385,6 +419,21 @@
   overflow-wrap: anywhere;
   margin-top: 4px;
 }
+.opt-no-metrics {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #b9852833;
+  border-radius: 12px;
+  background: #fffaf0;
+}
+.opt-no-metrics > div:first-child { display: flex; align-items: flex-start; gap: 10px; }
+.opt-no-metrics p { margin: 2px 0; color: var(--opt-muted); }
+.opt-no-metrics dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0 0; }
+.opt-no-metrics dl > div { padding: 10px; border-radius: 8px; background: #fff; }
+.opt-no-metrics dt { color: var(--opt-muted); font-size: 10px; }
+.opt-no-metrics dd { margin: 4px 0 0; font-weight: 650; }
+.opt-next-step { display: block !important; margin-top: 12px; padding-top: 12px; border-top: 1px solid #b9852833; }
+.opt-next-step .control { margin-top: 6px; }
 .opt-trust {
   font-size: 10px;
   color: #655a76;
@@ -677,6 +726,8 @@
   }
 }
 @media (max-width: 900px) {
+  .opt-scenario-guide { grid-template-columns: auto 1fr; margin: 16px 20px; }
+  .opt-scenario-guide dl { grid-column: 1 / -1; }
   .opt-layout {
     grid-template-columns: 1fr;
   }
@@ -705,6 +756,9 @@
   }
 }
 @media (max-width: 600px) {
+  .opt-scenario-guide { grid-template-columns: 1fr; }
+  .opt-scenario-guide dl,
+  .opt-no-metrics dl { grid-template-columns: 1fr; }
   .opt-header {
     display: block;
   }

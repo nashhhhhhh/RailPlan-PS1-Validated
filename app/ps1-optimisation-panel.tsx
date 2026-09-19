@@ -88,6 +88,26 @@ const colorList = [
   "#307dba",
   "#ae5074",
 ];
+const scenarioGuide = {
+  A: {
+    title: "Fixed railway capacity",
+    objective: "Minimise priority-weighted contract delay.",
+    rules: "No ECLO and no capacity excess. Every access must fit the supplied locations and physical nights.",
+    interpretation: "The solver chooses each activity’s week and physical night. This is the strictest scenario and may need a longer search.",
+  },
+  B: {
+    title: "Deadlines protected",
+    objective: "Meet every planned completion date while minimising paid flexibility.",
+    rules: "Late completion is forbidden. Extra access capacity costs 7 per night and ECLO costs 5 per night.",
+    interpretation: "The solver may buy capacity or use ECLO when fixed supply cannot meet every deadline.",
+  },
+  C: {
+    title: "Balanced delivery plan",
+    objective: "Minimise weighted delay + capacity penalties + ECLO penalties.",
+    rules: "At most one extra access-night per location/week, with separate bounded ECLO windows for Alpha and Beta.",
+    interpretation: "The solver trades a controlled amount of flexibility against contract delay.",
+  },
+} as const;
 function Evidence({
   value,
   label = "Evidence",
@@ -521,6 +541,7 @@ export default function PS1OptimisationPanel({
     summary = view?.detail.run,
     validation = view?.detail.validation;
   const objective = result?.objective_components;
+  const hasObjectiveMetrics = !!objective && Object.keys(objective).length > 0;
   const completeness = validation?.completeness as Record<string, unknown> | undefined;
   const hardViolationCount = validation && Array.isArray(validation.hard_violations) ? validation.hard_violations.length : null;
   const gate = publicationGate({candidate:!!summary && (summary.solver_status==="OPTIMAL"||summary.solver_status==="FEASIBLE"),feasible:validation?.feasible===true,physicalComplete:summary?.physical_validation_complete===true && validation?.physical_validation_complete===true,hardViolations:hardViolationCount,backendAccepted:summary?.publishable===true});
@@ -607,6 +628,11 @@ export default function PS1OptimisationPanel({
         </span>
       </header>
       <div className="opt-night-terms"><p><strong>physical_night:</strong> Network-wide engineering night used for physical conflicts.</p><p><strong>access_night:</strong> Local contract/type/week allocation index.</p><p><strong>co_share_group:</strong> Local possession-sharing group at one location/week.</p></div>
+      <section className="opt-scenario-guide" aria-label={`Scenario ${scenario} rules`}>
+        <span>SCENARIO {scenario}</span>
+        <div><h3>{scenarioGuide[scenario].title}</h3><p>{scenarioGuide[scenario].interpretation}</p></div>
+        <dl><div><dt>What is optimised</dt><dd>{scenarioGuide[scenario].objective}</dd></div><div><dt>Rules that stay enforced</dt><dd>{scenarioGuide[scenario].rules}</dd></div></dl>
+      </section>
       <details className="opt-guide" data-tour="optimizer-guide">
         <summary><CircleHelp size={18} /><span>How to use this optimiser</span><small>5 clear steps</small></summary>
         <div className="opt-guide-grid">
@@ -668,7 +694,7 @@ export default function PS1OptimisationPanel({
           <div className="opt-presets" role="group" aria-label="Solver presets">{(Object.keys(solverPresets) as Array<keyof typeof solverPresets>).map(name=><button type="button" className="control" key={name} disabled={solving} onClick={()=>setOptions({...options,...solverPresets[name]})}>{name}</button>)}<p>Longer limits improve search but do not guarantee optimality.</p></div>
           <label>Run mode<select aria-label="Optimisation mode" value={mode} disabled={solving} onChange={(e) => setMode(e.target.value as "preview" | "saved")}>
             <option value="preview">Stateless preview · no saved history</option><option value="saved">Saved optimisation · PostgreSQL history</option>
-          </select></label>
+          </select><small>Preview uses the loaded CSVs. Saved mode keeps the result for later.</small></label>
           <label>
             Time budget · seconds
             <input
@@ -686,6 +712,7 @@ export default function PS1OptimisationPanel({
                 })
               }
             />
+            <small>Maximum solver search time. Try a longer budget when the result is UNKNOWN.</small>
           </label>
           <label>
             Physical nights per week
@@ -703,6 +730,7 @@ export default function PS1OptimisationPanel({
                 })
               }
             />
+            <small>Abstract engineering-night slots available each week, from 1 to 7.</small>
           </label>
           <label>
             Baseline preference
@@ -725,6 +753,7 @@ export default function PS1OptimisationPanel({
                 </option>
               ))}
             </select>
+            <small>A soft preference to stay near a previous accepted plan; it is not a hard lock.</small>
           </label>
         </div>
         <details>
@@ -1032,7 +1061,7 @@ export default function PS1OptimisationPanel({
                   )}{" "}
                   · {summary.terminal_outcome}
                 </p>
-                <div className="opt-metrics">
+                {hasObjectiveMetrics ? <div className="opt-metrics">
                   <Metric
                     label="Internal objective"
                     value={summary.objective_score}
@@ -1068,7 +1097,11 @@ export default function PS1OptimisationPanel({
                     {summary.scenario === "B" && <Metric label="Contract completion gate" value={result.contract_completion_gate ? "Passed" : "Failed"} />}
                     <Metric label="Baseline movement" value={result.baseline_movement} />
                   </>}
-                </div>
+                </div> : <div className="opt-no-metrics" role="note">
+                  <div><AlertTriangle size={19}/><span><strong>No candidate means no schedule totals yet</strong><p>Objective, access-night, delay, capacity and ECLO values can only be calculated after the solver finds a complete candidate. The dashes previously shown here did not mean zero.</p></span></div>
+                  <dl><div><dt>Search completed in</dt><dd>{summary.solve_duration_seconds.toFixed(2)}s</dd></div><div><dt>Candidate schedule</dt><dd>Not found</dd></div><div><dt>What UNKNOWN means</dt><dd>Time ran out; impossibility was not proven.</dd></div></dl>
+                  {summary.solver_status === "UNKNOWN" && <div className="opt-next-step"><strong>Recommended next step</strong><p>Choose Balanced or Thorough and run again. Quick is useful for a fast check, but strict Scenario A often needs more search time.</p><button className="control" onClick={()=>{setOptions({...options,...solverPresets.Thorough});document.querySelector(".opt-config")?.scrollIntoView({behavior:"smooth",block:"start"});}}>Use Thorough settings</button></div>}
+                </div>}
                 <p className="opt-trust">
                   Internal provisional validator · {validation ? (validation.feasible===true ? "Schedule feasible" : "Schedule infeasible") : "Schedule feasibility unverified"} · Judge validation not run · Score verification: internal only · Conflict severity is separate from schedule objective
                 </p>
