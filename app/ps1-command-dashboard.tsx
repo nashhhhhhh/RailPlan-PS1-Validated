@@ -150,6 +150,7 @@ export default function PS1CommandDashboard() {
   const [query, setQuery] = useState("");
   const [selectedWeek, setSelectedWeek] = useState(17);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [startInDemo, setStartInDemo] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [sample, setSample] = useState<Sample | null>(null);
   const [sampleError, setSampleError] = useState("");
@@ -239,7 +240,7 @@ export default function PS1CommandDashboard() {
     <div className="psd-content">
       <header className="psd-topbar">
         <div className="psd-wordmark">railplan<span>ai</span><i/><small>PS1 planning workspace</small></div>
-        <div className="psd-top-actions"><span className="psd-status"><i/>Official challenge data</span><button className="psd-top-button" onClick={() => setTourOpen(true)}><CircleHelp size={16}/>Walkthrough</button><button className="psd-primary" data-tour="optimizer" onClick={() => setWorkspaceOpen(true)}><SlidersHorizontal size={16}/>Open optimiser</button></div>
+        <div className="psd-top-actions"><span className="psd-status"><i/>Official challenge data</span><button className="psd-top-button" onClick={() => setTourOpen(true)}><CircleHelp size={16}/>Walkthrough</button><button className="psd-top-button" onClick={() => {setStartInDemo(true);setWorkspaceOpen(true);}}>Competition Demo</button><button className="psd-primary" data-tour="optimizer" onClick={() => {setStartInDemo(false);setWorkspaceOpen(true);}}><SlidersHorizontal size={16}/>Open optimiser</button></div>
       </header>
 
       <main className="psd-main">
@@ -332,7 +333,7 @@ export default function PS1CommandDashboard() {
         <footer className="psd-provenance"><div><Database size={16}/><span><b>01_data</b> · network, capacity, contracts and activities</span></div><div><MapPinned size={16}/><span><b>02_references</b> · authoritative dual-line topology</span></div><div><Download size={16}/><span><b>03_submission_sample</b> · organiser Scenario A schedule and results</span></div><p>Reference schedule shown for exploration. Internal validator and judge verification remain separate.</p></footer>
       </main>
     </div>
-    {workspaceOpen && <PS1Workspace onClose={() => setWorkspaceOpen(false)}/>}
+    {workspaceOpen && <PS1Workspace initialDemo={startInDemo} onClose={() => setWorkspaceOpen(false)}/>}
     <button className="psd-tour-launcher" onClick={() => setTourOpen(true)} aria-label="Start dashboard walkthrough"><CircleHelp size={18}/><span>Tour</span></button>
     <PS1Tour open={tourOpen} onClose={closeTour} onNavigate={setView}/>
   </div>;

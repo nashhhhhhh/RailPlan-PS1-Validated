@@ -51,6 +51,7 @@ import type {
   RunSummary,
 } from "./ps1-optimisation-data";
 import type { Dataset } from "./ps1-workspace";
+import {publicationGate,solverExplanation,solverPresets} from "./components/ps1/demo-state";
 import "./ps1-optimisation.css";
 
 type Props = {
@@ -517,6 +518,12 @@ export default function PS1OptimisationPanel({
     summary = view?.detail.run,
     validation = view?.detail.validation;
   const objective = result?.objective_components;
+  const completeness = validation?.completeness as Record<string, unknown> | undefined;
+  const hardViolationCount = validation && Array.isArray(validation.hard_violations) ? validation.hard_violations.length : null;
+  const gate = publicationGate({candidate:!!summary && (summary.solver_status==="OPTIMAL"||summary.solver_status==="FEASIBLE"),feasible:validation?.feasible===true,physicalComplete:summary?.physical_validation_complete===true && validation?.physical_validation_complete===true,hardViolations:hardViolationCount,backendAccepted:summary?.publishable===true});
+  const canDownload = gate.eligible && !!artifacts && artifacts.run_id===summary?.id && ["SCHEDULE_ACCESS.csv","SCHEDULE_OCCUPANCY.csv","RESULTS.csv"].every(name=>typeof artifacts.files[name]==="string");
+  const downloadReason = !gate.eligible ? gate.reason : artifacts?.run_id!==summary?.id ? "Load the accepted artifacts for this run first." : "One or more required CSV files are missing.";
+  function downloadValidationReport(){if(!validation||!summary)return;const url=URL.createObjectURL(new Blob([JSON.stringify(validation,null,2)],{type:"application/json"}));const link=document.createElement("a");link.href=url;link.download=`PS1-${summary.scenario}-${summary.id.slice(0,8)}-validation.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   const accessMatches = (a: Access) =>
     (!week || a.week === Number(week)) &&
     (!contract ||
@@ -596,6 +603,7 @@ export default function PS1OptimisationPanel({
           <i /> OR-Tools CP-SAT
         </span>
       </header>
+      <div className="opt-night-terms"><p><strong>physical_night:</strong> Network-wide engineering night used for physical conflicts.</p><p><strong>access_night:</strong> Local contract/type/week allocation index.</p><p><strong>co_share_group:</strong> Local possession-sharing group at one location/week.</p></div>
       {!instanceId && (!elasticScenario || mode === "saved") && (
         <div className="opt-callout">
           <Layers size={20} />
@@ -640,6 +648,7 @@ export default function PS1OptimisationPanel({
           </button>
         </div>
         <div className="opt-fields">
+          <div className="opt-presets" role="group" aria-label="Solver presets">{(Object.keys(solverPresets) as Array<keyof typeof solverPresets>).map(name=><button type="button" className="control" key={name} disabled={solving} onClick={()=>setOptions({...options,...solverPresets[name]})}>{name}</button>)}<p>Longer limits improve search but do not guarantee optimality.</p></div>
           {elasticScenario && <label>Run mode<select aria-label="Optimisation mode" value={mode} disabled={solving} onChange={(e) => setMode(e.target.value as "preview" | "saved")}>
             <option value="preview">Local preview · no saved history</option><option value="saved">Saved optimisation · PostgreSQL history</option>
           </select></label>}
@@ -992,6 +1001,7 @@ export default function PS1OptimisationPanel({
                   </span>
                 </div>
                 <h3>{statusLabel(summary.solver_status)}</h3>
+                <p role="status">{solverExplanation(summary.solver_status)}</p>
                 <p>
                   {summary.publishable ? (
                     <>
@@ -1030,10 +1040,12 @@ export default function PS1OptimisationPanel({
                     label="Weighted overrun"
                     value={objective?.priority_weighted_overrun}
                   />
+                  <Metric label="Raw overrun" value={objective?.overrun_days_total} />
+                  <Metric label="Excess access nights" value={objective?.excess_access_nights_total} />
+                  <Metric label="ECLO nights" value={objective?.eclo_nights_total} />
+                  <Metric label="Final objective" value={summary.objective_score} />
                   {(summary.scenario === "B" || summary.scenario === "C") && <>
-                    <Metric label="Excess access nights" value={objective?.excess_access_nights_total} />
                     <Metric label="Excess penalty · 7×" value={objective?.excess_penalty} />
-                    <Metric label="ECLO nights" value={objective?.eclo_nights_total} />
                     <Metric label="ECLO penalty · 5×" value={objective?.eclo_penalty} />
                     <Metric label="Workload over-delivery" value={result.workload_delivery.reduce((total, row) => total + Number(row.over_delivery ?? 0), 0)} />
                     {summary.scenario === "B" && <Metric label="Contract completion gate" value={result.contract_completion_gate ? "Passed" : "Failed"} />}
@@ -1041,9 +1053,11 @@ export default function PS1OptimisationPanel({
                   </>}
                 </div>
                 <p className="opt-trust">
-                  Internal provisional validator · {summary.publishable ? "Schedule feasible" : "Schedule infeasible"} · Judge validation not run · Score verification: internal only · Conflict severity is separate from schedule objective
+                  Internal provisional validator · {validation ? (validation.feasible===true ? "Schedule feasible" : "Schedule infeasible") : "Schedule feasibility unverified"} · Judge validation not run · Score verification: internal only · Conflict severity is separate from schedule objective
                 </p>
               </div>
+              <section className="opt-publication" aria-label="Publication gate"><h3>Publication checklist</h3><ul>{gate.checks.map(check=><li key={check.label}>{check.passed?"✓":"○"} {check.label}: {check.passed?"Passed":check.reason}</li>)}</ul><p>{gate.eligible?"CSV export permitted by internal validation.":`CSV downloads disabled: ${gate.reason}`}</p></section>
+              <section className="opt-demo-summary" aria-label="Demo summary"><h3>Demo summary</h3><dl><div><dt>Scenario</dt><dd>{summary.scenario}</dd></div><div><dt>Solver status</dt><dd>{summary.solver_status}</dd></div><div><dt>Feasibility</dt><dd>{validation ? validation.feasible===true?"Schedule feasible":"Schedule infeasible":"Unverified"}</dd></div><div><dt>Objective</dt><dd>{summary.objective_score??"Not eligible"}</dd></div><div><dt>Physical validation</dt><dd>{summary.physical_validation_complete?"Complete":"Incomplete"}</dd></div><div><dt>Hard violations</dt><dd>{hardViolationCount??"Not checked"}</dd></div><div><dt>Publication eligibility</dt><dd>{gate.eligible?"Eligible":"Not eligible"}</dd></div><div><dt>Score status</dt><dd>Internal only · Judge validation not run</dd></div></dl></section>
               <div className="opt-quality">
                 <span>
                   <CheckCircle2 size={14} /> Primary optimal:{" "}
@@ -1547,6 +1561,8 @@ export default function PS1OptimisationPanel({
                 {tab === "Validation" && (
                   <>
                     <div className="opt-metrics">
+                      <Metric label="Workload completeness" value={completeness?.workload_gate_passed===true?"Complete":completeness?"Incomplete":"Not checked"} />
+                      <Metric label="Activities complete" value={completeness?`${display(completeness.activities_complete)} / ${display(completeness.activity_count)}`:"Not checked"} />
                       <Metric
                         label="Physical-night checks"
                         value={
@@ -1650,14 +1666,11 @@ export default function PS1OptimisationPanel({
                 )}
                 {tab === "Downloads" && (
                   <>
-                    {!summary.publishable ? (
+                    {!gate.eligible ? (
                       <div className="opt-empty">
                         <Lock size={28} />
-                        <h4>No internally accepted artifacts</h4>
-                        <p>
-                          This run remains available in history with its
-                          diagnostics.
-                        </p>
+                        <h4>CSV downloads disabled</h4>
+                        <p>{gate.reason}</p>
                       </div>
                     ) : (
                       <>
@@ -1684,11 +1697,13 @@ export default function PS1OptimisationPanel({
                         {artifacts && (
                           <>
                             <div className="opt-downloads">
-                              {Object.entries(artifacts.files).map(
+                              {Object.entries(artifacts.files).filter(([name])=>["SCHEDULE_ACCESS.csv","SCHEDULE_OCCUPANCY.csv","RESULTS.csv"].includes(name)).map(
                                 ([name, text]) => (
                                   <button
                                     className="opt-download"
                                     key={name}
+                                    disabled={!canDownload}
+                                    title={!canDownload?downloadReason:undefined}
                                     onClick={() => downloadCsv(name, text)}
                                   >
                                     <Download size={22} />
@@ -1703,10 +1718,9 @@ export default function PS1OptimisationPanel({
                             </div>
                             <button
                               className="opt-primary"
+                              disabled={!canDownload}
                               onClick={() =>
-                                Object.entries(artifacts.files).forEach(
-                                  ([name, text]) => downloadCsv(name, text),
-                                )
+                                ["SCHEDULE_ACCESS.csv","SCHEDULE_OCCUPANCY.csv","RESULTS.csv"].forEach(name=>downloadCsv(name,artifacts.files[name]))
                               }
                             >
                               Download all files
@@ -1714,6 +1728,7 @@ export default function PS1OptimisationPanel({
                             <p className="opt-muted">
                               Your browser may ask to allow multiple downloads.
                             </p>
+                            {!canDownload&&<p role="status">CSV downloads disabled: {downloadReason}</p>}
                           </>
                         )}
                       </>
@@ -1722,6 +1737,7 @@ export default function PS1OptimisationPanel({
                       Judge validation: Not run · Score verification: Internal
                       only
                     </p>
+                    <button className="control" disabled={!validation} onClick={downloadValidationReport}>Download JSON validation report</button>
                   </>
                 )}
               </div>

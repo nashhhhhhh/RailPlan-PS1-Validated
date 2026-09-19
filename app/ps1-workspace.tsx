@@ -5,6 +5,7 @@ import "./ps1.css";
 import {z} from "zod";
 import PS1OptimisationPanel from './ps1-optimisation-panel';
 import PS1ValidationPanel,{type PS1Violation} from './ps1-validation-panel';
+import {demoSteps,scenarioDescriptions,type DemoStep} from './components/ps1/demo-state';
 
 type Activity={activity_id:string;contract_number:string;activity_type:string;total_accesses:number;planned_start_week:number;planned_start_date:string;predecessor_activity_id:string;activity_priority:number;line_code:string;bound:string;span_location_ids:string[]};
 type Project={contract_number:string;contract_description:string;nature_of_activity:string;contract_priority:number;planned_completion_date:string;number_of_workfronts:number;number_of_maximum_access_per_week:number;access_type:string};
@@ -22,17 +23,32 @@ const savedSchema=z.object({id:z.string().uuid(),name:z.string(),dataset:dataset
 const listSchema=z.object({items:z.array(z.object({id:z.string().uuid(),name:z.string()}))});
 const descriptions={A:"Fixed supply; ECLO forbidden. Minimise priority-weighted completion overrun.",B:"Fixed planned deadlines. Minimise 7 × excess access-nights + 5 × ECLO nights.",C:"Balance overrun, extra supply and ECLO. At most one excess access-night per location/week; ECLO within a two-week span per line."};
 
-export default function PS1Workspace({onClose}:{onClose:()=>void}){
+export default function PS1Workspace({onClose,initialDemo=false}:{onClose:()=>void;initialDemo?:boolean}){
  const [bundle,setBundle]=useState<Bundle|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false);
  const [tab,setTab]=useState<"activities"|"contracts"|"supply">("activities"),[line,setLine]=useState("All"),[scenario,setScenario]=useState<"A"|"B"|"C">("A");
  const [query,setQuery]=useState(""),[selected,setSelected]=useState(""),[saved,setSaved]=useState("");
  const [url,setUrl]=useState(process.env.NEXT_PUBLIC_RAILPLAN_API_URL||"http://127.0.0.1:8000"),[user,setUser]=useState(process.env.NEXT_PUBLIC_RAILPLAN_DEMO_USER_ID||"1a677983-6052-53d0-a3fa-880c7a5e186a");
  const [history,setHistory]=useState<{id:string;name:string}[]>([]);
  const [highlight,setHighlight]=useState<PS1Violation|null>(null);
+ const [demo,setDemo]=useState(initialDemo),[demoStep,setDemoStep]=useState<DemoStep>('Dataset');
+ const [demoReset,setDemoReset]=useState(0);
+ const [connection,setConnection]=useState<'Connecting'|'Stateless mode'|'Persisted mode'|'Unavailable'>('Connecting');
  const [optimiserLocations,setOptimiserLocations]=useState<string[]>([]);
  const connectionRef=useRef<HTMLDetailsElement|null>(null);
  const controller=useRef<AbortController|null>(null);
  useEffect(()=>()=>controller.current?.abort(),[]);
+ useEffect(()=>{
+  const c=new AbortController();setConnection('Connecting');
+  (async()=>{try{
+   const base=new URL(url);if(!['http:','https:'].includes(base.protocol)||base.username||base.password||base.search||base.hash)throw Error('Invalid backend address');
+   const host=base.href.replace(/\/$/,'');
+   const live=await fetch(host+'/health',{signal:c.signal});if(!live.ok)throw Error('Backend unavailable');
+   const ready=await fetch(host+'/health/ready',{signal:c.signal});if(!ready.ok)throw Error('Backend unavailable');
+   const body=z.object({status:z.literal('ready'),mode:z.enum(['stateless','persisted'])}).parse(await ready.json());
+   if(!c.signal.aborted)setConnection(body.mode==='persisted'?'Persisted mode':'Stateless mode');
+  }catch{if(!c.signal.aborted)setConnection('Unavailable');}})();
+  return()=>c.abort();
+ },[url]);
  function begin(){controller.current?.abort();const c=new AbortController();controller.current=c;setBusy(true);setError("");return c;}
  async function api(path:string,c:AbortController,body?:unknown){
   const base=new URL(url);if(!["http:","https:"].includes(base.protocol)||base.username||base.password||base.search||base.hash)throw Error("Enter an HTTP(S) backend address without credentials or query parameters.");
@@ -54,12 +70,22 @@ export default function PS1Workspace({onClose}:{onClose:()=>void}){
  const detail=data?.tables.activity_details.find(a=>a.activity_id===selected);
  const project=detail&&data?.tables.project_details.find(p=>p.contract_number===detail.contract_number);
  return <Dialog open onOpenChange={open=>{if(!open)onClose();}}><DialogContent className="ps1-workspace">
+  <div className="ps1-demo-head"><button className="control" aria-pressed={demo} onClick={()=>{setDemo(v=>!v);setDemoStep('Dataset');}}>{demo?'Exit Competition Demo':'Start Competition Demo'}</button><span role="status">Backend: {connection==='Connecting'?'Connecting':connection==='Unavailable'?'Unavailable':`Connected · ${connection}`}</span></div>
+  {demo&&<section className="ps1-demo" aria-label="Competition Demo"><h3>Competition Demo</h3><nav aria-label="Demo steps">{demoSteps.map((step,index)=><button key={step} className={`control ${step===demoStep?'primary':''}`} aria-current={step===demoStep?'step':undefined} onClick={()=>setDemoStep(step)}>{index+1}. {step}</button>)}</nav><p>Step {demoSteps.indexOf(demoStep)+1} of 6: {demoStep}</p>
+   {demoStep==='Dataset'&&<p>Load the organiser input dataset below, or import all eight input CSV files. Organiser reference output is an example, not a generated result.</p>}
+   {demoStep==='Scenario'&&<div className="ps1-demo-cards">{(['A','B','C'] as const).map(k=><button key={k} className={`ps1-demo-card ${scenario===k?'selected':''}`} onClick={()=>setScenario(k)} aria-pressed={scenario===k}><strong>Scenario {k}</strong>{scenarioDescriptions[k].map(sentence=><span key={sentence}>{sentence}</span>)}</button>)}</div>}
+   {demoStep==='Optimisation'&&<p>Choose Quick, Balanced or Thorough below, then run the solver. Longer limits improve search but do not guarantee optimality. Scenario A requires persisted mode; B and C support stateless preview.</p>}
+   {demoStep==='Validation'&&<p>Inspect the generated run's internal validation and publication checklist below. You can also upload three submission CSV files for separate internal validation.</p>}
+   {demoStep==='Objective'&&<p>Review each objective component below. Conflict severity is separate from schedule objective. Score verification: internal only.</p>}
+   {demoStep==='Export'&&<p>Download generated CSV files only when every publication check passes. Download the JSON validation report for the same run.</p>}
+   <div className="ps1-actions"><button className="control" disabled={demoStep==='Dataset'} onClick={()=>setDemoStep(demoSteps[Math.max(0,demoSteps.indexOf(demoStep)-1)])}>Previous</button><button className="control primary" disabled={demoStep==='Export'} onClick={()=>setDemoStep(demoSteps[Math.min(5,demoSteps.indexOf(demoStep)+1)])}>Next step</button><button className="control" onClick={()=>{setDemoStep('Dataset');setScenario('A');setTab('activities');setSelected('');setHighlight(null);setOptimiserLocations([]);setQuery('');setLine('All');setDemoReset(n=>n+1);}}>Restart demo</button></div>
+  </section>}
   <DialogTitle>PS1 · Track access planning</DialogTitle><DialogDescription>Line Alpha and Line Beta · official hackathon instance · weekly possession planning</DialogDescription>
   <div className="ps1-actions"><button className="control primary" disabled={busy} onClick={example}>Load organiser dataset</button><label className="control">Import 8 CSV files<input type="file" accept=".csv" multiple disabled={busy} onChange={e=>{void upload(e.target.files);e.target.value="";}}/></label><span>{busy?'Loading…':saved?`Saved instance ${saved}`:bundle?'Preview loaded':'Choose a dataset to begin'}</span></div>
-  <details className="ps1-connection" ref={connectionRef}><summary>Connection and saved instances</summary><p>Import validation uses FastAPI. Saving and reopening use PostgreSQL and your planner identity.</p><label>Backend address<input value={url} onChange={e=>setUrl(e.target.value)} disabled={busy}/></label><label>Demo planner ID<input value={user} onChange={e=>setUser(e.target.value)} disabled={busy}/></label>
-   <button className="control" disabled={busy||!bundle||!Object.keys(bundle.files).length} onClick={()=>void action(async c=>{const r=z.object({id:z.string().uuid()}).parse(await api('/api/ps1/instances',c,{name:bundle!.name,files:bundle!.files}));if(!c.signal.aborted)setSaved(r.id);})}>Save dataset</button>
-   <button className="control" disabled={busy} onClick={()=>void action(async c=>{const r=listSchema.parse(await api('/api/ps1/instances',c));if(!c.signal.aborted)setHistory(r.items);})}>Load saved list</button>
-   {history.map(h=><button key={h.id} className="control" disabled={busy} onClick={()=>void action(async c=>{const r=savedSchema.parse(await api('/api/ps1/instances/'+h.id,c));if(!c.signal.aborted){useBundle({name:r.name,files:{},dataset:r.dataset});setSaved(r.id);}})}>{h.name}</button>)}
+  <details className="ps1-connection" ref={connectionRef}><summary>Connection and saved instances</summary><p>Import validation uses FastAPI. Saving and reopening use PostgreSQL and your planner identity.</p><label>Backend address<input value={url} onChange={e=>setUrl(e.target.value)} disabled={busy}/></label>{connection==='Persisted mode'&&<label>Demo planner ID<input value={user} onChange={e=>setUser(e.target.value)} disabled={busy}/></label>}
+   {connection==='Persisted mode'&&<><button className="control" disabled={busy||!bundle||!Object.keys(bundle.files).length} onClick={()=>void action(async c=>{const r=z.object({id:z.string().uuid()}).parse(await api('/api/ps1/instances',c,{name:bundle!.name,files:bundle!.files}));if(!c.signal.aborted)setSaved(r.id);})}>Save dataset</button>
+   <button className="control" disabled={busy} onClick={()=>void action(async c=>{const r=listSchema.parse(await api('/api/ps1/instances',c));if(!c.signal.aborted)setHistory(r.items);})}>Load saved list</button></>}
+   {connection==='Persisted mode'&&history.map(h=><button key={h.id} className="control" disabled={busy} onClick={()=>void action(async c=>{const r=savedSchema.parse(await api('/api/ps1/instances/'+h.id,c));if(!c.signal.aborted){useBundle({name:r.name,files:{},dataset:r.dataset});setSaved(r.id);}})}>{h.name}</button>)}
   </details>
   {error&&<p role="alert" className="ps1-error">{error}</p>}
   {s&&data&&<>
@@ -69,8 +95,8 @@ export default function PS1Workspace({onClose}:{onClose:()=>void}){
    <p className="ps1-note">H01 and H02 share interchange names; each line and bound has its own tunnel/platform capacity. Live possessions require cross-line closure checks. These locations have no Singapore coordinates.</p>
    <div className="ps1-scenarios">{(['A','B','C'] as const).map(k=><button className={`control ${scenario===k?'primary':''}`} key={k} onClick={()=>setScenario(k)}>Scenario {k}</button>)}<p>{descriptions[scenario]}</p></div>
    <p className="ps1-status">Dataset loaded · Judge validation not run. Generate and inspect saved schedules below, or validate an uploaded submission separately.</p>
-   <PS1OptimisationPanel key={data.fingerprint+'/'+saved+'/'+url+'/'+user+'/'+scenario} instanceId={saved} instanceFiles={bundle!.files} dataset={data} scenario={scenario} baseUrl={url} demoUserId={user} onSaveDataset={()=>{if(connectionRef.current){connectionRef.current.open=true;connectionRef.current.scrollIntoView({block:'center'});connectionRef.current.querySelector<HTMLButtonElement>('button')?.focus();}}} onSelectActivity={id=>{setSelected(id);setTab('activities');setLine('All');setQuery('');setHighlight(null);}} onHighlightLocations={setOptimiserLocations}/>
-   <PS1ValidationPanel key={data.fingerprint+'/'+saved} scenario={scenario} files={bundle!.files} instanceId={saved} busy={busy} api={api} action={action} onSelect={v=>{setOptimiserLocations([]);setHighlight(v);setLine('All');setQuery('');if(v?.activity_ids.length){setSelected(v.activity_ids[0]);setTab('activities');}}}/>
+   <PS1OptimisationPanel key={data.fingerprint+'/'+saved+'/'+url+'/'+user+'/'+scenario+'/'+demoReset} instanceId={saved} instanceFiles={bundle!.files} dataset={data} scenario={scenario} baseUrl={url} demoUserId={connection==='Persisted mode'?user:''} onSaveDataset={()=>{if(connectionRef.current){connectionRef.current.open=true;connectionRef.current.scrollIntoView({block:'center'});connectionRef.current.querySelector<HTMLButtonElement>('button')?.focus();}}} onSelectActivity={id=>{setSelected(id);setTab('activities');setLine('All');setQuery('');setHighlight(null);}} onHighlightLocations={setOptimiserLocations}/>
+   <PS1ValidationPanel key={data.fingerprint+'/'+saved+'/'+demoReset} scenario={scenario} files={bundle!.files} instanceId={saved} busy={busy} api={api} action={action} onSelect={v=>{setOptimiserLocations([]);setHighlight(v);setLine('All');setQuery('');if(v?.activity_ids.length){setSelected(v.activity_ids[0]);setTab('activities');}}}/>
    {highlight&&<section className="ps1-status"><strong>Selected violation · {highlight.rule_code} · Week {highlight.week??'not applicable'}</strong><p>Activities: {highlight.activity_ids.join(', ')||'—'} · Contracts: {highlight.contract_ids.join(', ')||'—'}</p><div>{highlight.location_ids.map(id=><mark key={id}>{id} </mark>)}</div></section>}
    {data.warnings.map((w,i)=><p className="ps1-error" key={i}>{w}</p>)}
    <div className="ps1-actions">{(['activities','contracts','supply'] as const).map(t=><button key={t} className={`control ${tab===t?'primary':''}`} onClick={()=>setTab(t)}>{t}</button>)}<input aria-label="Search dataset" placeholder="Activity, contract or location…" value={query} onChange={e=>setQuery(e.target.value)}/><select aria-label="Filter line" value={line} onChange={e=>setLine(e.target.value)} disabled={tab==='contracts'}><option>All</option><option>ALP</option><option>BET</option></select></div>
