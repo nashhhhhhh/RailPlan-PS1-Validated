@@ -593,9 +593,10 @@
 .legend-wb-line { fill: none; stroke-width: 3; stroke-linecap: round; }
 .legend-eb-line { stroke: #72dff3; }
 .legend-wb-line { stroke: #c997fa; stroke-dasharray: 7 5; }
-.psd-interchange-zone rect { fill: rgba(226, 184, 94, .055); stroke: rgba(226, 184, 94, .42); stroke-width: 1.5; stroke-dasharray: 6 6; }
-.psd-interchange-zone text { fill: #e7c977; font: 700 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .7px; }
-.psd-crossline-link { fill: none; stroke: #70809b; stroke-width: 1.5; stroke-dasharray: 5 6; }
+.psd-interchange-zone .psd-interchange-frame { fill: rgba(232, 130, 130, .035); stroke: rgba(232, 130, 130, .55); stroke-width: 1.4; stroke-dasharray: 6 6; }
+.psd-interchange-zone .psd-interchange-hatch { fill: url(#isolationHatch); stroke: none; }
+.psd-interchange-zone text { fill: #efa0a0; font: 700 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .7px; }
+.psd-crossline-link { fill: none; stroke: rgba(232, 130, 130, .55); stroke-width: 1.3; stroke-dasharray: 5 6; }
 .psd-line-label-panel { fill: #142036; stroke: #3a4b64; stroke-width: 1.2; }
 .psd-line-accent { fill: #65d9ef; }
 .psd-svg-line.beta .psd-line-accent { fill: #c18df0; }
@@ -605,7 +606,7 @@
 .psd-svg-line.dimmed { opacity: .22; filter: saturate(.45); }
 .psd-track { stroke-width: 5; filter: none; }
 .psd-svg-line.beta .psd-track { filter: none; }
-.psd-track-bed { stroke: #26364e; stroke-width: 5; stroke-linecap: round; opacity: .78; }
+.psd-track-bed { fill: none; stroke: #26364e; stroke-width: 5; stroke-linecap: round; opacity: .78; }
 .psd-track-eb { stroke-width: 2.4; }
 .psd-track-wb { stroke-width: 2; opacity: .92; stroke-dasharray: 9 8; }
 .psd-energy { stroke-width: 2.5; stroke-dasharray: 1 54; opacity: .95; filter: drop-shadow(0 0 4px currentColor); animation-duration: 1.8s; }
