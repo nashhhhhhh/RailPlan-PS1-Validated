@@ -107,13 +107,13 @@ export type CommandCentre = {
   "window": WindowOut;
   "requests": (RequestOut)[];
   "timeline": ({
-  [key:string]: unknown;
+
 })[];
   "conflicts": ({
-  [key:string]: unknown;
+
 })[] | null;
   "analysis": {
-  [key:string]: unknown;
+
 } | null;
   "scenarios": (ScenarioOut)[];
   "selected_scenario_id": string | null;
@@ -184,7 +184,7 @@ export type ErrorBody = {
   "code": string;
   "message": string;
   "fields"?: ({
-  [key:string]: unknown;
+
 })[];
   "correlation_id": string;
   "guidance"?: string | null;
@@ -202,10 +202,10 @@ export type GeoFeature = {
   "id": string;
   "type": "Feature";
   "geometry": {
-  [key:string]: unknown;
+
 } | null;
   "properties": {
-  [key:string]: unknown;
+
 };
   "geometry_available": boolean;
   "geometry_source": string;
@@ -280,37 +280,61 @@ export type OptimisationCreate = {
   "window_id": string;
   "objective_id": string;
   "parameters"?: {
-  [key:string]: unknown;
+
 };
 };
 
 export type OptimisationDetail = {
   "run": {
-  [key:string]: unknown;
+
 };
   "result": OptimiseResult;
   "validation": {
-  [key:string]: unknown;
+
 } | null;
   "diagnostics": ({
-  [key:string]: unknown;
+
 })[];
   "contract_results": ({
-  [key:string]: unknown;
+
 })[];
 };
 
 export type OptimisationJob = {
   "id": string;
   "instance_id": string;
+  "operator_id": string;
+  "created_by": string;
   "scenario": "A" | "B" | "C";
-  "status": "QUEUED" | "RUNNING" | "CANCELLATION_REQUESTED" | "SUCCEEDED" | "FAILED" | "CANCELLED";
+  "status": "QUEUED" | "RUNNING" | "SUCCEEDED" | "FAILED" | "CANCELLED";
   "progress": number;
   "stage": string;
   "cancel_requested": boolean;
   "run_id"?: string | null;
+  "input_fingerprint": string;
+  "solver_seed": number;
+  "time_limit_seconds": number;
+  "deterministic_time_limit": number;
+  "option_snapshot": {
+
+};
+  "validator_version": string;
+  "policy_version": string;
+  "solver_status"?: string | null;
+  "objective_components"?: {
+
+} | null;
+  "best_objective"?: string | null;
+  "best_bound"?: string | null;
+  "validation_result"?: {
+
+} | null;
+  "diagnostics"?: ({
+
+})[];
+  "artifact_eligible"?: boolean;
   "diagnostic"?: {
-  [key:string]: unknown;
+
 } | null;
   "created_at": string;
   "started_at"?: string | null;
@@ -326,7 +350,7 @@ export type OptimisationJobAccepted = {
 
 export type OptimisationPage = {
   "items": ({
-  [key:string]: unknown;
+
 })[];
   "total": number;
   "limit": number;
@@ -351,7 +375,7 @@ export type OptimiseResult = {
   "lexicographic_complete"?: boolean;
   "solve_time_seconds": number;
   "objective_components"?: {
-  [key:string]: unknown;
+
 } | null;
   "submission_files"?: {
   [key:string]: string;
@@ -360,33 +384,33 @@ export type OptimiseResult = {
   "physical_validation_complete"?: boolean;
   "validation_report"?: ValidationReport | null;
   "completion_changes"?: ({
-  [key:string]: unknown;
+
 })[];
   "workload_delivery"?: ({
-  [key:string]: unknown;
+
 })[];
   "capacity_hotspots"?: ({
-  [key:string]: unknown;
+
 })[];
   "baseline_movement"?: number;
   "contract_completion_gate"?: boolean;
   "eclo_windows"?: {
   [key:string]: {
-  [key:string]: unknown;
+
 };
 };
   "cross_line_eclo_activities"?: (string)[];
   "diagnostics"?: ({
-  [key:string]: unknown;
+
 })[];
   "stages"?: ({
-  [key:string]: unknown;
+
 })[];
   "settings": {
-  [key:string]: unknown;
+
 };
   "failed_candidate"?: {
-  [key:string]: unknown;
+
 } | null;
   "judge_validation"?: "not_run";
   "score_verification"?: "internal_only";
@@ -606,7 +630,7 @@ export type SavedOptimiseResult = {
   "lexicographic_complete"?: boolean;
   "solve_time_seconds": number;
   "objective_components"?: {
-  [key:string]: unknown;
+
 } | null;
   "submission_files"?: {
   [key:string]: string;
@@ -615,33 +639,33 @@ export type SavedOptimiseResult = {
   "physical_validation_complete"?: boolean;
   "validation_report"?: ValidationReport | null;
   "completion_changes"?: ({
-  [key:string]: unknown;
+
 })[];
   "workload_delivery"?: ({
-  [key:string]: unknown;
+
 })[];
   "capacity_hotspots"?: ({
-  [key:string]: unknown;
+
 })[];
   "baseline_movement"?: number;
   "contract_completion_gate"?: boolean;
   "eclo_windows"?: {
   [key:string]: {
-  [key:string]: unknown;
+
 };
 };
   "cross_line_eclo_activities"?: (string)[];
   "diagnostics"?: ({
-  [key:string]: unknown;
+
 })[];
   "stages"?: ({
-  [key:string]: unknown;
+
 })[];
   "settings": {
-  [key:string]: unknown;
+
 };
   "failed_candidate"?: {
-  [key:string]: unknown;
+
 } | null;
   "judge_validation"?: "not_run";
   "score_verification"?: "internal_only";
@@ -710,10 +734,10 @@ export type ScenarioDetail = {
   "summary": ScenarioOut;
   "assignments": (AssignmentOut)[];
   "changes": ({
-  [key:string]: unknown;
+
 })[];
   "analysis": {
-  [key:string]: unknown;
+
 } | null;
   "capabilities": Capabilities;
 };
@@ -806,11 +830,11 @@ export type ValidationReport = {
   "dataset_fingerprint": string;
   "submission_fingerprint": string;
   "rule_policy": {
-  [key:string]: unknown;
+
 };
   "hard_violations": (Violation)[];
   "warnings": ({
-  [key:string]: unknown;
+
 })[];
   "objective_components": ObjectiveComponents;
   "objective_score": string | null;
@@ -829,10 +853,10 @@ export type Violation = {
   "contract_ids"?: (string)[];
   "location_ids"?: (string)[];
   "possession_group"?: {
-  [key:string]: unknown;
+
 } | null;
   "evidence"?: {
-  [key:string]: unknown;
+
 };
 };
 
