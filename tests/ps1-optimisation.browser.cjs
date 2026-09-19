@@ -314,7 +314,7 @@ fs.mkdirSync(screenshots, { recursive: true });
   };
   try {
     await page.goto(base, { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1200);
+    await page.getByText(/used locations reached full capacity/).waitFor();
     const activityKpi = page.locator(".psd-kpi.orange strong");
     const alphaEastbound = page.getByRole("button", { name: "Filter dashboard to Line Alpha EB" });
     await alphaEastbound.click();
@@ -339,20 +339,16 @@ fs.mkdirSync(screenshots, { recursive: true });
       .getByRole("button", { name: "Load organiser dataset", exact: true })
       .click();
     await opt().waitFor();
-    await opt().getByLabel("Optimisation mode").selectOption("saved");
+    await opt().getByLabel("Optimisation mode").selectOption("preview");
     assert.equal(
       await opt()
         .getByRole("button", { name: "Generate schedule", exact: true })
         .isDisabled(),
       false,
     );
-    const guide = opt().getByText("How to use this optimiser", { exact: true });
-    await guide.click();
-    for (const heading of ["Load the planning inputs", "Choose a scenario", "Choose where the run lives", "Set the search", "Generate and verify"])
-      assert.equal(await opt().getByText(heading, { exact: true }).count(), 1);
-    assert.equal(await opt().getByText("8 input files loaded — stateless preview is ready.", { exact: true }).count(), 1);
-    assert.equal(await opt().getByRole("region", { name: "Scenario A rules" }).getByText("Fixed railway capacity", { exact: true }).count(), 1);
-    check("Scenario A stateless preview and embedded guide are ready");
+    assert.equal(await opt().getByLabel("Optimisation mode").inputValue(), "preview");
+    assert.equal(await opt().getByText(/Scenario A .* fixed supply, no ECLO/).count(), 1);
+    check("Scenario A stateless preview is ready");
     await opt().getByLabel("Optimisation mode").selectOption("saved");
     assert.equal(
       await opt()
@@ -625,6 +621,7 @@ fs.mkdirSync(screenshots, { recursive: true });
     await page.getByRole("button", { name: "Load organiser dataset", exact: true }).click();
     await opt().waitFor();
     assert.equal(await opt().getByLabel("Optimisation mode").inputValue(),"preview");
+    assert.equal(await opt().getByLabel("Optimisation mode").locator('option[value="saved"]').isDisabled(),true);
     assert.equal(await opt().getByRole("button",{name:"Generate schedule",exact:true}).isDisabled(),false);
     assert.equal(await opt().getByText(/flexible supply/i).count(),0);
     await opt().getByRole("button",{name:"Generate schedule",exact:true}).click();

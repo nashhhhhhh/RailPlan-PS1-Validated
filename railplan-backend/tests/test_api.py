@@ -170,6 +170,18 @@ def test_cors_rejects_unconfigured_origin(client):
     assert response.status_code==400
     assert "access-control-allow-origin" not in response.headers
 
+def test_service_index_explains_public_backend(client,monkeypatch):
+    monkeypatch.delenv("DATABASE_URL",raising=False)
+    response=client[0].get("/")
+    assert response.status_code==200
+    assert response.json()=={
+      "service":"RailPlan data API","status":"ok","mode":"stateless",
+      "documentation":"/docs","health":"/health","readiness":"/health/ready",
+      "stateless_previews":[
+        "/api/ps1/optimise/scenario-a/preview",
+        "/api/ps1/optimise/scenario-b/preview",
+        "/api/ps1/optimise/scenario-c/preview"]}
+
 @pytest.mark.parametrize("path,params",[
  ("/api/network/stations",{"bbox":"103,1,104,2"}),
  ("/api/network/sectors",{}),

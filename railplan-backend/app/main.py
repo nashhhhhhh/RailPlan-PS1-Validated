@@ -21,6 +21,22 @@ app.add_middleware(CORSMiddleware,allow_origins=origins,allow_credentials=False,
     allow_methods=["GET","POST","PATCH","OPTIONS"],allow_headers=["Content-Type","Authorization","X-Demo-User-Id"],
     expose_headers=["X-Correlation-Id"])
 
+@app.get("/")
+def service_index():
+    return {
+        "service":"RailPlan data API",
+        "status":"ok",
+        "mode":"persisted" if os.environ.get("DATABASE_URL") else "stateless",
+        "documentation":"/docs",
+        "health":"/health",
+        "readiness":"/health/ready",
+        "stateless_previews":[
+            "/api/ps1/optimise/scenario-a/preview",
+            "/api/ps1/optimise/scenario-b/preview",
+            "/api/ps1/optimise/scenario-c/preview",
+        ],
+    }
+
 @app.middleware("http")
 async def correlation(request,call_next):
     request.state.correlation_id=str(uuid4())
