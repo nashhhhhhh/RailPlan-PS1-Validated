@@ -1,9 +1,9 @@
 # Data dictionary
 
-## PS1 optimiser additions: migrations 0007–0009
+## PS1 optimiser additions: migrations 0007–0011
 
 Migration 0007 stores sealed terminal runs and their exact accepted schedule evidence.
-Migration 0008 adds `ps1_optimisation_jobs`; migration 0009 adds lifecycle, audit and
+Migration 0010 adds `ps1_optimisation_jobs`; migration 0011 adds lifecycle, audit and
 delete/truncate guards.
 
 Five dedicated tables: `ps1_optimisation_runs`, `ps1_optimisation_accesses`,

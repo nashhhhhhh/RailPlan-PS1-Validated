@@ -343,7 +343,7 @@ export type OptimiseInput = {
 };
 
 export type OptimiseResult = {
-  "scenario"?: "A";
+  "scenario"?: "A" | "B" | "C";
   "optimiser_version"?: string;
   "solver_status": string;
   "publishable"?: boolean;
@@ -362,6 +362,20 @@ export type OptimiseResult = {
   "completion_changes"?: ({
   [key:string]: unknown;
 })[];
+  "workload_delivery"?: ({
+  [key:string]: unknown;
+})[];
+  "capacity_hotspots"?: ({
+  [key:string]: unknown;
+})[];
+  "baseline_movement"?: number;
+  "contract_completion_gate"?: boolean;
+  "eclo_windows"?: {
+  [key:string]: {
+  [key:string]: unknown;
+};
+};
+  "cross_line_eclo_activities"?: (string)[];
   "diagnostics"?: ({
   [key:string]: unknown;
 })[];
@@ -454,6 +468,8 @@ export type Placement = {
   "week": number;
   "physical_night": number;
   "access_night"?: number | null;
+  "eclo"?: number | null;
+  "co_share_group"?: string | null;
 };
 
 export type PolicyCreate = {
@@ -582,7 +598,7 @@ export type SavedOptimiseInput = {
 };
 
 export type SavedOptimiseResult = {
-  "scenario"?: "A";
+  "scenario"?: "A" | "B" | "C";
   "optimiser_version"?: string;
   "solver_status": string;
   "publishable"?: boolean;
@@ -601,6 +617,20 @@ export type SavedOptimiseResult = {
   "completion_changes"?: ({
   [key:string]: unknown;
 })[];
+  "workload_delivery"?: ({
+  [key:string]: unknown;
+})[];
+  "capacity_hotspots"?: ({
+  [key:string]: unknown;
+})[];
+  "baseline_movement"?: number;
+  "contract_completion_gate"?: boolean;
+  "eclo_windows"?: {
+  [key:string]: {
+  [key:string]: unknown;
+};
+};
+  "cross_line_eclo_activities"?: (string)[];
   "diagnostics"?: ({
   [key:string]: unknown;
 })[];
@@ -630,6 +660,30 @@ export type SavedValidation = {
 };
 
 export type ScenarioAPreviewInput = {
+  "time_limit_seconds"?: number;
+  "deterministic_time_limit"?: number;
+  "random_seed"?: number;
+  "physical_nights_per_week"?: number;
+  "locked_placements"?: (Placement)[];
+  "baseline_placements"?: (Placement)[];
+  "instance_files": {
+  [key:string]: string;
+};
+};
+
+export type ScenarioBPreviewInput = {
+  "time_limit_seconds"?: number;
+  "deterministic_time_limit"?: number;
+  "random_seed"?: number;
+  "physical_nights_per_week"?: number;
+  "locked_placements"?: (Placement)[];
+  "baseline_placements"?: (Placement)[];
+  "instance_files": {
+  [key:string]: string;
+};
+};
+
+export type ScenarioCPreviewInput = {
   "time_limit_seconds"?: number;
   "deterministic_time_limit"?: number;
   "random_seed"?: number;
@@ -797,6 +851,8 @@ export type WorkloadItem = {
   "contract_number": string;
   "required": string;
   "delivered": string;
+  "standard_access_contribution": string;
+  "eclo_contribution": string;
   "shortfall": string;
   "over_delivery": string;
   "present": boolean;

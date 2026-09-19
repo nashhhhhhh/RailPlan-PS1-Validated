@@ -11,28 +11,28 @@ typed clients and production frontend build pass their available checks. The one
 stateless launcher returned HTTP 200 from the dashboard, `/health` and `/health/ready`.
 
 This host has no Docker, PostgreSQL/PostGIS server, `postgres`, `psql` or Podman. Therefore
-no honest disposable database could be created, and migrations 0001–0009 plus database
+no honest disposable database could be created, and migrations 0001–0011 plus database
 trigger/concurrency tests were **not executed against PostgreSQL**. SQL assets parse, the
-Alembic chain resolves to head 0009, ORM/schema inventory checks pass, and the database
+Alembic chain resolves to head 0011, ORM/schema inventory checks pass, and the database
 tests are retained for a suitably equipped release runner.
 
 ## Exact test evidence
 
 | Check | Result |
 |---|---|
-| Complete Python suite | **441 passed, 93 skipped, 0 failed**, 2 dependency deprecation warnings, 28.30 s |
-| PostgreSQL-only selection | **93 skipped**: 56 rollback-fixture tests, 36 committed-database tests, 1 migration test |
+| Complete Python suite | **469 passed, 96 skipped, 0 failed**, 2 dependency deprecation warnings, 23.62 s |
+| PostgreSQL-only selection | **96 skipped** across rollback, committed-database and clean-migration fixtures |
 | Root frontend client tests | **16 passed, 0 failed** |
-| Generated backend TypeScript client tests | **19 passed, 0 failed** |
+| Generated backend TypeScript client tests | **21 passed, 0 failed** |
 | Strict TypeScript (`tsc --noEmit`, strict project config) | Passed |
 | Browser workflow | **17 checks passed** using installed Chrome and mocked PS1 HTTP boundaries |
 | Production Vinext build | Passed all five build phases; emitted only Vinext's route-classification notice |
 | Clean dependency install | `pnpm install --frozen-lockfile` passed after removing the prior `node_modules` tree |
 | Stateless launcher smoke | Dashboard 200; FastAPI health 200; stateless readiness 200 |
-| OpenAPI/contracts | Regenerated and parsed: **69 paths, 78 schemas**, API version 0.5.0 |
-| Alembic graph | `0001 -> ... -> 0009 (head)` |
+| OpenAPI/contracts | Regenerated and parsed: **73 paths, 80 schemas**, API version 0.5.0 |
+| Alembic graph | `0001 -> ... -> 0011 (head)` |
 
-The 93 skipped PostgreSQL tests cover clean migrations, PostGIS/schema behavior, immutable
+The 96 skipped PostgreSQL tests cover clean migrations, PostGIS/schema behavior, immutable
 instances, persisted validation and optimiser runs, audit/sealing triggers, operator
 isolation, idempotency collisions and deduplication, rollback, concurrent requests, job
 progress/cancellation and destructive-downgrade refusal. They skipped because the three
@@ -42,14 +42,14 @@ was reported as equivalent evidence.
 ## Organiser dataset exercise
 
 The checked-in [machine-readable result](railplan-backend/docs/ORGANISER_RUN_RESULTS.json)
-was produced by `scripts/run_release_scenarios.py` with seed 0, a 60-second wall limit and
-a 30-unit deterministic limit.
+was produced by `scripts/run_release_scenarios.py` with seed 0, a 20-second wall limit and
+a 10-unit deterministic limit per scenario.
 
 | Scenario | Source availability | Result | Elapsed | Objective bound/value | Physical validation | CSV policy |
 |---|---|---|---:|---|---|---|
-| A | Available | `FEASIBLE` | 65.235 s total; 60.187 s solve | scaled bound 252, scaled incumbent 791; internal score 79.10 | Feasible, complete, **0 violations** | Three candidate CSVs written only to disposable test artifacts after the rich gate passed |
-| B | Optimiser source absent | `NOT_AVAILABLE` | Not run | Not available | Not run | No CSV fabricated |
-| C | Optimiser source absent | `NOT_AVAILABLE` | Not run | Not available | Not run | No CSV fabricated |
+| A | Available | `FEASIBLE` | 22.484 s total; 20.109 s solve | bound 252, incumbent 16926; internal score 1692.60 | Feasible, complete, **0 violations** | Rich-validator-accepted CSVs retained in memory; none written to the source tree |
+| B | Available | `FEASIBLE` | 22.969 s total; 19.390 s solve | bound 30, incumbent 253; internal score 253.00 | Feasible, complete, **0 violations** | Rich-validator-accepted CSVs retained in memory; none written to the source tree |
+| C | Available | `UNKNOWN` | 16.968 s total; 13.360 s solve | bound 182, no incumbent | Not complete; **0 reported violations** because no candidate existed | No CSV generated or written |
 
 The elapsed wall time includes about five seconds of deterministic model preparation in
 addition to the configured CP-SAT solve budget. All entries retain
@@ -60,7 +60,9 @@ sample submission files remain reference material and were not relabelled as Rai
 
 - Added database-free `POST /api/ps1/optimise/scenario-a/preview`, reusing the existing
   Scenario A solver and explicit physical-night rich-validation gate.
-- Added migrations 0008–0009 for operator-scoped durable optimisation jobs, guarded
+- Integrated the existing Scenario B and C optimisers, stateless previews and saved-run
+  endpoints without changing their documented solver rules.
+- Added migrations 0010–0011 for operator-scoped durable optimisation jobs, guarded
   transitions, monotonic progress, audit history, idempotency and cancellation.
 - Added asynchronous Scenario A start/list/poll/cancel APIs. Terminal solver evidence is
   stored through the existing sealed-run path; unsuccessful candidates expose no CSVs.
@@ -86,10 +88,10 @@ Core/runtime:
 - `railplan-backend/app/routers/ps1_optimisation.py`
 - `railplan-backend/app/ps1_optimisation/{contracts,jobs,persistence,saved_contracts}.py`
 - `railplan-backend/app/ps1_optimisation_models.py`
-- `railplan-backend/sql/011_ps1_optimisation_jobs.sql`
-- `railplan-backend/sql/012_ps1_optimisation_job_guards.sql`
-- `railplan-backend/migrations/versions/0008_ps1_optimisation_jobs.py`
-- `railplan-backend/migrations/versions/0009_ps1_optimisation_job_guards.py`
+- `railplan-backend/sql/013_ps1_optimisation_jobs.sql`
+- `railplan-backend/sql/014_ps1_optimisation_job_guards.sql`
+- `railplan-backend/migrations/versions/0010_ps1_optimisation_jobs.py`
+- `railplan-backend/migrations/versions/0011_ps1_optimisation_job_guards.py`
 - `railplan-backend/scripts/run_release_scenarios.py`, `scripts/package-source.py`
 
 Deployment/generated clients:

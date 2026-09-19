@@ -44,8 +44,8 @@ The three database names must differ and start with `railplan_test`. The old rol
 suite creates its schema inside a transaction and rolls it back. The committed suite
 uses real committed schema/data and separate connections for sealing, race and reload
 tests. The migration test uses its own fresh database, explicitly passes its URL as
-`DATABASE_URL` to Alembic subprocesses, upgrades through 0009, attempts the
-expected-refused downgrade to 0008 and verifies head remains 0009. Missing URLs cause
+`DATABASE_URL` to Alembic subprocesses, upgrades through 0011, attempts the
+expected-refused downgrade to 0010 and verifies head remains 0011. Missing URLs cause
 explicit skips.
 
 **Setting TEST_DATABASE_URL alone does not redirect Alembic.** Never run Alembic against
@@ -57,10 +57,10 @@ Exact shell commands (only after confirming the variable points to that disposab
 # Inline assignment affects only the child command; it does not overwrite your shell's URL.
 DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic upgrade head
 DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic current
-DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic downgrade 0008
+DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic downgrade 0010
 # Expected: nonzero exit requiring job audit history to be archived first.
 DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic current
-# Expected: still 0009. Do not disable triggers or force history deletion.
+# Expected: still 0011. Do not disable triggers or force history deletion.
 ```
 
 ```powershell
@@ -70,9 +70,9 @@ try {
     python -m alembic upgrade head
     if ($LASTEXITCODE -ne 0) { throw 'Upgrade failed' }
     python -m alembic current
-    python -m alembic downgrade 0008
+    python -m alembic downgrade 0010
     if ($LASTEXITCODE -eq 0) { throw 'Unexpected destructive downgrade success' }
-    python -m alembic current  # Must still show 0009.
+    python -m alembic current  # Must still show 0011.
 } finally {
     $env:DATABASE_URL = $previousDatabaseUrl
 }

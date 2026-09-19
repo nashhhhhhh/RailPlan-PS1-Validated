@@ -251,8 +251,8 @@ def test_migration_seven_refuses_destructive_downgrade():
     with pytest.raises(RuntimeError,match='Archive sealed'):revision.downgrade()
 
 @pytest.mark.parametrize(('module','parent','message'),[
-    ('0008_ps1_optimisation_jobs','0007','Archive optimisation jobs'),
-    ('0009_ps1_optimisation_job_guards','0008','Archive optimisation job audit history'),
+    ('0010_ps1_optimisation_jobs','0009','Archive optimisation jobs'),
+    ('0011_ps1_optimisation_job_guards','0010','Archive optimisation job audit history'),
 ])
 def test_job_migrations_parse_and_refuse_destructive_downgrade(monkeypatch,module,parent,message):
     import importlib

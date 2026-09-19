@@ -68,7 +68,8 @@ def committed_engine():
         with Operations.context(MigrationContext.configure(conn)):
             for name in ('0001_initial','0002_api_support','0003_conflict_scoring','0004_analysis_history',
                          '0005_ps1_instances','0006_ps1_validations','0007_ps1_optimisation_runs',
-                         '0008_ps1_optimisation_jobs','0009_ps1_optimisation_job_guards'):
+                         '0008_ps1_scenario_b','0009_ps1_scenario_c',
+                         '0010_ps1_optimisation_jobs','0011_ps1_optimisation_job_guards'):
                 importlib.import_module('migrations.versions.'+name).upgrade()
         seed(conn)
     yield eng
@@ -128,6 +129,43 @@ def test_fresh_connection_exact_snapshots_csvs_and_rows(committed_engine,fixture
             actual=list(fresh.execute(text(f"SELECT to_jsonb(c)-'run_id'-'instance_id'-'operator_id' FROM railplan.ps1_optimisation_{name} c WHERE run_id=:id"),{'id':saved.run_id}).scalars())
             assert sorted(actual,key=str)==sorted(run['schedule_snapshot'][name],key=str)
     fresh_engine.dispose()
+
+def test_scenario_b_api_persists_eclo_objective_physical_rows_and_exact_csvs(committed_engine,api):
+    source=files()
+    source['08_ACTIVITY_DETAILS.csv']=source['08_ACTIVITY_DETAILS.csv'].replace(',1,2027-01-04',',3,2027-01-04')
+    source['07_PROJECT_DETAILS.csv']=source['07_PROJECT_DETAILS.csv'].replace('2027-01-10','2027-01-17')
+    created=api.post('/api/ps1/instances',json={'files':source})
+    assert created.status_code==201,created.text
+    response=api.post(f"/api/ps1/instances/{created.json()['id']}/optimise/scenario-b",json={'time_limit_seconds':5,'random_seed':19})
+    assert response.status_code==200,response.text
+    body=response.json()
+    assert body['scenario']=='B' and body['publishable']
+    assert body['objective_components']['eclo_nights_total']==2
+    assert body['validation_report']['objective_score']=='10.00'
+    with Session(committed_engine) as db:
+        run=store.get_run(db,ACTOR,body['run_id'])
+        rows=list(db.execute(text('SELECT eclo,physical_night FROM railplan.ps1_optimisation_accesses WHERE run_id=:id ORDER BY access_seq'),{'id':body['run_id']}))
+    assert run['scenario']=='B' and run['accepted_csvs']==body['submission_files']
+    assert [row.eclo for row in rows]==[1,1]
+    assert all(1<=row.physical_night<=7 for row in rows)
+
+def test_scenario_c_api_persists_windows_weighted_objective_and_exact_csvs(committed_engine,api):
+    source=files()
+    source['08_ACTIVITY_DETAILS.csv']=source['08_ACTIVITY_DETAILS.csv'].replace(',1,2027-01-04',',3,2027-01-04')
+    source['07_PROJECT_DETAILS.csv']=source['07_PROJECT_DETAILS.csv'].replace('Non-live (Others),3,2027','Non-live (Others),1,2027')
+    created=api.post('/api/ps1/instances',json={'files':source})
+    assert created.status_code==201,created.text
+    response=api.post(f"/api/ps1/instances/{created.json()['id']}/optimise/scenario-c",json={'time_limit_seconds':5,'random_seed':23})
+    assert response.status_code==200,response.text
+    body=response.json()
+    assert body['scenario']=='C' and body['publishable'] and body['eclo_windows']['ALP']['active']
+    assert body['objective_components']['eclo_nights_total']==2
+    with Session(committed_engine) as db:
+        run=store.get_run(db,ACTOR,body['run_id'])
+        rows=list(db.execute(text('SELECT eclo,physical_night FROM railplan.ps1_optimisation_accesses WHERE run_id=:id ORDER BY access_seq'),{'id':body['run_id']}))
+    assert run['scenario']=='C' and run['accepted_csvs']==body['submission_files']
+    assert run['result_snapshot']['eclo_windows']==body['eclo_windows']
+    assert [row.eclo for row in rows]==[1,1] and all(1<=row.physical_night<=7 for row in rows)
 
 def test_precision_and_primary_flags_roundtrip(committed_engine,fixture_instance):
     payload=SavedOptimiseInput(locked_placements=[{'activity_id':'SMOKE-A1','access_seq':1,'week':2,'physical_night':6,'access_night':1}])
@@ -334,10 +372,15 @@ def test_migration_upgrade_and_deliberate_downgrade_refusal():
     env={**os.environ,'DATABASE_URL':url}
     upgraded=subprocess.run([sys.executable,'-m','alembic','upgrade','head'],cwd=ROOT,env=env,capture_output=True,text=True)
     assert upgraded.returncode==0,upgraded.stderr
+    repeated=subprocess.run([sys.executable,'-m','alembic','upgrade','head'],cwd=ROOT,env=env,capture_output=True,text=True)
+    assert repeated.returncode==0,repeated.stderr
+    for module in ('app.seed','app.seed_scoring'):
+        seeded=subprocess.run([sys.executable,'-m',module],cwd=ROOT,env=env,capture_output=True,text=True)
+        assert seeded.returncode==0,seeded.stderr
     with eng.connect() as conn:
-        assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0009'
+        assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0011'
         assert conn.execute(text("SELECT count(*) FROM pg_tables WHERE schemaname='railplan' AND tablename LIKE 'ps1_optimisation_%'")).scalar_one()==6
-    refused=subprocess.run([sys.executable,'-m','alembic','downgrade','0008'],cwd=ROOT,env=env,capture_output=True,text=True)
+    refused=subprocess.run([sys.executable,'-m','alembic','downgrade','0010'],cwd=ROOT,env=env,capture_output=True,text=True)
     assert refused.returncode!=0 and 'Archive optimisation job audit history' in refused.stderr
-    with eng.connect() as conn:assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0009'
+    with eng.connect() as conn:assert conn.execute(text('SELECT version_num FROM alembic_version')).scalar_one()=='0011'
     eng.dispose()

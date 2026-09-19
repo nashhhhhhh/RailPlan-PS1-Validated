@@ -8,12 +8,13 @@ from sqlalchemy import text
 from app import repository
 from app.ps1_validation.contracts import VERSION as VALIDATOR_VERSION, POLICY, snapshot
 from app.ps1_validation.submission import fingerprint
-from .contracts import OptimiseInput, Placement, VERSION
+from .contracts import OptimiseInput, ScenarioBOptimiseInput, ScenarioCOptimiseInput, Placement, VERSION
 from .saved_contracts import SavedOptimiseResult
 from .exporter import export_bundle
 from .preprocessing import prepare, InputError
 
-OBJECTIVE_POLICY='ps1-objective/scenario-a-scale10-lex5/1'
+OBJECTIVE_POLICIES={'A':'ps1-objective/scenario-a-scale10-lex5/1','B':'ps1-objective/scenario-b-official-lex7/1','C':'ps1-objective/scenario-c-scale10-lex9/1'}
+OBJECTIVE_POLICY=OBJECTIVE_POLICIES['A']
 OUTCOMES={s:('bounded' if s=='UNKNOWN' else s.lower()) for s in
           ('OPTIMAL','FEASIBLE','INFEASIBLE','UNKNOWN','MODEL_LIMIT','VALIDATION_FAILED','ERROR','MODEL_INVALID')}
 
@@ -28,12 +29,17 @@ def get_run(db,actor,run_id,instance_id=None):
     if row is None:raise HTTPException(404,'PS1 optimisation not found')
     return dict(row)
 
-def resolve(db,actor,instance,payload):
-    options=OptimiseInput.model_validate({k:getattr(payload,k) for k in OptimiseInput.model_fields})
+def resolve(db,actor,instance,payload,scenario='A'):
+    option_type={'A':OptimiseInput,'B':ScenarioBOptimiseInput,'C':ScenarioCOptimiseInput}[scenario]
+    options=option_type.model_validate({k:getattr(payload,k) for k in option_type.model_fields})
     if payload.baseline_run_id:
         baseline=get_run(db,actor,payload.baseline_run_id,instance['id'])
         if not baseline['publishable']:raise HTTPException(422,'Baseline run must have an internally accepted schedule')
-        rows=db.execute(text('''SELECT activity_id,access_seq,week,physical_night,access_night
+        baseline_scenario=baseline.get('scenario','A') # Pre-0008/test rows are Scenario A.
+        if scenario=='A' and baseline_scenario!='A':raise HTTPException(422,'Scenario A requires a Scenario A baseline')
+        if scenario=='B' and baseline_scenario not in ('A','B'):raise HTTPException(422,'Baseline scenario is incompatible with Scenario B')
+        if scenario=='C' and baseline_scenario not in ('A','B','C'):raise HTTPException(422,'Baseline scenario is incompatible with Scenario C')
+        rows=db.execute(text('''SELECT activity_id,access_seq,week,physical_night,access_night,eclo
           FROM railplan.ps1_optimisation_accesses WHERE run_id=:id AND operator_id=:op AND instance_id=:instance
           ORDER BY activity_id,access_seq'''),{'id':baseline['id'],'op':actor['operator_id'],'instance':instance['id']}).mappings()
         options.baseline_placements=[Placement.model_validate(dict(row)) for row in rows]
@@ -52,16 +58,19 @@ def resolve(db,actor,instance,payload):
                 raise InputError(f'{name}: placement outside week/night/allocation bounds {key}')
     return options
 
-def effective_configuration(instance,options,baseline_run_id=None):
+def effective_configuration(instance,options,baseline_run_id=None,scenario='A'):
     config=options.model_dump(mode='json')
     for key in ('locked_placements','baseline_placements'):
         config[key]=sorted(config[key],key=lambda p:(p['activity_id'],p['access_seq']))
-    return {'instance_id':str(instance['id']),'dataset_fingerprint':instance['dataset']['fingerprint'],'scenario':'A',
+    stage_order={'A':['weighted_overrun_scaled_10','raw_contract_overrun_days','completion_weeks','baseline_movements','stable_placement_rank'],
+        'B':['official_scenario_b_objective','excess_access_nights_total','eclo_nights_total','workload_over_delivery_scaled','completion_weeks','baseline_movements','stable_placement_rank'],
+        'C':['official_scenario_c_objective_scaled_10','priority_weighted_overrun_scaled_10','excess_access_nights_total','eclo_nights_total','raw_contract_overrun_days','workload_over_delivery_scaled','completion_weeks','baseline_movements','stable_placement_rank']}[scenario]
+    return {'instance_id':str(instance['id']),'dataset_fingerprint':instance['dataset']['fingerprint'],'scenario':scenario,
         'optimiser_version':VERSION,'validator_version':VALIDATOR_VERSION,'policy_version':POLICY.version,
-        'policy_snapshot':snapshot(),'objective_policy':OBJECTIVE_POLICY,'ortools_version':ortools.__version__,
+        'policy_snapshot':snapshot(),'objective_policy':OBJECTIVE_POLICY if scenario=='A' else OBJECTIVE_POLICIES[scenario],'ortools_version':ortools.__version__,
         'fixed_settings':{'num_search_workers':1,'night_domain':'configured_uniform_1_to_7_per_week',
             'allocation_alignment':'one_local_index_per_used_physical_night','possession_assignment':'one_group_per_location_week_physical_night',
-            'stage_order':['weighted_overrun_scaled_10','raw_contract_overrun_days','completion_weeks','baseline_movements','stable_placement_rank']},
+            'stage_order':stage_order},
         'solver_options':config,'baseline_run_id':str(baseline_run_id) if baseline_run_id else None}
 
 def existing_key(db,actor,instance_id,key,digest,lock=False):
@@ -89,20 +98,22 @@ def accepted(result):
 def primary_metrics(result,is_accepted):
     score=Decimal(result.validation_report.objective_score) if is_accepted else None
     bound=gap=None
-    stages=[s for s in result.stages if s.get('name')=='weighted_overrun_scaled_10']
+    primary_name={'A':'weighted_overrun_scaled_10','B':'official_scenario_b_objective','C':'official_scenario_c_objective_scaled_10'}[result.scenario]
+    stages=[s for s in result.stages if s.get('name')==primary_name]
     if len(stages)==1 and stages[0].get('status') in ('OPTIMAL','FEASIBLE'):
         try:
-            value=Decimal(str(stages[0]['best_bound']))/Decimal(10)
+            value=Decimal(str(stages[0]['best_bound']))/(Decimal(10) if result.scenario in ('A','C') else Decimal(1))
             if value.is_finite() and value>=0 and (score is None or value<=score):bound=value
         except (KeyError,InvalidOperation,ValueError):pass
     if score is not None and bound is not None:
         gap=((score-bound)/max(abs(score),Decimal(1))).quantize(Decimal('0.000000000001'),rounding=ROUND_HALF_UP)
     return score,bound,gap
 
-def schedule_records(instance,options,result):
+def schedule_records(instance,options,result,scenario=None):
     if not accepted(result):return {'accesses':[],'occupancies':[],'contract_results':[]}
-    data=prepare(instance['dataset'],options)
-    bundle=export_bundle(instance['dataset'],data,result.physical_nights)
+    scenario=scenario or result.scenario
+    data=prepare(instance['dataset'],options,scenario)
+    bundle=export_bundle(instance['dataset'],data,result.physical_nights,scenario)
     if bundle.files!=result.submission_files:raise RuntimeError('Trusted service CSVs do not match canonical export')
     locks={(p.activity_id,p.access_seq) for p in options.locked_placements}
     baseline={(p.activity_id,p.access_seq):p for p in options.baseline_placements}
@@ -116,7 +127,7 @@ def schedule_records(instance,options,result):
     contracts=[{k:v for k,v in row.items() if k!='scenario'}|{'weighted_overrun':None} for row in bundle.contract_results]
     return {'accesses':records,'occupancies':bundle.occupancies,'contract_results':contracts}
 
-def persist(db,actor,instance,payload,configuration,digest,result,records,started,completed):
+def persist(db,actor,instance,payload,configuration,digest,result,records,started,completed,scenario=None):
     """Caller owns final transaction; errors MUST propagate, including commit failure."""
     existing=existing_key(db,actor,instance['id'],payload.idempotency_key,digest,lock=True)
     if existing:return response(existing,False)
@@ -125,7 +136,8 @@ def persist(db,actor,instance,payload,configuration,digest,result,records,starte
     score,bound,gap=primary_metrics(result,is_accepted)
     run_id=uuid4()
     report=result.validation_report.model_dump(mode='json') if result.validation_report else None
-    params={'id':run_id,'instance':instance['id'],'op':actor['operator_id'],'creator':actor['id'],'baseline':payload.baseline_run_id,
+    scenario=scenario or result.scenario
+    params={'id':run_id,'instance':instance['id'],'op':actor['operator_id'],'creator':actor['id'],'baseline':payload.baseline_run_id,'scenario':scenario,
         'status':result.solver_status,'outcome':OUTCOMES[result.solver_status],
         'optimiser':VERSION,'validator':VALIDATOR_VERSION,'policy':POLICY.version,'dataset':instance['dataset']['fingerprint'],'fingerprint':digest,
         'request':json.dumps(payload.model_dump(mode='json',exclude_unset=True)),'configuration':json.dumps(configuration),
@@ -138,7 +150,7 @@ def persist(db,actor,instance,payload,configuration,digest,result,records,starte
        optimiser_version,validator_version,policy_version,dataset_fingerprint,input_fingerprint,request_snapshot,solver_configuration,
        result_snapshot,validation_snapshot,diagnostics,primary_optimal,lexicographic_complete,physical_validation_complete,publishable,
        objective_score,primary_objective_bound,primary_objective_gap,solve_duration_seconds,started_at,completed_at,accepted_csvs,schedule_snapshot)
-      VALUES(:id,:instance,:op,:creator,:baseline,'A',:status,:outcome,:optimiser,:validator,:policy,:dataset,:fingerprint,
+      VALUES(:id,:instance,:op,:creator,:baseline,:scenario,:status,:outcome,:optimiser,:validator,:policy,:dataset,:fingerprint,
        CAST(:request AS jsonb),CAST(:configuration AS jsonb),CAST(:result AS jsonb),CAST(:validation AS jsonb),CAST(:diagnostics AS jsonb),
        :primary,:lex,:physical,:accepted,:score,:bound,:gap,:duration,:started,:completed,CAST(:csvs AS jsonb),CAST(:schedule AS jsonb))'''),params)
     # Fixed developer-authored identifiers only. Values are always parameters.
@@ -153,5 +165,5 @@ def persist(db,actor,instance,payload,configuration,digest,result,records,starte
     if payload.idempotency_key is not None:
         db.execute(text('''INSERT INTO railplan.ps1_optimisation_keys(operator_id,instance_id,idempotency_key,input_fingerprint,run_id)
             VALUES(:op,:instance,:key,:fingerprint,:id)'''),{**params,'key':payload.idempotency_key})
-    repository.event(db,actor,'ps1_optimisation_completed','ps1_optimisation',run_id,f'Internal Scenario A terminal result: {result.solver_status}')
+    repository.event(db,actor,'ps1_optimisation_completed','ps1_optimisation',run_id,f'Internal Scenario {scenario} terminal result: {result.solver_status}')
     return response(get_run(db,actor,run_id,instance['id']),True)

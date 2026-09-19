@@ -4,7 +4,7 @@ Migration 0007 introduced immutable terminal Scenario A runs, exact result/valid
 snapshots, explicit access/occupancy/contract rows, accepted CSV artifacts, baselines and
 operator/instance-scoped idempotency. Those tables and their sealing rules remain intact.
 
-Migrations 0008–0009 add a separate durable job-control table with audited guarded state,
+Migrations 0010–0011 add a separate durable job-control table with audited guarded state,
 progress and cancellation. The synchronous endpoint remains supported. Failed solver
 outcomes persist as diagnostics and never publish candidate CSVs.
 

@@ -269,8 +269,7 @@ fs.mkdirSync(screenshots, { recursive: true });
       404,
     );
   });
-  const opt = () =>
-    page.getByRole("region", { name: "Scenario A optimisation workspace" });
+  const opt = () => page.locator('[aria-label$="optimisation workspace"]');
   const shot = async (name) => {
     const focus = name.startsWith("01")
       ? opt().locator(".opt-callout")
@@ -311,18 +310,18 @@ fs.mkdirSync(screenshots, { recursive: true });
       await opt()
         .getByRole("button", { name: "Generate schedule", exact: true })
         .isDisabled(),
-      true,
+      false,
     );
     await page.getByRole("button", { name: "Scenario C", exact: true }).click();
     assert.equal(
       await opt()
         .getByRole("button", { name: "Generate schedule", exact: true })
         .isDisabled(),
-      true,
+      false,
     );
     assert.equal(posts.length, 0);
     await page.getByRole("button", { name: "Scenario A", exact: true }).click();
-    check("B and C cannot generate Scenario A requests");
+    check("B and C generation are enabled without generating Scenario A requests");
     delayPost = true;
     await opt()
       .getByRole("button", { name: "Generate schedule", exact: true })
@@ -379,6 +378,7 @@ fs.mkdirSync(screenshots, { recursive: true });
       "access_night",
       "access_seq",
       "activity_id",
+      "eclo",
       "physical_night",
       "week",
     ]);
@@ -393,6 +393,7 @@ fs.mkdirSync(screenshots, { recursive: true });
     await shot("06-contracts");
     await opt().getByRole("tab", { name: "Validation", exact: true }).click();
     await shot("07-validation");
+    await opt().getByRole("tab", { name: "Downloads", exact: true }).click();
     assert.ok(
       (await opt()
         .getByText(
@@ -402,7 +403,6 @@ fs.mkdirSync(screenshots, { recursive: true });
         .count()) > 0,
     );
     check("internal verification labels preserved");
-    await opt().getByRole("tab", { name: "Downloads", exact: true }).click();
     artifactConflict = true;
     await opt()
       .getByRole("button", { name: "Load saved artifacts", exact: true })

@@ -1,5 +1,7 @@
 # RailPlan domain ER diagrams
 
+Scenario B and C reuse the sealed `ps1_optimisation_runs` parent and its access, occupancy, contract-result, and idempotency-key children. `scenario` discriminates A/B/C; `ps1_optimisation_accesses.eclo` retains `0/1`. Workload, excess, ECLO windows, cross-line ECLO records, stages, policy, and validation structures remain immutable JSON snapshots on the parent.
+
 These are relationship-level diagrams. Full columns and subsidiary junctions are in DATA_DICTIONARY.md.
 
 ## Network and requested intent
@@ -64,7 +66,7 @@ erDiagram
 
 ## Relationship notes
 
-Scenario A optimisation reads an operator-scoped immutable `ps1_instances.dataset` and
+Scenario A/B/C optimisation reads an operator-scoped immutable `ps1_instances.dataset` and
 saves a terminal rich result in dedicated migration-0007 tables. Physical mappings are
 not sent through CSV-only validation history. All child rows share operator/instance FKs.
 

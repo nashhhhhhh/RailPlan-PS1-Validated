@@ -37,8 +37,10 @@ def connection():
             importlib.import_module("migrations.versions.0005_ps1_instances").upgrade()
             importlib.import_module("migrations.versions.0006_ps1_validations").upgrade()
             importlib.import_module("migrations.versions.0007_ps1_optimisation_runs").upgrade()
-            importlib.import_module("migrations.versions.0008_ps1_optimisation_jobs").upgrade()
-            importlib.import_module("migrations.versions.0009_ps1_optimisation_job_guards").upgrade()
+            importlib.import_module("migrations.versions.0008_ps1_scenario_b").upgrade()
+            importlib.import_module("migrations.versions.0009_ps1_scenario_c").upgrade()
+            importlib.import_module("migrations.versions.0010_ps1_optimisation_jobs").upgrade()
+            importlib.import_module("migrations.versions.0011_ps1_optimisation_job_guards").upgrade()
         seed(conn)
         from app.demo_rules import configure_demo_rules
         configure_demo_rules(conn)
@@ -58,6 +60,12 @@ def run(db,key,**params):
 def test_postgres_version(db):
     assert int(db.execute(text("SHOW server_version_num")).scalar())>=160000
     assert db.execute(text("SELECT postgis_version()")).scalar()
+
+def test_scenarios_has_one_scoring_revision_trigger_after_fresh_migration(db):
+    count=db.execute(text("""SELECT count(*) FROM pg_trigger t
+      JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace
+      WHERE n.nspname='railplan' AND c.relname='scenarios' AND t.tgname='scoring_revision' AND NOT t.tgisinternal""")).scalar_one()
+    assert count==1
 
 def test_ps1_persistence_dedup_and_exact_csv_retention(api,db):
     from app.ps1 import load_files

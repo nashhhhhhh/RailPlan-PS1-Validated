@@ -37,6 +37,7 @@ import {
   optionsSchema,
   pageSchema,
   placement,
+  previewResultSchema,
   statusLabel,
   summarySchema,
 } from "./ps1-optimisation-data";
@@ -54,6 +55,7 @@ import "./ps1-optimisation.css";
 
 type Props = {
   instanceId: string;
+  instanceFiles: Record<string, string>;
   dataset: Dataset;
   scenario: "A" | "B" | "C";
   baseUrl: string;
@@ -109,6 +111,7 @@ function Metric({ label, value }: { label: string; value: unknown }) {
 
 export default function PS1OptimisationPanel({
   instanceId,
+  instanceFiles,
   dataset,
   scenario,
   baseUrl,
@@ -117,10 +120,13 @@ export default function PS1OptimisationPanel({
   onSelectActivity,
   onHighlightLocations,
 }: Props) {
+  const elasticScenario = scenario === "B" || scenario === "C";
+  const [mode, setMode] = useState<"preview" | "saved">("saved");
   const [options, setOptions] = useState(defaults),
     [baseline, setBaseline] = useState(""),
     [locks, setLocks] = useState<Placement[]>([]);
   const [history, setHistory] = useState<RunSummary[]>([]),
+    [comparison, setComparison] = useState<RunDetail[]>([]),
     [historyTotal, setHistoryTotal] = useState(0),
     [historyOffset, setHistoryOffset] = useState(0),
     [historyBusy, setHistoryBusy] = useState(false),
@@ -174,6 +180,67 @@ export default function PS1OptimisationPanel({
       ) % colorList.length
     ];
   const client = () => connectionClient(baseUrl, demoUserId);
+  async function backend(path: string, body: unknown, signal: AbortSignal) {
+    const base = new URL(baseUrl);
+    if (!["http:", "https:"].includes(base.protocol) || base.username || base.password || base.search || base.hash)
+      throw Error("Enter an HTTP(S) backend address without credentials or query parameters.");
+    const response = await fetch(base.href.replace(/\/$/, "") + path, {
+      method: "POST", signal, headers: { "Content-Type": "application/json", ...(demoUserId ? { "X-Demo-User-Id": demoUserId } : {}) },
+      body: JSON.stringify(body),
+    });
+    const value: unknown = await response.json();
+    if (!response.ok) {
+      const message = typeof value === "object" && value && "error" in value
+        ? String((value as { error?: { message?: string } }).error?.message ?? "Request failed")
+        : "Request failed";
+      throw Error(message);
+    }
+    return value;
+  }
+  async function backendGet(path: string, signal: AbortSignal) {
+    const base = new URL(baseUrl);
+    const response = await fetch(base.href.replace(/\/$/, "") + path, { signal,
+      headers: demoUserId ? { "X-Demo-User-Id": demoUserId } : {} });
+    const value: unknown = await response.json();
+    if (!response.ok) throw Error("Could not load saved optimisation history.");
+    return value;
+  }
+  function csvRows(text: string | undefined) {
+    if (!text) return [] as Record<string, string>[];
+    const [header, ...lines] = text.trim().split(/\r?\n/);
+    const fields = header.split(",");
+    return lines.filter(Boolean).map((line) => Object.fromEntries(fields.map((field, i) => [field, line.split(",")[i] ?? ""])));
+  }
+  function showPreview(raw: unknown) {
+    const result = previewResultSchema.parse(raw);
+    const validation = result.validation_report as Record<string, unknown> | null;
+    const objective = result.objective_components as Record<string, unknown> | null;
+    const firstStage = result.stages[0] as Record<string, unknown> | undefined;
+    const run = summarySchema.parse({
+      id: "local-preview", instance_id: instanceId || "stateless", baseline_run_id: null, scenario,
+      solver_status: result.solver_status,
+      terminal_outcome: result.solver_status === "UNKNOWN" ? "bounded" : result.solver_status.toLowerCase(),
+      publishable: result.publishable, physical_validation_complete: result.physical_validation_complete,
+      primary_optimal: result.primary_optimal, lexicographic_complete: result.lexicographic_complete,
+      objective_score: typeof validation?.objective_score === "string" ? validation.objective_score : null,
+      primary_objective_bound: firstStage?.best_bound === undefined ? null : String(firstStage.best_bound),
+      primary_objective_gap: firstStage?.gap === undefined ? null : String(firstStage.gap),
+      solve_duration_seconds: result.solve_time_seconds, created_at: new Date().toISOString(),
+    });
+    const contractResults = Array.isArray(objective?.contract_results)
+      ? objective.contract_results.filter((row) => typeof (row as Record<string, unknown>).simulated_completion_date === "string" && typeof (row as Record<string, unknown>).overrun_days === "number")
+        .map((row) => ({ ...(row as Record<string, unknown>), weighted_overrun: null }))
+      : [];
+    const detail = detailSchema.parse({ run, result, validation, diagnostics: result.diagnostics, contract_results: contractResults });
+    const accesses = result.physical_nights.map((row) => accessSchema.parse({ ...row, locked: false,
+      eclo: row.eclo ?? 0, baseline_week: null, baseline_physical_night: null }));
+    const occupancies = csvRows(result.submission_files?.["SCHEDULE_OCCUPANCY.csv"]).map((row) => occupancySchema.parse({
+      activity_id: row.activity_id, week: Number(row.week), location_id: row.location_id, co_share_group: row.co_share_group,
+    }));
+    setView({ detail, accesses, occupancies }); setSelectedId("local-preview");
+    if (result.publishable && result.submission_files) setArtifacts({ run_id: "local-preview", files: result.submission_files,
+      physical_validation_complete: result.physical_validation_complete, judge_validation: "not_run", score_verification: "internal_only" });
+  }
   async function loadHistory(more = false) {
     if (!instanceId) return;
     historyController.current?.abort();
@@ -183,13 +250,7 @@ export default function PS1OptimisationPanel({
     setHistoryError("");
     const offset = more ? historyOffset : 0;
     try {
-      const page = pageSchema.parse(
-        await client().ps1Optimisations(
-          instanceId,
-          { limit: 50, offset },
-          c.signal,
-        ),
-      );
+      const page = pageSchema.parse(await client().ps1Optimisations(instanceId, { limit: 50, offset, scenario }, c.signal));
       const rows = page.items.map((x) => summarySchema.parse(x));
       if (c.signal.aborted) return;
       setHistory((previous) => [
@@ -199,6 +260,13 @@ export default function PS1OptimisationPanel({
       ]);
       setHistoryTotal(page.total);
       setHistoryOffset(offset + page.items.length);
+      if (!more) {
+        const all = pageSchema.parse(await client().ps1Optimisations(instanceId, { limit: 50, offset: 0 }, c.signal));
+        const latest = new Map<string, RunSummary>();
+        for (const item of all.items.map((row) => summarySchema.parse(row))) if (!latest.has(item.scenario)) latest.set(item.scenario, item);
+        const details = await Promise.all([...latest.values()].map(async (item) => detailSchema.parse(await client().ps1Optimisation(item.id, c.signal))));
+        if (!c.signal.aborted) setComparison(details);
+      }
     } catch (e) {
       if (!c.signal.aborted) setHistoryError(errorText(e));
     } finally {
@@ -285,6 +353,7 @@ export default function PS1OptimisationPanel({
     artifactCache.current.clear();
     onHighlightLocations([]);
     setHistory([]);
+    setComparison([]);
     setHistoryTotal(0);
     setHistoryOffset(0);
     setSelectedId("");
@@ -332,7 +401,7 @@ export default function PS1OptimisationPanel({
     return () => clearInterval(timer);
   }, [solving]);
   async function run(retry = false) {
-    if (!instanceId || scenario !== "A" || solving) return;
+    if (solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))) return;
     setRunError("");
     setNotice("");
     let next: Attempt;
@@ -365,13 +434,16 @@ export default function PS1OptimisationPanel({
     solveController.current = c;
     const currentEpoch = epoch.current;
     try {
-      const result = createdSchema.parse(
-        await client().optimisePs1ScenarioA(
-          next.instanceId,
-          next.body,
-          c.signal,
-        ),
-      );
+      if (elasticScenario && mode === "preview") {
+        const { baseline_run_id: _baseline, idempotency_key: _key, ...solver } = next.body;
+        const raw = await backend(`/api/ps1/optimise/scenario-${scenario.toLowerCase()}/preview`, { ...solver, instance_files: instanceFiles }, c.signal);
+        if (c.signal.aborted || currentEpoch !== epoch.current) return;
+        showPreview(raw); setNotice("Local preview completed. No server-side history was created."); setAttempt(null); return;
+      }
+      const raw = scenario === "A"
+        ? await client().optimisePs1ScenarioA(next.instanceId, next.body, c.signal)
+        : await backend(`/api/ps1/instances/${next.instanceId}/optimise/scenario-${scenario.toLowerCase()}`, next.body, c.signal);
+      const result = createdSchema.parse(raw);
       if (c.signal.aborted || currentEpoch !== epoch.current) return;
       setNotice(
         result.reused
@@ -398,6 +470,7 @@ export default function PS1OptimisationPanel({
   }
   async function loadArtifacts() {
     if (!view?.detail.run.publishable) return;
+    if (view.detail.run.id === "local-preview") return;
     const id = view.detail.run.id;
     artifactController.current?.abort();
     const c = new AbortController();
@@ -490,28 +563,40 @@ export default function PS1OptimisationPanel({
           o.week === selectedAccess.week,
       )
     : [];
-  const acceptedRuns = history.filter((r) => r.publishable);
+  const acceptedRuns = [
+    ...new Map(
+      [
+        ...history.filter((r) => r.publishable),
+        ...comparison.map((item) => item.run).filter((r) => r.publishable),
+      ].map((r) => [r.id, r]),
+    ).values(),
+  ].filter(
+    (r) =>
+      scenario === "C" ||
+      r.scenario === "A" ||
+      (scenario === "B" && r.scenario === "B"),
+  );
   const baselineRun =
     history.find((r) => r.id === baseline) ??
     (summary?.id === baseline ? summary : undefined);
   return (
     <section
       className="ps1-optimiser"
-      aria-label="Scenario A optimisation workspace"
+      aria-label={`Scenario ${scenario} optimisation workspace`}
     >
       <header className="opt-header">
         <div>
           <span className="opt-eyebrow">
-            <Activity size={13} /> SCENARIO A / PLANNING ENGINE
+            <Activity size={13} /> SCENARIO {scenario} / PLANNING ENGINE
           </span>
           <h2>Make every night count.</h2>
-          <p>Generate, inspect and refine a saved track-access plan.</p>
+          <p>{scenario === "B" ? "Meet every planned completion date with explicit ECLO and capacity trade-offs." : scenario === "C" ? "Balance weighted delay, bounded capacity elasticity and line-scoped ECLO windows." : "Generate, inspect and refine a saved track-access plan."}</p>
         </div>
         <span className="opt-engine">
           <i /> OR-Tools CP-SAT
         </span>
       </header>
-      {!instanceId && (
+      {!instanceId && (!elasticScenario || mode === "saved") && (
         <div className="opt-callout">
           <Layers size={20} />
           <div>
@@ -523,11 +608,19 @@ export default function PS1OptimisationPanel({
           </button>
         </div>
       )}
-      {scenario !== "A" && (
-        <p className="opt-callout">
-          Scenario {scenario} optimisation is not implemented. Select Scenario A
-          to generate a schedule. Saved results below remain Scenario A.
-        </p>
+      {scenario === "B" && (
+        <div className="opt-callout">
+          <div><strong>Scenario B · strict schedule, flexible supply</strong>
+            <p>ECLO is permitted. Completion after the planned date is forbidden. Official objective: 7 × excess access nights + 5 × ECLO nights.</p>
+            <p>Both modes call FastAPI. Local preview needs no PostgreSQL and creates no saved history; the frontend-only app.py launcher does not start FastAPI.</p></div>
+        </div>
+      )}
+      {scenario === "C" && (
+        <div className="opt-callout">
+          <div><strong>Scenario C · balanced and elastic</strong>
+            <p>Objective: priority-weighted overrun + 7 × excess access nights + 5 × ECLO nights. Each location/week may exceed supply by at most one.</p>
+            <p>Alpha and Beta have independent ECLO windows of at most two consecutive weeks; cross-line Live ECLO must fit both. Both modes call FastAPI.</p></div>
+        </div>
       )}
       <div className="opt-config">
         <div className="opt-section-title">
@@ -547,6 +640,9 @@ export default function PS1OptimisationPanel({
           </button>
         </div>
         <div className="opt-fields">
+          {elasticScenario && <label>Run mode<select aria-label="Optimisation mode" value={mode} disabled={solving} onChange={(e) => setMode(e.target.value as "preview" | "saved")}>
+            <option value="preview">Local preview · no saved history</option><option value="saved">Saved optimisation · PostgreSQL history</option>
+          </select></label>}
           <label>
             Time budget · seconds
             <input
@@ -587,7 +683,7 @@ export default function PS1OptimisationPanel({
             <select
               aria-label="Baseline run"
               value={baseline}
-              disabled={solving}
+              disabled={solving || mode === "preview"}
               onChange={(e) => setBaseline(e.target.value)}
             >
               <option value="">No baseline</option>
@@ -645,15 +741,14 @@ export default function PS1OptimisationPanel({
             </label>
           </div>
           <p className="opt-muted">
-            Physical nights are abstract slots within each week; no dated
-            engineering-night calendar is supplied. Scenario A uses fixed
-            capacity and forbids ECLO.
+            Physical nights are abstract network-wide slots within each week; no dated
+            engineering-night calendar is supplied. Access nights remain contract-local and co-share groups remain location-local.
           </p>
         </details>
         <div className="opt-actions">
           <button
             className="opt-primary"
-            disabled={!instanceId || scenario !== "A" || solving}
+            disabled={solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))}
             onClick={() => void run()}
           >
             <Play size={15} />
@@ -743,7 +838,7 @@ export default function PS1OptimisationPanel({
         <div className="opt-actions">
           <button
             className="control"
-            disabled={scenario !== "A" || !instanceId}
+            disabled={(mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))}
             onClick={() => void run(true)}
           >
             Retry exact attempt
@@ -779,7 +874,7 @@ export default function PS1OptimisationPanel({
             <div className="opt-empty">
               <History size={28} />
               <p>No saved runs yet.</p>
-              <span>Generate your first Scenario A schedule.</span>
+              <span>Generate your first Scenario {scenario} schedule.</span>
             </div>
           )}
           {historyBusy && !history.length && (
@@ -832,6 +927,22 @@ export default function PS1OptimisationPanel({
               Load older runs
             </button>
           )}
+          {comparison.length > 0 && <details className="opt-evidence">
+            <summary>Latest A/B/C comparison</summary>
+            <p className="opt-muted">Scenario objectives use different formulas and must not be ranked directly without context.</p>
+            {comparison.map((item) => {
+              const objective = item.result.objective_components as Record<string, unknown> | null;
+              return <div key={item.run.id} className="opt-history-item">
+                <strong>Scenario {item.run.scenario} · {item.run.solver_status}</strong>
+                <span>Objective: {item.run.objective_score ?? "—"} · {display(objective?.formula)}</span>
+                <span>Weighted/raw overrun: {display(objective?.priority_weighted_overrun)} / {display(objective?.overrun_days_total)} days</span>
+                <span>Excess / ECLO: {display(objective?.excess_access_nights_total)} / {display(objective?.eclo_nights_total)}</span>
+                <span>Over-delivery: {item.result.workload_delivery.reduce((sum,row)=>sum+Number(row.over_delivery ?? 0),0)} · Hotspots: {item.result.capacity_hotspots.length}</span>
+                <span>Late contracts: {display(objective?.contracts_overrunning)} · Solve: {item.run.solve_duration_seconds.toFixed(2)}s</span>
+                <span>Publishable: {item.run.publishable ? "Yes" : "No"} · Physical: {item.run.physical_validation_complete ? "Complete" : "Incomplete"}</span>
+              </div>;
+            })}
+          </details>}
         </aside>
         <main className="opt-main">
           {loading && (
@@ -872,7 +983,7 @@ export default function PS1OptimisationPanel({
               >
                 <div className="opt-section-title">
                   <span className="opt-eyebrow">
-                    SAVED RESULT · {summary.id.slice(0, 8)}
+                    {summary.id === "local-preview" ? "LOCAL PREVIEW" : "SAVED RESULT"} · {summary.id.slice(0, 8)}
                   </span>
                   <span
                     className={`opt-badge ${summary.publishable ? "good" : "neutral"}`}
@@ -919,9 +1030,18 @@ export default function PS1OptimisationPanel({
                     label="Weighted overrun"
                     value={objective?.priority_weighted_overrun}
                   />
+                  {(summary.scenario === "B" || summary.scenario === "C") && <>
+                    <Metric label="Excess access nights" value={objective?.excess_access_nights_total} />
+                    <Metric label="Excess penalty · 7×" value={objective?.excess_penalty} />
+                    <Metric label="ECLO nights" value={objective?.eclo_nights_total} />
+                    <Metric label="ECLO penalty · 5×" value={objective?.eclo_penalty} />
+                    <Metric label="Workload over-delivery" value={result.workload_delivery.reduce((total, row) => total + Number(row.over_delivery ?? 0), 0)} />
+                    {summary.scenario === "B" && <Metric label="Contract completion gate" value={result.contract_completion_gate ? "Passed" : "Failed"} />}
+                    <Metric label="Baseline movement" value={result.baseline_movement} />
+                  </>}
                 </div>
                 <p className="opt-trust">
-                  Judge validation: Not run · Score verification: Internal only
+                  Internal provisional validator · {summary.publishable ? "Schedule feasible" : "Schedule infeasible"} · Judge validation not run · Score verification: internal only · Conflict severity is separate from schedule objective
                 </p>
               </div>
               <div className="opt-quality">
@@ -960,7 +1080,7 @@ export default function PS1OptimisationPanel({
                 </p>
               )}
               <div className="opt-actions">
-                {summary.publishable && (
+                {summary.publishable && summary.id !== "local-preview" && (
                   <button
                     className="control"
                     disabled={solving}
@@ -974,12 +1094,12 @@ export default function PS1OptimisationPanel({
                     Use as baseline
                   </button>
                 )}
-                <button
+                {summary.id !== "local-preview" && <button
                   className="opt-link"
                   onClick={() => void openRun(summary.id, true)}
                 >
                   Reload saved result
-                </button>
+                </button>}
                 <code>{summary.id}</code>
               </div>
               <div
@@ -1475,6 +1595,19 @@ export default function PS1OptimisationPanel({
                 )}
                 {tab === "Diagnostics" && (
                   <>
+                    {(summary.scenario === "B" || summary.scenario === "C") && <>
+                      <h4>Workload delivery</h4>
+                      <Evidence value={result.workload_delivery} label="Required, delivered and over-delivered workload" />
+                      <h4>Capacity hotspots</h4>
+                      {result.capacity_hotspots.length ? result.capacity_hotspots.map((hotspot, i) =>
+                        <Evidence key={`hotspot-${i}`} value={hotspot} label={`${display(hotspot.location_id)} · week ${display(hotspot.week)}`} />)
+                        : <p>No capacity hotspots were reported.</p>}
+                    </>}
+                    {summary.scenario === "C" && <>
+                      <h4>Scenario C ECLO windows</h4>
+                      <Evidence value={result.eclo_windows} label="Alpha and Beta ECLO windows" />
+                      <Evidence value={result.cross_line_eclo_activities} label="Cross-line ECLO activities" />
+                    </>}
                     <h4>Solver stages</h4>
                     {result.stages.length ? (
                       result.stages.map((s, i) => (

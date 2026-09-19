@@ -148,6 +148,7 @@ test("placement adapter includes only supported Placement fields", () => {
     week: 1,
     physical_night: 1,
     access_night: 1,
+    eclo: 0,
   });
 });
 test("occupancy joins on activity and week, never local night or group", () => {

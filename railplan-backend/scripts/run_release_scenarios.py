@@ -12,8 +12,8 @@ from pathlib import Path
 from time import monotonic
 
 from app.ps1 import load_files, parse_instance
-from app.ps1_optimisation.contracts import OptimiseInput
-from app.ps1_optimisation.service import optimise
+from app.ps1_optimisation.contracts import OptimiseInput, ScenarioBOptimiseInput, ScenarioCOptimiseInput
+from app.ps1_optimisation.service import optimise, optimise_scenario_b, optimise_scenario_c
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,20 +32,22 @@ def diagnostic_summary(items: list[dict]) -> list[dict]:
     return summary
 
 
-def scenario_a(seconds: float, deterministic_seconds: float, seed: int, candidate_dir: Path | None) -> dict:
+def run_scenario(scenario: str, seconds: float, deterministic_seconds: float, seed: int, candidate_dir: Path | None) -> dict:
     dataset = parse_instance(load_files())
-    options = OptimiseInput(
+    option_type = {"A": OptimiseInput, "B": ScenarioBOptimiseInput, "C": ScenarioCOptimiseInput}[scenario]
+    solver = {"A": optimise, "B": optimise_scenario_b, "C": optimise_scenario_c}[scenario]
+    options = option_type(
         time_limit_seconds=seconds,
         deterministic_time_limit=deterministic_seconds,
         random_seed=seed,
     )
     started = monotonic()
-    result = optimise(dataset, options)
+    result = solver(dataset, options)
     elapsed = monotonic() - started
     primary = result.stages[0] if result.stages else {}
     validation = result.validation_report
     if candidate_dir is not None and result.publishable:
-        destination = candidate_dir / "scenario-a"
+        destination = candidate_dir / f"scenario-{scenario.lower()}"
         destination.mkdir(parents=True, exist_ok=False)
         for name, content in (result.submission_files or {}).items():
             (destination / name).write_text(content, encoding="utf-8", newline="")
@@ -58,9 +60,9 @@ def scenario_a(seconds: float, deterministic_seconds: float, seed: int, candidat
         "configured_wall_limit_seconds": seconds,
         "configured_deterministic_limit": deterministic_seconds,
         "deterministic_seed": seed,
-        "objective_bound_scaled_10": primary.get("best_bound"),
-        "objective_bound_internal": (primary.get("best_bound") / 10 if primary.get("best_bound") is not None else None),
-        "objective_value_scaled_10": primary.get("value"),
+        "objective_stage": primary.get("name"),
+        "objective_bound": primary.get("best_bound"),
+        "objective_value": primary.get("value"),
         "objective_score": validation.objective_score if validation else None,
         "publishable": result.publishable,
         "physical_validation_status": (
@@ -73,27 +75,6 @@ def scenario_a(seconds: float, deterministic_seconds: float, seed: int, candidat
         "judge_validation": result.judge_validation,
         "score_verification": result.score_verification,
     }
-
-
-def unavailable(scenario: str, seconds: float) -> dict:
-    return {
-        "available": False,
-        "execution_status": "NOT_AVAILABLE",
-        "solver_status": None,
-        "configured_wall_limit_seconds": seconds,
-        "publishable": False,
-        "physical_validation_status": "not_run",
-        "validator_violations": [],
-        "csv_files_written": [],
-        "judge_validation": "not_run",
-        "score_verification": "internal_only",
-        "diagnostics": [{
-            "code": "optimiser_source_absent",
-            "message": f"Scenario {scenario} optimiser source is not present in this authoritative checkout; no schedule was fabricated.",
-        }],
-    }
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--a-seconds", type=float, default=20.0)
@@ -115,9 +96,9 @@ def main() -> int:
         parser.error("candidate directory already exists")
 
     scenarios = {
-        "A": scenario_a(args.a_seconds, args.deterministic_seconds, args.seed, args.candidate_dir),
-        "B": unavailable("B", args.b_seconds),
-        "C": unavailable("C", args.c_seconds),
+        "A": run_scenario("A", args.a_seconds, args.deterministic_seconds, args.seed, args.candidate_dir),
+        "B": run_scenario("B", args.b_seconds, args.deterministic_seconds, args.seed, args.candidate_dir),
+        "C": run_scenario("C", args.c_seconds, args.deterministic_seconds, args.seed, args.candidate_dir),
     }
     report = {
         "dataset": "bundled organiser PS1 input (eight files under data/PS1/01_data)",

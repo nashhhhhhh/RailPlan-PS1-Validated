@@ -53,7 +53,7 @@ def test_schema_model_columns_agree():
     sql=(ROOT/"sql/001_schema.sql").read_text()+"\n"+(ROOT/"sql/005_scoring.sql").read_text().replace("CREATE TABLE railplan.","CREATE TABLE ")+"\n"+(ROOT/"sql/008_ps1_instances.sql").read_text().replace("CREATE TABLE railplan.","CREATE TABLE ")
     sql+='\n'+(ROOT/'sql/009_ps1_validations.sql').read_text().replace('CREATE TABLE railplan.','CREATE TABLE ')
     sql+='\n'+(ROOT/'sql/010_ps1_optimisation_runs.sql').read_text().replace('CREATE TABLE railplan.','CREATE TABLE ')
-    sql+='\n'+(ROOT/'sql/011_ps1_optimisation_jobs.sql').read_text().replace('CREATE TABLE railplan.','CREATE TABLE ')
+    sql+='\n'+(ROOT/'sql/013_ps1_optimisation_jobs.sql').read_text().replace('CREATE TABLE railplan.','CREATE TABLE ')
     for table in Base.metadata.tables.values():
         body=re.search(r"CREATE TABLE "+table.name+r" \((.*?)\n\);",sql,re.S)[1]
         columns=[line.strip().split()[0] for line in body.splitlines()
@@ -125,6 +125,30 @@ def test_openapi_and_health():
         assert client.get("/health").json()["operational_approval_available"] is False
         schema=client.get("/openapi.json").json()
         assert "/api/maintenance-requests" in schema["paths"]
+        assert "/api/ps1/optimise/scenario-b/preview" in schema["paths"]
+        assert "/api/ps1/optimise/scenario-c/preview" in schema["paths"]
+        assert client.get("/health").json()["scenario_b_solver_available"] is True
+        assert client.get("/health").json()["scenario_c_solver_available"] is True
+
+def test_scoring_trigger_prefixes_are_literal_and_scenarios_not_duplicated():
+    sql=(ROOT/'sql/005_scoring.sql').read_text()
+    assert "left(tablename,8)='request_'" in sql
+    assert "left(tablename,9)='scenario_'" in sql
+    assert "tablename LIKE 'scenario_%'" not in sql
+    # scenarios is explicitly listed; literal scenario_ only matches names with the underscore prefix.
+    assert "'scenario_assignments','scenarios'" in sql
+
+def test_scenario_b_migration_is_additive_and_refuses_downgrade():
+    import importlib
+    revision=importlib.import_module('migrations.versions.0008_ps1_scenario_b')
+    assert revision.down_revision=='0007'
+    with pytest.raises(RuntimeError,match='Archive sealed Scenario B'):revision.downgrade()
+
+def test_scenario_c_migration_is_additive_and_refuses_downgrade():
+    import importlib
+    revision=importlib.import_module('migrations.versions.0009_ps1_scenario_c')
+    assert revision.down_revision=='0008'
+    with pytest.raises(RuntimeError,match='Archive sealed Scenario C'):revision.downgrade()
 
 def test_default_auth_fails_closed(monkeypatch):
     from app.database import session

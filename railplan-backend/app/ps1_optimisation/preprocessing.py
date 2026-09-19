@@ -6,7 +6,7 @@ from app.ps1_validation.rules import legal_mix
 class InputError(ValueError):
     pass
 
-def prepare(dataset, options):
+def prepare(dataset, options, scenario='A'):
     tables = dataset['tables']
     activities = {a['activity_id']: a for a in sorted(tables['activity_details'], key=lambda a:a['activity_id'])}
     projects = {(p['contract_number'],p['activity_type']):p for p in sorted(tables['project_details'], key=lambda p:(p['contract_number'],p['activity_type']))}
@@ -20,6 +20,8 @@ def prepare(dataset, options):
         for placement in getattr(options, field):
             a = activities.get(placement.activity_id)
             key = placement.activity_id, placement.access_seq
+            if placement.co_share_group is not None:
+                raise InputError(f'{field}: co_share_group cannot be locked on an access placement; lock physical_night to fix possession concurrency {key}')
             if key in seen: raise InputError(f'{field}: duplicate activity/access_seq {key}')
             seen.add(key)
             if not a or placement.access_seq > a['total_accesses']: raise InputError(f'{field}: unknown activity/access_seq {key}')
@@ -35,10 +37,13 @@ def prepare(dataset, options):
     for aid,bid in combinations(activities,2):
         a,b = footprints[aid],footprints[bid]
         kinds = [projects[activities[i]['contract_number'],activities[i]['activity_type']]['access_type'] for i in (aid,bid)]
-        if a['occupied'] & b['occupied'] and legal_mix(kinds):
-            continue # All common locations will use the same legal physical-night group.
+        shared_overlap=a['occupied'] & b['occupied'] if legal_mix(kinds) else set()
+        if scenario=='A' and shared_overlap:
+            continue # Preserve the established Scenario A possession policy.
         collisions = {
-            'closure':a['occupied'] & b['occupied'],
+            # A legal possession exempts only its common occupied locations. Its
+            # buffers, mirrored closures and interchange closures remain physical.
+            'closure':(a['occupied'] & b['occupied'])-shared_overlap,
             'buffer':(a['buffer'] & (b['occupied']|b['buffer'])) | (b['buffer'] & a['occupied']),
             'live_opposite_bound':(a['opposite'] & b['closure']) | (b['opposite'] & a['closure']),
             'live_interchange':(a['interchange'] & b['closure']) | (b['interchange'] & a['closure']),
@@ -46,10 +51,11 @@ def prepare(dataset, options):
         collisions = {code:sorted(locs) for code,locs in collisions.items() if locs}
         if collisions: pairs.append({'activity_ids':[aid,bid], 'collisions':collisions})
     for aid,a in activities.items():
-        if a['planned_start_week']+a['total_accesses']-1 > horizon:
+        minimum_accesses=(2*a['total_accesses']+2)//3 if scenario in ('B','C') else a['total_accesses']
+        if a['planned_start_week']+minimum_accesses-1 > horizon:
             diagnostics.append({'code':'workload','activity_ids':[aid],'message':'Required weekly accesses do not fit after planned start.'})
         for loc in sorted(footprints[aid]['occupied']):
-            if supply[loc] == 0: diagnostics.append({'code':'capacity','activity_ids':[aid],'location_ids':[loc],'message':'Required location has zero supply.'})
+            if scenario=='A' and supply[loc] == 0: diagnostics.append({'code':'capacity','activity_ids':[aid],'location_ids':[loc],'message':'Required location has zero supply.'})
     for contract in sorted({p['contract_number'] for p in projects.values()}):
         records=[p for p in projects.values() if p['contract_number']==contract]
         if len({(p['contract_priority'],p['planned_completion_date']) for p in records}) != 1:

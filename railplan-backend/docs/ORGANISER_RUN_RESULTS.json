@@ -8,64 +8,77 @@
   "scenario_results": {
     "A": {
       "available": true,
-      "configured_deterministic_limit": 30.0,
-      "configured_wall_limit_seconds": 60.0,
-      "csv_files_written": [
-        "RESULTS.csv",
-        "SCHEDULE_ACCESS.csv",
-        "SCHEDULE_OCCUPANCY.csv"
-      ],
+      "configured_deterministic_limit": 10.0,
+      "configured_wall_limit_seconds": 20.0,
+      "csv_files_written": [],
       "deterministic_seed": 0,
       "diagnostics": [],
-      "elapsed_seconds": 65.235,
+      "elapsed_seconds": 22.484,
       "execution_status": "COMPLETED",
       "judge_validation": "not_run",
-      "objective_bound_internal": 25.2,
-      "objective_bound_scaled_10": 252.0,
-      "objective_score": "79.10",
-      "objective_value_scaled_10": 791,
+      "objective_bound": 252.0,
+      "objective_score": "1692.60",
+      "objective_stage": "weighted_overrun_scaled_10",
+      "objective_value": 16926,
       "physical_validation_complete": true,
       "physical_validation_status": "feasible",
       "publishable": true,
       "score_verification": "internal_only",
-      "solver_elapsed_seconds": 60.187,
+      "solver_elapsed_seconds": 20.109,
       "solver_status": "FEASIBLE",
       "validator_violations": []
     },
     "B": {
-      "available": false,
-      "configured_wall_limit_seconds": 60.0,
+      "available": true,
+      "configured_deterministic_limit": 10.0,
+      "configured_wall_limit_seconds": 20.0,
       "csv_files_written": [],
-      "diagnostics": [
-        {
-          "code": "optimiser_source_absent",
-          "message": "Scenario B optimiser source is not present in this authoritative checkout; no schedule was fabricated."
-        }
-      ],
-      "execution_status": "NOT_AVAILABLE",
+      "deterministic_seed": 0,
+      "diagnostics": [],
+      "elapsed_seconds": 22.969,
+      "execution_status": "COMPLETED",
       "judge_validation": "not_run",
-      "physical_validation_status": "not_run",
-      "publishable": false,
+      "objective_bound": 30.0,
+      "objective_score": "253.00",
+      "objective_stage": "official_scenario_b_objective",
+      "objective_value": 253,
+      "physical_validation_complete": true,
+      "physical_validation_status": "feasible",
+      "publishable": true,
       "score_verification": "internal_only",
-      "solver_status": null,
+      "solver_elapsed_seconds": 19.39,
+      "solver_status": "FEASIBLE",
       "validator_violations": []
     },
     "C": {
-      "available": false,
-      "configured_wall_limit_seconds": 60.0,
+      "available": true,
+      "configured_deterministic_limit": 10.0,
+      "configured_wall_limit_seconds": 20.0,
       "csv_files_written": [],
+      "deterministic_seed": 0,
       "diagnostics": [
         {
-          "code": "optimiser_source_absent",
-          "message": "Scenario C optimiser source is not present in this authoritative checkout; no schedule was fabricated."
+          "code": "search_limit",
+          "message": "No incumbent within the configured solve budgets. This does not prove infeasibility."
+        },
+        {
+          "code": "physical_pair_constraints",
+          "incompatible_pair_count": 312
         }
       ],
-      "execution_status": "NOT_AVAILABLE",
+      "elapsed_seconds": 16.968,
+      "execution_status": "COMPLETED",
       "judge_validation": "not_run",
-      "physical_validation_status": "not_run",
+      "objective_bound": 182.0,
+      "objective_score": null,
+      "objective_stage": "official_scenario_c_objective_scaled_10",
+      "objective_value": null,
+      "physical_validation_complete": false,
+      "physical_validation_status": "not_complete",
       "publishable": false,
       "score_verification": "internal_only",
-      "solver_status": null,
+      "solver_elapsed_seconds": 13.36,
+      "solver_status": "UNKNOWN",
       "validator_violations": []
     }
   }

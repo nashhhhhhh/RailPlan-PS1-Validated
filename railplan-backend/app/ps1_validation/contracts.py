@@ -17,8 +17,10 @@ RULES = ('schema', 'unknown_reference', 'duplicate', 'workload', 'access_sequenc
 
 @dataclass(frozen=True)
 class RulePolicy:
-    version: str = 'ps1-policy/2-explicit-night-alignment'
+    version: str = 'ps1-policy/4-scenario-c-line-windows'
     night_alignment: str = 'CSV-only weekly footprint overlaps are diagnostic warnings, not proof of conflict. Physical checks require complete explicit (activity_id, week) physical-night assignments; local access indices and location group labels never establish global concurrency.'
+    physical_night_domain: str = 'The official inputs provide no dated engineering-night calendar. Rich optimiser validation therefore uses the optimiser-supplied explicit physical-night identity; RailPlan generation provisions a configurable uniform domain of 1 to 7 network-wide slots per calendar week.'
+    eclo_line_classification: str = 'Scenario C line windows use every line present in the canonical expanded closure footprint. Non-live work affects its own line only; Live work whose interchange closure crosses H01-H02 affects both Alpha and Beta.'
     co_sharing: str = 'Pair exemption requires legal shared groups at every common occupied location. No exemption is inferred merely from a matching label at different locations.'
     separate_possessions: str = 'Distinct groups at a common occupied location are separate nights there; this does not prove separation of their buffers or mirrored closures elsewhere.'
     buffer_extent: str = 'Expand inclusive platform-ended span by two chain positions per buffer sector; clip at line ends. Mirror the full expanded Live closure.'
@@ -63,6 +65,8 @@ class WorkloadItem(BaseModel):
     contract_number: str
     required: str
     delivered: str
+    standard_access_contribution: str
+    eclo_contribution: str
     shortfall: str
     over_delivery: str
     present: bool

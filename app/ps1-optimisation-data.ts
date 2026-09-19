@@ -40,6 +40,7 @@ export const summarySchema = z
     primary_objective_gap: z.string().nullable(),
     solve_duration_seconds: z.number(),
     created_at: z.string(),
+    scenario: z.enum(["A", "B", "C"]).default("A"),
   })
   .passthrough();
 export const detailSchema = z.object({
@@ -47,6 +48,7 @@ export const detailSchema = z.object({
   result: z
     .object({
       solver_status: z.string(),
+      scenario: z.enum(["A", "B", "C"]).default("A"),
       publishable: z.boolean(),
       primary_optimal: z.boolean(),
       lexicographic_complete: z.boolean(),
@@ -55,6 +57,12 @@ export const detailSchema = z.object({
       settings: record,
       objective_components: record.nullable(),
       completion_changes: z.array(record),
+      workload_delivery: z.array(record).default([]),
+      capacity_hotspots: z.array(record).default([]),
+      baseline_movement: z.number().int().default(0),
+      contract_completion_gate: z.boolean().default(false),
+      eclo_windows: z.record(record).default({}),
+      cross_line_eclo_activities: z.array(z.string()).default([]),
       stages: z.array(record),
       judge_validation: z.literal("not_run"),
       score_verification: z.literal("internal_only"),
@@ -67,7 +75,7 @@ export const detailSchema = z.object({
       contract_number: z.string(),
       simulated_completion_date: z.string(),
       overrun_days: z.number(),
-      weighted_overrun: z.string(),
+      weighted_overrun: z.string().nullable(),
     }),
   ),
 });
@@ -75,6 +83,21 @@ export const createdSchema = z.object({
   run_id: z.string(),
   created: z.boolean(),
   reused: z.boolean(),
+});
+export const previewResultSchema = detailSchema.shape.result.extend({
+  submission_files: z.record(z.string()).nullable(),
+  physical_nights: z.array(
+    z.object({
+      activity_id: z.string(),
+      access_seq: z.number().int(),
+      week: z.number().int(),
+      physical_night: z.number().int(),
+      access_night: nullableNumber,
+      eclo: z.number().int().nullable().optional(),
+    }).passthrough(),
+  ),
+  validation_report: record.nullable(),
+  diagnostics: z.array(record),
 });
 export const artifactsSchema = z.object({
   run_id: z.string(),
@@ -207,6 +230,7 @@ export function placement(row: Access): Placement {
     week: row.week,
     physical_night: row.physical_night,
     access_night: row.access_night,
+    eclo: Number(Boolean(row.eclo)),
   };
 }
 export function joinOccupancy(rows: Occupancy[], accesses: Access[]) {

@@ -40,7 +40,7 @@ docker compose -f compose.prod.yaml up --build -d
 
 Percent-encode reserved characters in `DATABASE_URL`. The database health check uses
 `pg_isready`; the API readiness check calls `/health/ready`, which verifies database
-connectivity and migration head `0009`. `/health` is the liveness endpoint.
+connectivity and migration head `0011`. `/health` is the liveness endpoint.
 
 ## Limitations before production use
 

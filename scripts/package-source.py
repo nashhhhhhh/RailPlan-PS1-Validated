@@ -14,6 +14,7 @@ def excluded(path):
     name=path.name
     return (any(p in EXCLUDED_DIRS or p.endswith('.egg-info') or
                 p.startswith('.test-tmp') or p.startswith('pytest-cache-files-') for p in path.parts)
+
             or name.startswith('.env') or name in {'.DS_Store','.npmrc','.coverage','next-env.d.ts'}
             or path.suffix.lower() in {'.pyc','.pyo','.tsbuildinfo','.log','.out','.pem','.key','.zip'}
             or name.startswith('credentials') or name.startswith('secrets'))

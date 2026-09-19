@@ -1,5 +1,5 @@
 /** RailPlan v0.5 client. No automatic retries or mock fallback. */
-import type {ReferenceData,GeoFeature,Availability,ApprovalHistory,SavedOptimiseInput,SavedOptimiseResult,OptimisationPage,OptimisationDetail,OptimisationArtifacts,ScenarioAPreviewInput,OptimiseResult,OptimisationJob,OptimisationJobAccepted} from "./contracts.generated";
+import type {ReferenceData,GeoFeature,Availability,ApprovalHistory,SavedOptimiseInput,SavedOptimiseResult,OptimisationPage,OptimisationDetail,OptimisationArtifacts,ScenarioAPreviewInput,ScenarioBPreviewInput,ScenarioCPreviewInput,OptimiseResult,OptimisationJob,OptimisationJobAccepted} from "./contracts.generated";
 export type UUID = string;
 export type Instant = string;
 export interface Page<T> {items:T[]; limit:number; offset:number; total:number}
@@ -69,11 +69,15 @@ export class RailPlanClient {
  capabilities(signal?:AbortSignal){return this.call<Capabilities>("/api/capabilities",{signal});}
  optimisePs1ScenarioAPreview(input:ScenarioAPreviewInput,signal?:AbortSignal){return this.call<OptimiseResult>("/api/ps1/optimise/scenario-a/preview",{method:"POST",body:input,signal});}
  optimisePs1ScenarioA(instanceId:UUID,options:SavedOptimiseInput={},signal?:AbortSignal){return this.call<SavedOptimiseResult>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimise/scenario-a",{method:"POST",body:options,signal});}
+ optimisePs1ScenarioB(instanceId:UUID,options:SavedOptimiseInput={},signal?:AbortSignal){return this.call<SavedOptimiseResult>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimise/scenario-b",{method:"POST",body:options,signal});}
+ previewPs1ScenarioB(options:ScenarioBPreviewInput,signal?:AbortSignal){return this.call<OptimiseResult>("/api/ps1/optimise/scenario-b/preview",{method:"POST",body:options,signal});}
+ optimisePs1ScenarioC(instanceId:UUID,options:SavedOptimiseInput={},signal?:AbortSignal){return this.call<SavedOptimiseResult>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimise/scenario-c",{method:"POST",body:options,signal});}
+ previewPs1ScenarioC(options:ScenarioCPreviewInput,signal?:AbortSignal){return this.call<OptimiseResult>("/api/ps1/optimise/scenario-c/preview",{method:"POST",body:options,signal});}
  startPs1ScenarioAJob(instanceId:UUID,options:SavedOptimiseInput={},signal?:AbortSignal){return this.call<OptimisationJobAccepted>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimise/scenario-a/jobs",{method:"POST",body:options,signal});}
  ps1OptimisationJob(jobId:UUID,signal?:AbortSignal){return this.call<OptimisationJob>("/api/ps1/optimisation-jobs/"+encodeURIComponent(jobId),{signal});}
  ps1OptimisationJobs(instanceId:UUID,query:{limit?:number;offset?:number}={},signal?:AbortSignal){return this.call<OptimisationPage>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimisation-jobs",{query,signal});}
  cancelPs1OptimisationJob(jobId:UUID,signal?:AbortSignal){return this.call<OptimisationJob>("/api/ps1/optimisation-jobs/"+encodeURIComponent(jobId)+"/cancel",{method:"POST",signal});}
- ps1Optimisations(instanceId:UUID,query:{limit?:number;offset?:number}={},signal?:AbortSignal){return this.call<OptimisationPage>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimisations",{query,signal});}
+ ps1Optimisations(instanceId:UUID,query:{limit?:number;offset?:number;scenario?:"A"|"B"|"C"}={},signal?:AbortSignal){return this.call<OptimisationPage>("/api/ps1/instances/"+encodeURIComponent(instanceId)+"/optimisations",{query,signal});}
  ps1Optimisation(runId:UUID,signal?:AbortSignal){return this.call<OptimisationDetail>("/api/ps1/optimisations/"+encodeURIComponent(runId),{signal});}
  ps1OptimisationAccesses(runId:UUID,query:{limit?:number;offset?:number;week?:number;activity_id?:string}={},signal?:AbortSignal){return this.call<OptimisationPage>("/api/ps1/optimisations/"+encodeURIComponent(runId)+"/accesses",{query,signal});}
  ps1OptimisationOccupancies(runId:UUID,query:{limit?:number;offset?:number;week?:number;activity_id?:string;location_id?:string}={},signal?:AbortSignal){return this.call<OptimisationPage>("/api/ps1/optimisations/"+encodeURIComponent(runId)+"/occupancies",{query,signal});}

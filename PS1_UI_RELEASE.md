@@ -1,5 +1,7 @@
 # RailPlan PS1 optimiser UI integration release
 
+> Historical Scenario A release record. Scenario B generation is now enabled; see `SCENARIO_B_RELEASE.md` and `docs/PS1_UI_INTEGRATION.md` for current behaviour.
+
 Built from `RailPlan-PS1-Optimiser-Persistence.zip`. This release connects the existing Vinext/React PS1 workspace to the persistent Scenario A FastAPI API. It does not deploy the application or change the optimiser, validator, persistence schema or organiser dataset.
 
 ## Delivered
@@ -16,7 +18,7 @@ Built from `RailPlan-PS1-Optimiser-Persistence.zip`. This release connects the e
 - Soft saved-run baselines and hard access-placement locks for the next solve.
 - Exact stored CSV downloads; unavailable artifacts remain explicit on rejected runs.
 - Responsive tablet layout, keyboard tab navigation, visible focus states, reduced-motion support and non-colour status cues.
-- Scenario B/C generate actions remain disabled because only Scenario A optimisation exists.
+- At the time of this historical release, Scenario B/C generation was disabled.
 
 ## Files added
 
