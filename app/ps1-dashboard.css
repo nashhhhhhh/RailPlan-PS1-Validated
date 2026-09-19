@@ -602,7 +602,9 @@
 .psd-svg-line.dimmed { opacity: .22; filter: saturate(.45); }
 .psd-track { stroke-width: 5; filter: none; }
 .psd-svg-line.beta .psd-track { filter: none; }
-.psd-track-wb { stroke-width: 3.5; opacity: .72; stroke-dasharray: 10 7; }
+.psd-track-bed { stroke: #26364e; stroke-width: 9; stroke-linecap: round; opacity: .72; }
+.psd-track-eb { stroke-width: 4; }
+.psd-track-wb { stroke-width: 3; opacity: .9; stroke-dasharray: 11 7; }
 .psd-energy { stroke-width: 1.5; opacity: .72; filter: none; }
 .psd-packet { filter: drop-shadow(0 0 4px currentColor); }
 .psd-station-bridge { stroke: currentColor; stroke-width: 2; opacity: .75; }
