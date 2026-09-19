@@ -10,11 +10,11 @@ RUN corepack enable && corepack prepare pnpm@11.25.0 --activate
 WORKDIR /app
 
 FROM pnpm-base AS dependencies
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 FROM pnpm-base AS production-dependencies
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --prod --frozen-lockfile
 
 FROM pnpm-base AS builder

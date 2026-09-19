@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
   X,
   AlertTriangle,
+  CircleHelp,
 } from "lucide-react";
 import {
   accessKey,
@@ -87,6 +88,26 @@ const colorList = [
   "#307dba",
   "#ae5074",
 ];
+const scenarioGuide = {
+  A: {
+    title: "Fixed railway capacity",
+    objective: "Minimise priority-weighted contract delay.",
+    rules: "No ECLO and no capacity excess. Every access must fit the supplied locations and physical nights.",
+    interpretation: "The solver chooses each activity’s week and physical night. This is the strictest scenario and may need a longer search.",
+  },
+  B: {
+    title: "Deadlines protected",
+    objective: "Meet every planned completion date while minimising paid flexibility.",
+    rules: "Late completion is forbidden. Extra access capacity costs 7 per night and ECLO costs 5 per night.",
+    interpretation: "The solver may buy capacity or use ECLO when fixed supply cannot meet every deadline.",
+  },
+  C: {
+    title: "Balanced delivery plan",
+    objective: "Minimise weighted delay + capacity penalties + ECLO penalties.",
+    rules: "At most one extra access-night per location/week, with separate bounded ECLO windows for Alpha and Beta.",
+    interpretation: "The solver trades a controlled amount of flexibility against contract delay.",
+  },
+} as const;
 function Evidence({
   value,
   label = "Evidence",
@@ -121,11 +142,8 @@ export default function PS1OptimisationPanel({
   onSelectActivity,
   onHighlightLocations,
 }: Props) {
-  const previewSupported = (["A", "B", "C"] as const).includes(scenario);
   const elasticScenario = scenario === "B" || scenario === "C";
-  const [mode, setMode] = useState<"preview" | "saved">(
-    instanceId ? "saved" : "preview",
-  );
+  const [mode, setMode] = useState<"preview" | "saved">("saved");
   const [options, setOptions] = useState(defaults),
     [baseline, setBaseline] = useState(""),
     [locks, setLocks] = useState<Placement[]>([]);
@@ -407,7 +425,7 @@ export default function PS1OptimisationPanel({
     return () => clearInterval(timer);
   }, [solving]);
   async function run(retry = false) {
-    if (solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!previewSupported || !Object.keys(instanceFiles).length))) return;
+    if (solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))) return;
     setRunError("");
     setNotice("");
     let next: Attempt;
@@ -440,7 +458,7 @@ export default function PS1OptimisationPanel({
     solveController.current = c;
     const currentEpoch = epoch.current;
     try {
-      if (previewSupported && mode === "preview") {
+      if (elasticScenario && mode === "preview") {
         const { baseline_run_id: _baseline, idempotency_key: _key, ...solver } = next.body;
         const raw = await backend(`/api/ps1/optimise/scenario-${scenario.toLowerCase()}/preview`, { ...solver, instance_files: instanceFiles }, c.signal);
         if (c.signal.aborted || currentEpoch !== epoch.current) return;
@@ -523,6 +541,7 @@ export default function PS1OptimisationPanel({
     summary = view?.detail.run,
     validation = view?.detail.validation;
   const objective = result?.objective_components;
+  const hasObjectiveMetrics = !!objective && Object.keys(objective).length > 0;
   const completeness = validation?.completeness as Record<string, unknown> | undefined;
   const hardViolationCount = validation && Array.isArray(validation.hard_violations) ? validation.hard_violations.length : null;
   const gate = publicationGate({candidate:!!summary && (summary.solver_status==="OPTIMAL"||summary.solver_status==="FEASIBLE"),feasible:validation?.feasible===true,physicalComplete:summary?.physical_validation_complete===true && validation?.physical_validation_complete===true,hardViolations:hardViolationCount,backendAccepted:summary?.publishable===true});
@@ -602,14 +621,14 @@ export default function PS1OptimisationPanel({
             <Activity size={13} /> SCENARIO {scenario} / PLANNING ENGINE
           </span>
           <h2>Make every night count.</h2>
-          <p>{scenario === "B" ? "Meet every planned completion date with explicit ECLO and capacity trade-offs." : scenario === "C" ? "Balance weighted delay, bounded capacity elasticity and line-scoped ECLO windows." : "Generate, inspect and refine a track-access plan."}</p>
+          <p>{scenario === "B" ? "Meet every planned completion date with explicit ECLO and capacity trade-offs." : scenario === "C" ? "Balance weighted delay, bounded capacity elasticity and line-scoped ECLO windows." : "Generate, inspect and refine a saved track-access plan."}</p>
         </div>
         <span className="opt-engine">
           <i /> OR-Tools CP-SAT
         </span>
       </header>
       <div className="opt-night-terms"><p><strong>physical_night:</strong> Network-wide engineering night used for physical conflicts.</p><p><strong>access_night:</strong> Local contract/type/week allocation index.</p><p><strong>co_share_group:</strong> Local possession-sharing group at one location/week.</p></div>
-      {!instanceId && mode === "saved" && (
+      {!instanceId && (!elasticScenario || mode === "saved") && (
         <div className="opt-callout">
           <Layers size={20} />
           <div>
@@ -660,7 +679,7 @@ export default function PS1OptimisationPanel({
         </div>
         <div className="opt-fields">
           <div className="opt-presets" role="group" aria-label="Solver presets">{(Object.keys(solverPresets) as Array<keyof typeof solverPresets>).map(name=><button type="button" className="control" key={name} disabled={solving} onClick={()=>setOptions({...options,...solverPresets[name]})}>{name}</button>)}<p>Longer limits improve search but do not guarantee optimality.</p></div>
-          {previewSupported && <label>Run mode<select aria-label="Optimisation mode" value={mode} disabled={solving} onChange={(e) => setMode(e.target.value as "preview" | "saved")}>
+          {elasticScenario && <label>Run mode<select aria-label="Optimisation mode" value={mode} disabled={solving} onChange={(e) => setMode(e.target.value as "preview" | "saved")}>
             <option value="preview">Local preview · no saved history</option><option value="saved">Saved optimisation · PostgreSQL history</option>
           </select></label>}
           <label>
@@ -680,6 +699,7 @@ export default function PS1OptimisationPanel({
                 })
               }
             />
+            <small>Maximum solver search time. Try a longer budget when the result is UNKNOWN.</small>
           </label>
           <label>
             Physical nights per week
@@ -697,6 +717,7 @@ export default function PS1OptimisationPanel({
                 })
               }
             />
+            <small>Abstract engineering-night slots available each week, from 1 to 7.</small>
           </label>
           <label>
             Baseline preference
@@ -719,6 +740,7 @@ export default function PS1OptimisationPanel({
                 </option>
               ))}
             </select>
+            <small>A soft preference to stay near a previous accepted plan; it is not a hard lock.</small>
           </label>
         </div>
         <details>
@@ -768,7 +790,7 @@ export default function PS1OptimisationPanel({
         <div className="opt-actions">
           <button
             className="opt-primary"
-            disabled={solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!previewSupported || !Object.keys(instanceFiles).length))}
+            disabled={solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))}
             onClick={() => void run()}
           >
             <Play size={15} />
@@ -858,7 +880,7 @@ export default function PS1OptimisationPanel({
         <div className="opt-actions">
           <button
             className="control"
-            disabled={(mode === "saved" && !instanceId) || (mode === "preview" && (!previewSupported || !Object.keys(instanceFiles).length))}
+            disabled={(mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))}
             onClick={() => void run(true)}
           >
             Retry exact attempt
@@ -1026,7 +1048,7 @@ export default function PS1OptimisationPanel({
                   )}{" "}
                   · {summary.terminal_outcome}
                 </p>
-                <div className="opt-metrics">
+                {hasObjectiveMetrics ? <div className="opt-metrics">
                   <Metric
                     label="Internal objective"
                     value={summary.objective_score}
@@ -1062,7 +1084,11 @@ export default function PS1OptimisationPanel({
                     {summary.scenario === "B" && <Metric label="Contract completion gate" value={result.contract_completion_gate ? "Passed" : "Failed"} />}
                     <Metric label="Baseline movement" value={result.baseline_movement} />
                   </>}
-                </div>
+                </div> : <div className="opt-no-metrics" role="note">
+                  <div><AlertTriangle size={19}/><span><strong>No candidate means no schedule totals yet</strong><p>Objective, access-night, delay, capacity and ECLO values can only be calculated after the solver finds a complete candidate. The dashes previously shown here did not mean zero.</p></span></div>
+                  <dl><div><dt>Search completed in</dt><dd>{summary.solve_duration_seconds.toFixed(2)}s</dd></div><div><dt>Candidate schedule</dt><dd>Not found</dd></div><div><dt>What UNKNOWN means</dt><dd>Time ran out; impossibility was not proven.</dd></div></dl>
+                  {summary.solver_status === "UNKNOWN" && <div className="opt-next-step"><strong>Recommended next step</strong><p>Choose Balanced or Thorough and run again. Quick is useful for a fast check, but strict Scenario A often needs more search time.</p><button className="control" onClick={()=>{setOptions({...options,...solverPresets.Thorough});document.querySelector(".opt-config")?.scrollIntoView({behavior:"smooth",block:"start"});}}>Use Thorough settings</button></div>}
+                </div>}
                 <p className="opt-trust">
                   Internal provisional validator · {validation ? (validation.feasible===true ? "Schedule feasible" : "Schedule infeasible") : "Schedule feasibility unverified"} · Judge validation not run · Score verification: internal only · Conflict severity is separate from schedule objective
                 </p>
