@@ -314,9 +314,22 @@ fs.mkdirSync(screenshots, { recursive: true });
       await opt()
         .getByRole("button", { name: "Generate schedule", exact: true })
         .isDisabled(),
+      false,
+    );
+    const guide = opt().getByText("How to use this optimiser", { exact: true });
+    await guide.click();
+    for (const heading of ["Load the planning inputs", "Choose a scenario", "Choose where the run lives", "Set the search", "Generate and verify"])
+      assert.equal(await opt().getByText(heading, { exact: true }).count(), 1);
+    assert.equal(await opt().getByText("8 input files loaded — stateless preview is ready.", { exact: true }).count(), 1);
+    check("Scenario A stateless preview and embedded guide are ready");
+    await opt().getByLabel("Optimisation mode").selectOption("saved");
+    assert.equal(
+      await opt()
+        .getByRole("button", { name: "Generate schedule", exact: true })
+        .isDisabled(),
       true,
     );
-    check("requires a saved instance");
+    check("saved mode requires a saved instance");
     await shot("01-save-prerequisite");
     await opt().getByRole("button", { name: "Go to Save Dataset" }).click();
     await page

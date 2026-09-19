@@ -15,6 +15,7 @@ import {
   SlidersHorizontal,
   X,
   AlertTriangle,
+  CircleHelp,
 } from "lucide-react";
 import {
   accessKey,
@@ -121,8 +122,10 @@ export default function PS1OptimisationPanel({
   onSelectActivity,
   onHighlightLocations,
 }: Props) {
-  const elasticScenario = scenario === "B" || scenario === "C";
-  const [mode, setMode] = useState<"preview" | "saved">("saved");
+  const inputFileCount = Object.keys(instanceFiles).length;
+  const [mode, setMode] = useState<"preview" | "saved">(
+    instanceId ? "saved" : "preview",
+  );
   const [options, setOptions] = useState(defaults),
     [baseline, setBaseline] = useState(""),
     [locks, setLocks] = useState<Placement[]>([]);
@@ -402,7 +405,7 @@ export default function PS1OptimisationPanel({
     return () => clearInterval(timer);
   }, [solving]);
   async function run(retry = false) {
-    if (solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))) return;
+    if (solving || (mode === "saved" && !instanceId) || (mode === "preview" && !inputFileCount)) return;
     setRunError("");
     setNotice("");
     let next: Attempt;
@@ -435,7 +438,7 @@ export default function PS1OptimisationPanel({
     solveController.current = c;
     const currentEpoch = epoch.current;
     try {
-      if (elasticScenario && mode === "preview") {
+      if (mode === "preview") {
         const { baseline_run_id: _baseline, idempotency_key: _key, ...solver } = next.body;
         const raw = await backend(`/api/ps1/optimise/scenario-${scenario.toLowerCase()}/preview`, { ...solver, instance_files: instanceFiles }, c.signal);
         if (c.signal.aborted || currentEpoch !== epoch.current) return;
@@ -597,14 +600,28 @@ export default function PS1OptimisationPanel({
             <Activity size={13} /> SCENARIO {scenario} / PLANNING ENGINE
           </span>
           <h2>Make every night count.</h2>
-          <p>{scenario === "B" ? "Meet every planned completion date with explicit ECLO and capacity trade-offs." : scenario === "C" ? "Balance weighted delay, bounded capacity elasticity and line-scoped ECLO windows." : "Generate, inspect and refine a saved track-access plan."}</p>
+          <p>{scenario === "B" ? "Meet every planned completion date with explicit ECLO and capacity trade-offs." : scenario === "C" ? "Balance weighted delay, bounded capacity elasticity and line-scoped ECLO windows." : "Generate, inspect and refine a validated track-access plan."}</p>
         </div>
         <span className="opt-engine">
           <i /> OR-Tools CP-SAT
         </span>
       </header>
       <div className="opt-night-terms"><p><strong>physical_night:</strong> Network-wide engineering night used for physical conflicts.</p><p><strong>access_night:</strong> Local contract/type/week allocation index.</p><p><strong>co_share_group:</strong> Local possession-sharing group at one location/week.</p></div>
-      {!instanceId && (!elasticScenario || mode === "saved") && (
+      <details className="opt-guide" data-tour="optimizer-guide">
+        <summary><CircleHelp size={18} /><span>How to use this optimiser</span><small>5 clear steps</small></summary>
+        <div className="opt-guide-grid">
+          <article><b>1</b><div><strong>Load the planning inputs</strong><p>Use <em>Load organiser dataset</em> for the eight bundled challenge CSVs. Upload all eight files from <code>01_data</code> together only when planning a custom dataset.</p></div></article>
+          <article><b>2</b><div><strong>Choose a scenario</strong><p>A uses fixed supply, B keeps planned deadlines with elastic supply, and C balances delay, extra supply and ECLO.</p></div></article>
+          <article><b>3</b><div><strong>Choose where the run lives</strong><p><em>Stateless preview</em> works without PostgreSQL or sign-in and creates no history. <em>Saved optimisation</em> needs a saved dataset and keeps runs for comparison.</p></div></article>
+          <article><b>4</b><div><strong>Set the search</strong><p>Pick Quick, Balanced or Thorough, then adjust the time budget, physical nights and optional advanced settings. A longer search may find a better plan.</p></div></article>
+          <article><b>5</b><div><strong>Generate and verify</strong><p>Inspect solver status, the publication gate, schedule, occupancy, contracts and validation. Export CSVs only when the candidate is publishable and has zero hard violations.</p></div></article>
+        </div>
+        <p className={`opt-guide-status ${inputFileCount ? "ready" : instanceId ? "saved" : "waiting"}`}>
+          {inputFileCount ? `${inputFileCount} input files loaded — stateless preview is ready.` : instanceId ? "Saved dataset loaded — saved optimisation is ready. Reload its source files to use stateless preview." : "No planning inputs loaded yet. Load the organiser dataset or import all eight input CSVs above."}
+        </p>
+        <p className="opt-guide-note"><strong>Solver status:</strong> OPTIMAL proves the best result, FEASIBLE found a valid candidate, UNKNOWN found no usable candidate within the limit, INFEASIBLE proves there is no solution under the settings, and MODEL_INVALID means the model could not run.</p>
+      </details>
+      {!instanceId && mode === "saved" && (
         <div className="opt-callout">
           <Layers size={20} />
           <div>
@@ -649,9 +666,9 @@ export default function PS1OptimisationPanel({
         </div>
         <div className="opt-fields">
           <div className="opt-presets" role="group" aria-label="Solver presets">{(Object.keys(solverPresets) as Array<keyof typeof solverPresets>).map(name=><button type="button" className="control" key={name} disabled={solving} onClick={()=>setOptions({...options,...solverPresets[name]})}>{name}</button>)}<p>Longer limits improve search but do not guarantee optimality.</p></div>
-          {elasticScenario && <label>Run mode<select aria-label="Optimisation mode" value={mode} disabled={solving} onChange={(e) => setMode(e.target.value as "preview" | "saved")}>
-            <option value="preview">Local preview · no saved history</option><option value="saved">Saved optimisation · PostgreSQL history</option>
-          </select></label>}
+          <label>Run mode<select aria-label="Optimisation mode" value={mode} disabled={solving} onChange={(e) => setMode(e.target.value as "preview" | "saved")}>
+            <option value="preview">Stateless preview · no saved history</option><option value="saved">Saved optimisation · PostgreSQL history</option>
+          </select></label>
           <label>
             Time budget · seconds
             <input
@@ -757,7 +774,7 @@ export default function PS1OptimisationPanel({
         <div className="opt-actions">
           <button
             className="opt-primary"
-            disabled={solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))}
+            disabled={solving || (mode === "saved" && !instanceId) || (mode === "preview" && !inputFileCount)}
             onClick={() => void run()}
           >
             <Play size={15} />
@@ -847,7 +864,7 @@ export default function PS1OptimisationPanel({
         <div className="opt-actions">
           <button
             className="control"
-            disabled={(mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))}
+            disabled={(mode === "saved" && !instanceId) || (mode === "preview" && !inputFileCount)}
             onClick={() => void run(true)}
           >
             Retry exact attempt
