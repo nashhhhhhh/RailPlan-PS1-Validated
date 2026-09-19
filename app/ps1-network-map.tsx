@@ -31,7 +31,7 @@ function NetworkLine({
   onSelect: () => void;
 }) {
   const className = code === "ALP" ? "alpha" : "beta";
-  const gradient = code === "ALP" ? "url(#alphaGradient)" : "url(#betaGradient)";
+  const trackColor = code === "ALP" ? "#7adcf4" : "#bd91f2";
   const marker = code === "ALP" ? "url(#alphaArrow)" : "url(#betaArrow)";
   return <g
     className={`psd-svg-line ${className} ${dimmed ? "dimmed" : ""}`}
@@ -50,17 +50,23 @@ function NetworkLine({
       <text x="151" y={y + 17} textAnchor="end" className="psd-line-bound">WB</text>
     </g>
 
-    <path d={`M 205 ${y - 10} L 1090 ${y - 10}`} stroke={gradient} className={`psd-track psd-track-eb ${focusBound === "WB" ? "bound-dimmed" : ""}`} markerEnd={marker}/>
-    <path d={`M 1090 ${y + 10} L 205 ${y + 10}`} stroke={gradient} className={`psd-track psd-track-wb ${focusBound === "EB" ? "bound-dimmed" : ""}`} markerEnd={marker}/>
-    <path d={`M 205 ${y - 10} L 1090 ${y - 10}`} stroke={gradient} className={`psd-energy psd-energy-eb ${focusBound === "WB" ? "bound-dimmed" : ""}`}/>
-    <path d={`M 1090 ${y + 10} L 205 ${y + 10}`} stroke={gradient} className={`psd-energy psd-energy-wb ${focusBound === "EB" ? "bound-dimmed" : ""}`}/>
+    <line x1="188" y1={y - 10} x2="1092" y2={y - 10} className="psd-track-bed"/>
+    <line x1="1092" y1={y + 10} x2="188" y2={y + 10} className="psd-track-bed"/>
+    <line x1="188" y1={y - 10} x2="1082" y2={y - 10} stroke={trackColor} className={`psd-track psd-track-eb ${focusBound === "WB" ? "bound-dimmed" : ""}`} markerEnd={marker}/>
+    <line x1="1082" y1={y + 10} x2="198" y2={y + 10} stroke={trackColor} className={`psd-track psd-track-wb ${focusBound === "EB" ? "bound-dimmed" : ""}`} markerEnd={marker}/>
+    <line x1="188" y1={y - 10} x2="1074" y2={y - 10} stroke={trackColor} className={`psd-energy psd-energy-eb ${focusBound === "WB" ? "bound-dimmed" : ""}`}/>
+    <line x1="1082" y1={y + 10} x2="206" y2={y + 10} stroke={trackColor} className={`psd-energy psd-energy-wb ${focusBound === "EB" ? "bound-dimmed" : ""}`}/>
 
-    <circle r="4" fill={code === "ALP" ? "#79dfff" : "#cb8cff"} className={`psd-packet ${focusBound === "WB" ? "bound-dimmed" : ""}`}>
-      <animateMotion dur={code === "ALP" ? "7s" : "7.8s"} repeatCount="indefinite" path={`M 205 ${y - 10} L 1080 ${y - 10}`}/>
-    </circle>
-    <circle r="4" fill={code === "ALP" ? "#8ba8ff" : "#ee8dd0"} className={`psd-packet ${focusBound === "EB" ? "bound-dimmed" : ""}`}>
-      <animateMotion dur={code === "ALP" ? "8.2s" : "7.2s"} repeatCount="indefinite" path={`M 1080 ${y + 10} L 205 ${y + 10}`}/>
-    </circle>
+    <g className={`psd-packet ${focusBound === "WB" ? "bound-dimmed" : ""}`}>
+      <circle r="8" fill="none" stroke={code === "ALP" ? "#79dfff" : "#cb8cff"} className="psd-packet-halo"/>
+      <circle r="2.7" fill={code === "ALP" ? "#d9f8ff" : "#f2ddff"} className="psd-packet-core"/>
+      <animateMotion dur={code === "ALP" ? "7s" : "7.8s"} repeatCount="indefinite" path={`M 205 ${y - 10} L 1068 ${y - 10}`}/>
+    </g>
+    <g className={`psd-packet ${focusBound === "EB" ? "bound-dimmed" : ""}`}>
+      <circle r="8" fill="none" stroke={code === "ALP" ? "#8ba8ff" : "#ee8dd0"} className="psd-packet-halo"/>
+      <circle r="2.7" fill={code === "ALP" ? "#e4ebff" : "#ffe0f4"} className="psd-packet-core"/>
+      <animateMotion dur={code === "ALP" ? "8.2s" : "7.2s"} repeatCount="indefinite" path={`M 1068 ${y + 10} L 212 ${y + 10}`}/>
+    </g>
 
     {stations.map((station, index) => {
       const x = stationX[index];
@@ -85,11 +91,9 @@ export default function PS1NetworkMap({ focusLine, focusBound, onSelectLine }: P
       <title id="psd-network-title">Line Alpha and Line Beta network topology</title>
       <desc id="psd-network-description">Two independent directional metro lines with separate H01 and H02 capacity. Live work can create cross-line closure.</desc>
       <defs>
-        <linearGradient id="alphaGradient" x1="0" x2="1"><stop offset="0" stopColor="#5cd9f5"/><stop offset="1" stopColor="#7698ff"/></linearGradient>
-        <linearGradient id="betaGradient" x1="0" x2="1"><stop offset="0" stopColor="#a78bfa"/><stop offset="1" stopColor="#e184c9"/></linearGradient>
         <pattern id="microGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M 28 0 L 0 0 0 28" fill="none" stroke="#263656" strokeWidth=".6" opacity=".22"/></pattern>
-        <marker id="alphaArrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7698ff"/></marker>
-        <marker id="betaArrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#e184c9"/></marker>
+        <marker id="alphaArrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M 2 1.5 L 10 6 L 2 10.5" fill="none" stroke="#7adcf4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></marker>
+        <marker id="betaArrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M 2 1.5 L 10 6 L 2 10.5" fill="none" stroke="#bd91f2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></marker>
       </defs>
       <rect width="1180" height="430" fill="url(#microGrid)"/>
       <text x="40" y="40" className="psd-map-title">DUAL-LINE NETWORK TOPOLOGY</text>
