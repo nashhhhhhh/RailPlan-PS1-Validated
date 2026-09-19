@@ -6,7 +6,7 @@ Migration `0008` expanded the sealed run scenario check to `A/B` and the child a
 
 The original persistence release added terminal history to the synchronous Scenario A endpoint;
 Scenario B and C use the same transaction boundary and sealed evidence model. Pure optimiser
-version `ps1-optimiser/1.2.0`, validator 1.1.0, Scenario-C-line-window policy 4, the
+version `ps1-optimiser/1.3.0`, validator 1.2.0, explicit-possession-closure policy 5, the
 Scenario A offline CLI and organiser CSV schemas remain database-independent. Historical
 migration **0007** follows **0006**, while current head is **0011**. None reuses legacy nightly
 `optimisation_runs`, scenarios or CSV-only PS1 validation history.

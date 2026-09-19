@@ -13,11 +13,13 @@ def solve(dataset, data, options):
     weeks = range(1,horizon+1)
     night_ids = range(1,nights+1)
     guards = {}
-    def enforce(expression, code):
+    def guard(code):
         if code not in guards:
             guards[code] = model.NewBoolVar('rule:'+code)
             model.AddAssumption(guards[code])
-        model.Add(expression).OnlyEnforceIf(guards[code])
+        return guards[code]
+    def enforce(expression, code):
+        model.Add(expression).OnlyEnforceIf(guard(code))
     x,p,night,local,W,N,L,completion = {},{},{},{},{},{},{},{}
     by_project = defaultdict(list)
     by_location = defaultdict(list)
@@ -87,9 +89,14 @@ def solve(dataset, data, options):
     for pair in data['pairs']:
         aid,bid=pair['activity_ids']
         for w in weeks:
-            for n in night_ids:
-                # One pair constraint; diagnostics retain every applicable collision family.
-                enforce(x[aid,w,n]+x[bid,w,n]<=1,'physical_closure')
+            if pair['shareable']:
+                # Compatible activities may coexist in the week only as one
+                # possession.  Equality is transitive and the location/night
+                # constraints validate the complete (not merely pairwise) mix.
+                model.Add(night[aid,w]==night[bid,w]).OnlyEnforceIf(
+                    p[aid,w],p[bid,w],guard('physical_closure'))
+            else:
+                enforce(p[aid,w]+p[bid,w]<=1,'physical_closure')
     for placement in sorted(options.locked_placements,key=lambda p:(p.activity_id,p.access_seq)):
         key=placement.activity_id,placement.access_seq
         code=f'lock:{key[0]}:{key[1]}'

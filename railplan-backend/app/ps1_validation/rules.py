@@ -160,16 +160,17 @@ def evaluate(dataset, tables, scenario, physical_nights: dict[tuple[str, int], i
                     alignment_valid = False
                     add('schema', 'One location/week possession group cannot span multiple physical nights',
                         ids, week=week, locations=[loc], physical_evaluation_complete=False)
-    # CSV-only checks index candidate overlaps by week. Rich checks also index night.
+    # The submission identifies possessions by (location, week, co_share_group).
+    # Physical nights enrich diagnostics, but cannot make two distinct weekly
+    # possession groups exempt from one another's closure.
     affected=defaultdict(set)
     for r in access:
         if rich and not alignment_valid:
             continue
-        night = night_map[r['activity_id'],r['week']] if rich else None
-        for loc in spans[r['activity_id']]['closure']: affected[r['week'],night,loc].add(r['activity_id'])
+        for loc in spans[r['activity_id']]['closure']: affected[r['week'],loc].add(r['activity_id'])
     pairs=set()
     limit_exceeded=False
-    for (week,night,_),ids in sorted(affected.items()):
+    for (week,_),ids in sorted(affected.items()):
         for a,b in combinations(sorted(ids),2):
             pairs.add((week,a,b))
             if len(pairs)>POLICY.max_intersecting_pairs:
@@ -185,28 +186,35 @@ def evaluate(dataset, tables, scenario, physical_nights: dict[tuple[str, int], i
         common=sa['occupied'] & sb['occupied']
         shared={loc for loc in common if assignment[a,week,loc]==assignment[b,week,loc]
                 and legal[loc,week,assignment[a,week,loc]]}
-        if scenario=='A' and common and shared==common:
+        # A real shared possession requires a common occupied location, the
+        # same submitted group at every common location, and a legal complete
+        # group.  This—not pairwise access-type compatibility—is the exemption.
+        if common and shared==common:
             continue
-        # Different local groups establish separate possession slots at that location only.
-        same={loc for loc in common if assignment[a,week,loc]==assignment[b,week,loc]}-shared
+        group_evidence={'assignments': [
+            {'activity_id':aid,'location_id':loc,'co_share_group':assignment[aid,week,loc][1]}
+            for aid in (a,b) for loc in sorted(spans[aid]['occupied'])]}
+        night_evidence=({aid:night_map[aid,week] for aid in (a,b)} if rich and alignment_valid else None)
+        # Report closure intrusion directionally so diagnostics name both the
+        # offending activity and the activity/group owning the closure.
+        for owner,offender,locations in (
+            (a,b,sb['occupied'] & sa['closure']),
+            (b,a,sa['occupied'] & sb['closure'])):
+            if locations:
+                add('closure',"Activity inside another group's closure zone",[owner,offender],
+                    week=week,locations=locations,group=group_evidence,
+                    closure_owner_activity=owner,offending_activity=offender,
+                    physical_nights=night_evidence,shared_locations=sorted(shared))
         collisions={
-            'closure':common-shared if rich else same,
-            'buffer':(sa['buffer'] & (sb['occupied']|sb['buffer'])) | (sb['buffer'] & sa['occupied']),
+            'buffer':sa['buffer'] & sb['buffer'],
             'live_opposite_bound':(sa['opposite'] & sb['closure']) | (sb['opposite'] & sa['closure']),
             'live_interchange':(sa['interchange'] & sb['closure']) | (sb['interchange'] & sa['closure']),
         }
         for code,locations in sorted(collisions.items()):
             if locations:
-                if not rich:
-                    warnings.append({'code':'physical_night_alignment_unverifiable',
-                        'week':week,'activity_ids':[a,b],'candidate_collision_type':code,
-                        'candidate_locations':sorted(locations),
-                        'message':'Weekly footprints overlap, but the CSVs do not establish physical-night alignment. This is not proof of a conflict.'})
-                    continue
-                add(code,'Possession footprints conflict on the same explicit physical night',[a,b],week=week,locations=locations,
-                    group={'assignments': [{'activity_id':aid,'location_id':loc,'co_share_group':assignment[aid,week,loc][1]}
-                        for aid in (a,b) for loc in sorted(spans[aid]['occupied'])]},
-                    alignment='explicit_physical_night',physical_night=night_map[a,week],shared_locations=sorted(shared))
+                add(code,'Distinct possession groups have conflicting protected footprints',[a,b],
+                    week=week,locations=locations,group=group_evidence,
+                    physical_nights=night_evidence,shared_locations=sorted(shared))
     usage=defaultdict(list)
     for (loc,week,label),ids in sorted(groups.items()):
         usage[loc,week].append({'co_share_group':label[1],'source':label[0],'activity_ids':sorted(ids)})

@@ -156,8 +156,8 @@ def test_ps1_validation_exact_sources_dedup_and_audit(api,db,validation_run):
     assert stored['policy_snapshot']==result['report']['rule_policy']
     assert api.get(path).json()['total']==1
     violations=api.get('/api/ps1/validations/'+result['id']+'/violations').json()
-    assert violations['total']==0
-    assert len(result['report']['warnings'])==70
+    assert violations['total']==161
+    assert result['report']['warnings']==[]
     assert [r['evidence_snapshot'] for r in violations['items']]==result['report']['hard_violations'][:50]
     assert api.get('/api/ps1/validations/'+result['id']+'/violations?rule_code=workload').json()['total']==0
     assert db.execute(text("SELECT count(*) FROM railplan.audit_logs WHERE entity_type='ps1_validation_runs'")).scalar()>=1

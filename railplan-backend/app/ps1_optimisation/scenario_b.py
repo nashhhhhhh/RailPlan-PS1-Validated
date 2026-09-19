@@ -114,11 +114,16 @@ def solve(dataset, data, options, scenario='B'):
     for pair in data['pairs']:
         aid,bid=pair['activity_ids']
         for w in weeks:
-            # Both channel variables are zero when absent.  One conditional
-            # inequality is exactly equivalent to seven per-night clauses and
-            # substantially reduces Scenario C presolve work.
-            model.Add(physical_week[aid,w]!=physical_week[bid,w]).OnlyEnforceIf(
-                present[aid,w],present[bid,w],guard('physical_closure'))
+            if pair['shareable']:
+                # Same-week closure overlap is legal only when both activities
+                # actually share one possession. Physical-slot equality is
+                # transitive; the per-location constraints police the full mix.
+                model.Add(physical_week[aid,w]==physical_week[bid,w]).OnlyEnforceIf(
+                    present[aid,w],present[bid,w],guard('physical_closure'))
+            else:
+                # Distinct possession groups in one week remain inside each
+                # other's weekly protected closure even on different nights.
+                enforce(present[aid,w]+present[bid,w]<=1,'physical_closure')
 
     line_windows={}
     if scenario=='C':

@@ -16,8 +16,8 @@ Scenario B uses optional access rows with scaled work `normal=2`, `ECLO=3`, `req
 
 Stages are official score (`7×excess + 5×ECLO`), excess, ECLO, workload over-delivery, completion weeks, baseline movement, and stable rank. A time-limited feasible primary stage is never labeled optimal. The physical-night domain remains provisional because the official package contains no dated night calendar.
 
-`ps1-optimiser/1.2.0` uses pinned Google OR-Tools **9.14.6206** CP-SAT and
-`ps1-validator/1.1.0`, policy `ps1-policy/4-scenario-c-line-windows`. No LLM,
+`ps1-optimiser/1.3.0` uses pinned Google OR-Tools **9.14.6206** CP-SAT and
+`ps1-validator/1.2.0`, policy `ps1-policy/5-explicit-possession-closures`. No LLM,
 legacy nightly conflict engine or 0–100 severity score participates. Organiser
 inputs and sample files are unchanged; the sample is never used as a solver hint.
 
@@ -42,8 +42,10 @@ physical nights. This meaningful alignment is stronger than CSV-only information
 
 All activities at one location/week/physical night form one legal possession.
 Local labels `g001`, `g002`, … enumerate that location/week's used physical nights.
-Matching labels elsewhere never establish concurrency. Physical nights are never
-reconstructed from either local indices or group labels.
+The solver treats this slot as the possession decision: compatible activities whose
+closures interact may coexist in a week only by sharing it; incompatible activities must
+use different weeks. Matching labels elsewhere never establish concurrency. Physical
+nights are never reconstructed from either local indices or group labels.
 
 ## Modules, variables and hard constraints
 
@@ -72,10 +74,11 @@ Enforced constraints:
    occupied possession groups per location/week is at most fixed supply; zero excess.
 4. PM alone, one PC plus at most three C, or at most four C. Every location's entire
    group must be legal. Sharing reduces supply use but never workload.
-5. Same-physical-night non-overlap only for precomputed incompatible footprint pairs.
-   Collision families use occupied/buffer/opposite/interchange/closure exactly as the
-   validator, including buffer-buffer intersections. Potential legal sharing at every
-   common occupied location exempts a pair; full-group mix constraints still apply.
+5. Preprocessing retains every interacting occupied/closure pair; access-type compatibility
+   is metadata, never an exemption. For a compatible pair with common occupancy, same-week
+   presence forces equal physical possession slots. Equality is transitive and each
+   location validates the complete multi-activity mix. A pair that cannot share is forbidden
+   from the same week. Thus the exporter cannot split overlapping work into distinct groups.
 6. Live two-sector buffers; Consist one; Others none; clip to line ends. Live alone
    mirrors the expanded closure and crosses H01/H02. Non-live lines and bounds retain
    separate capacities. Buffers/mirrors alone do not consume occupied-location supply.

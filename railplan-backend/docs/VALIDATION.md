@@ -1,5 +1,34 @@
 # Validation — merged FastAPI v0.4
 
+## Current possession-closure verification (2026-09-19)
+
+Policy 5 corrects the externally reported cross-group closure defect. Preprocessing now
+retains 384 interacting pairs on the organiser instance (previous release report: 312),
+and compatible access types are not treated as an exemption until the model assigns one
+valid possession. Export grouping is fail-closed and the CSV validator independently
+reconstructs group closures.
+
+| Command / check | Actual result |
+|---|---|
+| `python -m pytest -q` | **490 passed, 100 skipped**, 0 failed; PostgreSQL/PostGIS URLs were not configured |
+| Focused optimiser/validator/static tests | **241 passed**, 0 failed |
+| Frozen pnpm install | Passed supply-chain policy check for **883** lockfile entries |
+| Root strict TypeScript | Passed |
+| Root PS1 client tests | **19 passed**, 0 failed |
+| API client tests | **21 passed**, 0 failed |
+| Vinext production build | Passed; plugin timing and route-classification notices only |
+| Browser workflow | Not executed successfully: the Vinext dev server failed during startup with an internal runner error; the browser harness then correctly reported connection refused |
+| Contract export | **75 paths, 80 schemas** |
+| Organiser A (60 s) | `FEASIBLE`, score **202.30**, bound **25.20**, rich validation complete, zero violations |
+| Organiser B (60 s) | `FEASIBLE`, score/bound **50.00**, rich validation complete, zero violations |
+| Organiser C (120 s) | `FEASIBLE`, score **11070.30**, bound **18.20**, rich validation complete, zero violations |
+| Independent final-CSV audit | A/B/C each passed with **0 cross-group closure intrusions** |
+
+The solver runs are bounded feasible incumbents, not optimality claims. Exact output is in
+`ORGANISER_CLOSURE_INVARIANT_RUN_20260919.json`; the separate auditor result is in
+`ORGANISER_CLOSURE_AUDIT_20260919.json`. Judge validation remains `not_run` and scores
+remain `internal_only`.
+
 ## Current Scenario C verification (2026-09-19)
 
 | Command / check | Actual result |

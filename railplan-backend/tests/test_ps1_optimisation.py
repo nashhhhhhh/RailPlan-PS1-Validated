@@ -16,8 +16,10 @@ from app.ps1 import parse_instance, load_files
 from app.ps1_validation.network import chains, expand
 from app.ps1_validation.service import validate
 from app.ps1_optimisation.contracts import OptimiseInput, Placement
+from app.ps1_optimisation.exporter import export_bundle
 from app.ps1_optimisation.preprocessing import InputError, prepare
 from app.ps1_optimisation.service import optimise
+from scripts.audit_exported_closures import audit_files
 from test_ps1_validation import fixture
 
 def small(n=1, nature='Non-live (Others)', possession='C', work=1):
@@ -85,7 +87,7 @@ def test_possession_mixes(kinds,legal):
     ('Non-live (Consist)','SEC:ALP:S04_H01:EB','buffer'),
     ('Live','SEC:ALP:S01_S02:WB','live_opposite_bound'),
     ('Live','SEC:BET:H01_H02:EB','live_interchange')])
-def test_physical_footprint_conflicts_same_night_only(nature,second,rule):
+def test_distinct_possession_footprint_conflicts_apply_across_the_week(nature,second,rule):
     ds=small(n=2,nature=nature)
     a,b=ds['tables']['activity_details']
     if rule=='live_interchange': a['start_location_id']=a['end_location_id']='SEC:ALP:H01_H02:EB'
@@ -94,18 +96,17 @@ def test_physical_footprint_conflicts_same_night_only(nature,second,rule):
     assert rule in data['pairs'][0]['collisions']
     bad=run(ds,locked_placements=[lock('T0'),lock('T1')])
     assert bad.solver_status=='INFEASIBLE' and not bad.publishable
-    good=run(ds,locked_placements=[lock('T0'),lock('T1',night=2)])
+    assert run(ds,locked_placements=[lock('T0'),lock('T1',night=2)]).solver_status=='INFEASIBLE'
+    good=run(ds,locked_placements=[lock('T0'),lock('T1',week=2,night=2)])
     assert_pass(good)
 
-def test_same_location_reusable_different_nights_and_supply_counts_groups():
+def test_same_location_distinct_groups_are_not_a_closure_escape():
     ds=small(n=2,possession='PM')
     for s in ds['tables']['location_supply']:s['supply_capacity']=2
     placements=[lock('T0'),lock('T1',night=2)]
-    good=run(ds,locked_placements=placements); assert_pass(good)
-    assert len({r['co_share_group'] for r in rows(good,'SCHEDULE_OCCUPANCY.csv')})==2
-    for s in ds['tables']['location_supply']:s['supply_capacity']=1
     bad=run(ds,locked_placements=placements)
     assert bad.solver_status=='INFEASIBLE' and bad.submission_files is None
+    good=run(ds,locked_placements=[lock('T0'),lock('T1',week=2,night=2)]); assert_pass(good)
 
 def test_legal_sharing_uses_one_capacity_unit_but_full_workload():
     ds=small(n=4)
@@ -114,11 +115,32 @@ def test_legal_sharing_uses_one_capacity_unit_but_full_workload():
     result=run(ds,locked_placements=[lock(f'T{i}') for i in range(4)])
     assert_pass(result)
     assert result.validation_report.completeness.activities_complete==4
+    occupancy=rows(result,'SCHEDULE_OCCUPANCY.csv')
+    assert all(len({row['co_share_group'] for row in occupancy if row['location_id']==loc})==1
+        for loc in {row['location_id'] for row in occupancy})
+
+def test_independent_export_audit_detects_split_group_regression():
+    ds=small(n=2); ds['tables']['project_details'][0]['number_of_workfronts']=2
+    result=run(ds,locked_placements=[lock('T0'),lock('T1')]); assert_pass(result)
+    assert audit_files(ds,result.submission_files)['passed']
+    files=dict(result.submission_files)
+    files['SCHEDULE_OCCUPANCY.csv']='\n'.join(
+        line.rsplit(',',1)[0]+',split' if line.startswith('T1,') else line
+        for line in files['SCHEDULE_OCCUPANCY.csv'].splitlines())+'\n'
+    audit=audit_files(ds,files)
+    assert not audit['passed'] and audit['cross_group_closure_violation_count']>=2
+
+def test_exporter_refuses_to_invent_split_possessions():
+    ds=small(n=2)
+    data=prepare(ds,OptimiseInput())
+    with pytest.raises(ValueError,match='Invalid possession relationship'):
+        export_bundle(ds,data,[lock('T0'),lock('T1',night=2)])
 
 def test_physical_and_local_nights_independent():
     ds=small(n=2,possession='PM'); p=ds['tables']['project_details'][0]
     ds['tables']['project_details'].append({**p,'contract_number':'OTHER'})
     ds['tables']['activity_details'][1]['contract_number']='OTHER'
+    ds['tables']['activity_details'][1]['start_location_id']=ds['tables']['activity_details'][1]['end_location_id']='SEC:ALP:S07_S08:EB'
     result=run(ds,locked_placements=[lock('T0',night=6,local=1),lock('T1',night=7,local=1)])
     assert_pass(result)
     assert {r.physical_night for r in result.physical_nights}=={6,7}
@@ -170,7 +192,8 @@ def test_exact_scaled_priority_objective(tier,priority,expected):
     assert all(stage['status']=='OPTIMAL' for stage in result.stages)
 
 def test_stable_seed_and_dataset_order():
-    ds=small(n=3,work=2); first=run(ds,random_seed=42)
+    ds=small(n=3,work=2); ds['tables']['project_details'][0]['number_of_workfronts']=3
+    first=run(ds,random_seed=42)
     assert_pass(first)
     shuffled=copy.deepcopy(ds)
     for table in shuffled['tables'].values():random.Random(7).shuffle(table)

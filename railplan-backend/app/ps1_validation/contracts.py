@@ -3,7 +3,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Literal, Annotated
 from pydantic import BaseModel, ConfigDict, Field
 
-VERSION = 'ps1-validator/1.1.0'
+VERSION = 'ps1-validator/1.2.0'
 HEADERS = {
     'SCHEDULE_ACCESS.csv': 'activity_id,access_seq,week,eclo,access_night',
     'SCHEDULE_OCCUPANCY.csv': 'activity_id,week,location_id,co_share_group',
@@ -17,12 +17,12 @@ RULES = ('schema', 'unknown_reference', 'duplicate', 'workload', 'access_sequenc
 
 @dataclass(frozen=True)
 class RulePolicy:
-    version: str = 'ps1-policy/4-scenario-c-line-windows'
-    night_alignment: str = 'CSV-only weekly footprint overlaps are diagnostic warnings, not proof of conflict. Physical checks require complete explicit (activity_id, week) physical-night assignments; local access indices and location group labels never establish global concurrency.'
+    version: str = 'ps1-policy/5-explicit-possession-closures'
+    night_alignment: str = 'Physical-night assignments enrich optimiser validation and must align within each submitted group. Distinct location/week possession groups remain subject to one another\'s closure footprints even when assigned different physical nights.'
     physical_night_domain: str = 'The official inputs provide no dated engineering-night calendar. Rich optimiser validation therefore uses the optimiser-supplied explicit physical-night identity; RailPlan generation provisions a configurable uniform domain of 1 to 7 network-wide slots per calendar week.'
     eclo_line_classification: str = 'Scenario C line windows use every line present in the canonical expanded closure footprint. Non-live work affects its own line only; Live work whose interchange closure crosses H01-H02 affects both Alpha and Beta.'
-    co_sharing: str = 'Pair exemption requires legal shared groups at every common occupied location. No exemption is inferred merely from a matching label at different locations.'
-    separate_possessions: str = 'Distinct groups at a common occupied location are separate nights there; this does not prove separation of their buffers or mirrored closures elsewhere.'
+    co_sharing: str = 'Closure exemption requires a common occupied location, the same legal submitted group at every common occupied location, and (for rich schedules) one physical possession slot. Access-type compatibility alone never establishes sharing.'
+    separate_possessions: str = 'Distinct groups are separate possessions and may not enter one another\'s expanded weekly closure footprint; assigning different physical nights does not create a closure exemption.'
     buffer_extent: str = 'Expand inclusive platform-ended span by two chain positions per buffer sector; clip at line ends. Mirror the full expanded Live closure.'
     interchange: str = 'Live expanded closure touching H01/H02 platforms or H01_H02 tunnel closes all three corresponding locations on both bounds of the other line; no recursive expansion.'
     completion: str = 'Completion is Sunday of the last submitted access week, provided full workload is delivered. Extra accesses remain counted.'

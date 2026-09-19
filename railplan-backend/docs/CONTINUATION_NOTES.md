@@ -19,8 +19,8 @@ Scenario A/B/C generation, A/B/C stateless previews, saved persistence and async
   transaction, metric, manual-test and environment details. `VALIDATION.md` has current totals.
 - Real PostgreSQL commit/concurrency and live migration verification are unexecuted without
   explicit disposable test URLs. Never substitute SQLite or historical passing notes.
-- Production identity, queue/cancellation, UI, comparison, replay and official judge parity
-  remain future work. Process termination before final commit has no terminal record.
+- Production identity, replay and official judge parity remain future work. Process
+  termination before final commit has no terminal record.
 
 ## Scenario A optimiser 1.0.0 (original release notes)
 
@@ -37,15 +37,16 @@ Scenario A/B/C generation, A/B/C stateless previews, saved persistence and async
   optimisation persistence if requested, UI controls, production load/cancellation handling.
   This paragraph is historical: B/C optimisation is now implemented; operational approval remains out of scope.
 
-## PS1 validator 1.1.0 (preserved)
+## PS1 validator 1.2.0 (current; original persistence design preserved)
 
 - Pure implementation: `app/ps1_validation/`; API: `app/routers/ps1_validations.py`.
 - Migration 0006 / `sql/009_ps1_validations.sql` follows immutable-instance migration 0005.
 - No AI, solver, nightly-model conversion or severity-score reuse.
 - UI: existing workspace plus `app/ps1-validation-panel.tsx` (upload, validation,
   saved history, metrics, filters/highlights and JSON download).
-- Public sample: 54 workloads complete, 192 accesses, RESULTS match; 70 alignment
-  warnings, zero hard violations, internal objective 48.30.
+- Public organiser sample: 54 workloads complete and RESULTS match, but policy 5 now
+  correctly rejects 134 directional cross-group closure intrusions plus 27 buffer
+  conflicts. It is reference output, not a RailPlan-generated feasible schedule.
 - Python validate accepts optional physical_nights; CSV-only feasibility is not
   physical-night clearance. Explicit mapping validation fails closed if incomplete.
 - Obtain the official validator before resolving alignment/completion assumptions.

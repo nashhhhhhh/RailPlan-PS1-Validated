@@ -77,23 +77,24 @@ def test_capacity_excess_is_allowed_and_scored_per_location_week():
     assert all({'available_supply','used_possession_groups','activity_ids','contract_ids','co_share_groups','physical_night_assignments'}<=set(row) for row in result.capacity_hotspots)
 
 
-def test_legal_co_share_consumes_one_unit_and_physical_nights_stay_independent():
+def test_legal_co_share_consumes_one_unit_and_cannot_be_split_into_groups():
     dataset=deadline(small(n=2))
     dataset['tables']['project_details'][0]['number_of_workfronts']=2
     for row in dataset['tables']['location_supply']:row['supply_capacity']=1
     shared=run(dataset,locked_placements=[Placement(activity_id=f'T{i}',access_seq=1,week=1,physical_night=1,access_night=1,eclo=0) for i in range(2)])
     assert shared.publishable and shared.objective_components['excess_access_nights_total']==0
     separate=run(dataset,locked_placements=[Placement(activity_id='T0',access_seq=1,week=1,physical_night=1,access_night=1,eclo=0),Placement(activity_id='T1',access_seq=1,week=1,physical_night=2,access_night=2,eclo=0)])
-    assert separate.publishable and separate.objective_components['excess_access_nights_total']==3
+    assert separate.solver_status=='INFEASIBLE' and separate.submission_files is None
 
 
-def test_same_night_buffer_conflict_and_different_night_reuse():
+def test_distinct_possession_buffer_conflict_applies_across_week():
     dataset=deadline(small(n=2,nature='Non-live (Consist)'))
     dataset['tables']['activity_details'][1]['start_location_id']=dataset['tables']['activity_details'][1]['end_location_id']='SEC:ALP:S03_S04:EB'
     a=Placement(activity_id='T0',access_seq=1,week=1,physical_night=1,access_night=1,eclo=0)
     b=Placement(activity_id='T1',access_seq=1,week=1,physical_night=1,access_night=1,eclo=0)
     assert run(dataset,locked_placements=[a,b]).solver_status=='INFEASIBLE'
-    assert run(dataset,locked_placements=[a,b.model_copy(update={'physical_night':2,'access_night':2})]).publishable
+    assert run(dataset,locked_placements=[a,b.model_copy(update={'physical_night':2,'access_night':2})]).solver_status=='INFEASIBLE'
+    assert run(dataset,locked_placements=[a,b.model_copy(update={'week':2,'physical_night':2,'access_night':2})]).publishable
 
 
 def test_legal_possession_label_does_not_bypass_physical_buffer():

@@ -4,7 +4,7 @@
 
 Generated Scenario A/B/C candidates call `validate(dataset, files, scenario, physical_nights=mapping)`. Artifacts are accepted only when `feasible`, `physical_validation_complete`, and an empty hard-violation list agree. Scenario C additionally cross-checks the validator objective against the scale-10 model objective. Rejected candidates retain diagnostic physical assignments and Scenario C ECLO windows but expose no accepted CSVs. `judge_validation` remains `not_run`; `score_verification` remains `internal_only`.
 
-Version: `ps1-validator/1.1.0`. Policy: `ps1-policy/4-scenario-c-line-windows`.
+Version: `ps1-validator/1.2.0`. Policy: `ps1-policy/5-explicit-possession-closures`.
 **Judge validation not run. Objectives are internal, not officially verified.**
 This validates uploaded schedules; it does not optimise, generate schedules, approve track
 access, use AI or translate PS1 activities into nightly maintenance requests. Input imports,
@@ -87,10 +87,10 @@ JSON containing exact CSV strings, retaining BOM and line-ending distinctions.
 | dependency | Predecessor fully completes before successor starts |
 | occupancy | Exact canonical occupied set: missing and unexpected rows |
 | possession_mix | PM alone; one PC + ≤3 C; ≤4 C |
-| closure | Rich context: same-night occupied overlap without legal sharing |
-| buffer | Rich context: same-night occupied/buffer and buffer/buffer overlaps |
-| live_opposite_bound | Rich context: same-night conflict with Live opposite-bound closure |
-| live_interchange | Rich context: same-night conflict with Live-only cross-line H01/H02 closure |
+| closure | Activity from a distinct group inside another activity/group's expanded weekly closure |
+| buffer | Buffer/buffer conflict between distinct possession groups |
+| live_opposite_bound | Distinct-group conflict with Live opposite-bound closure |
+| live_interchange | Distinct-group conflict with Live-only cross-line H01/H02 closure |
 | capacity | Distinct canonical groups against scenario supply allowance |
 | weekly_allocation | Distinct local contract/type/week nights and valid 1..cap indices |
 | workfront | Distinct activities per contract/type/week/local night |
@@ -114,30 +114,29 @@ H01_H02 through its expanded footprint closes those three locations on both boun
 the other line. Cross-line expansion is not recursive. Non-live never merges capacities.
 Buffers/mirrors are exclusion footprints, not occupancy rows or extra supply consumption.
 
-**Night alignment remains ambiguous:** `access_night` is local to contract/type/week.
-`co_share_group` is local to location/week and the sample changes labels along one access.
-Neither identifies a shared railway calendar. This version uses:
+**Night alignment remains provisional:** `access_night` is local to contract/type/week.
+`co_share_group` is local to location/week. External-validator evidence establishes that
+distinct groups cannot be used to escape weekly protected closures. This version uses:
 
-1. Different groups at a common occupied location represent different nights there.
+1. Different groups are distinct possessions and remain subject to one another's expanded
+   closure footprints for the week; different internal night IDs do not grant an exemption.
 2. Legal sharing at every common occupied location exempts a pair from mutual closures.
    A matching label at unrelated locations grants no exemption.
-3. CSV-only buffer/opposite/cross-line candidates produce deterministic
-   `physical_night_alignment_unverifiable` warnings containing week, activity IDs,
-   candidate collision type and locations. They are not proof of a conflict.
+3. CSV-only validation independently reconstructs groups and makes cross-group closure
+   intrusions hard violations; it does not trust optimiser physical-night state.
 4. Python callers may pass `validate(dataset, files, scenario, physical_nights=...)`,
    where the mapping is `{(activity_id, week): positive_integer_night_id}`. These
    IDs are shared across the network within a week, not local allocation indices.
    Every scheduled activity/week must be present exactly once, with no extra keys.
    A location/week possession group must map to one physical night. Invalid or
    incomplete mappings fail closed with a schema violation and a null objective.
-5. Rich validation indexes `(week, physical_night, location)` and checks same-night
-   physical overlaps as hard violations. Distinct groups on the same occupied
-   location and physical night collide; legal sharing retains its exemption.
-   Local labels at unrelated locations never establish concurrency or exemption.
+5. Rich validation additionally checks that each group maps to one physical night. Closure
+   evaluation remains week/group based so distinct groups cannot evade it by selecting
+   different internal nights. Local labels at unrelated locations never establish exemption.
 
 Reports expose `validation_context` and `physical_validation_complete`. In submission
-context, `feasible:true` means the verifiable CSV constraints passed, not physical
-safety clearance. Rich context means the explicit-night physical checks were run;
+context, `feasible:true` includes the exported group/closure checks but is not official
+operator safety approval. Rich context means explicit-night alignment checks were run;
 other geometry and scoring assumptions remain internal and provisional. Validation HTTP
 inputs remain CSV-only; tuple-key mappings are a Python solver interface, not JSON inputs.
 The separate [Scenario A optimiser](PS1_OPTIMISATION.md) now generates explicit physical
@@ -184,11 +183,12 @@ All 54 activities deliver all 192 standard workload units. All 14 RESULTS rows a
 derived dates. There are no schema, workload, possession-mix, supply or result errors.
 Raw contract overrun = 28 days; weighted activity overrun = `48.30`; excess = 0; ECLO = 0.
 
-**The unmodified sample passes CSV-only validation**, with zero hard violations,
-internal objective `48.30` and 70 alignment warnings. Physical-night validation remains
-incomplete because the CSVs do not supply a global alignment. The organiser README calls
-the sample feasible; this agreement does not establish judge parity. The actual
-`trackaccess` reference validator is not supplied. Inputs and sample files are unchanged.
+The unmodified organiser sample is not a RailPlan-generated schedule. Under policy 5 it
+has 161 hard findings (134 directional cross-group closure intrusions and 27 buffer
+conflicts), so it is infeasible and has no eligible objective score. Its raw components
+remain useful reference data only. The external validator executable is not supplied;
+the reported closure findings establish this rule but do not establish complete parity.
+Inputs and sample files are unchanged.
 
 ## Persistence and remaining verification
 

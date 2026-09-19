@@ -67,18 +67,19 @@ def refresh(ds,rows,scenario='A'):
 def codes(ds,rows,scenario='A',physical_nights=None):
     return {v['rule_code'] for v in validate(ds,encode(rows),scenario,physical_nights)['hard_violations']}
 
-def test_public_sample_baseline():
+def test_organiser_sample_is_not_misrepresented_as_closure_feasible():
     r=validate(parse_instance(load_files()),sample_files(),'A')
-    assert r['hard_violations']==[]
-    assert len(r['warnings'])==70
-    assert all(w['code']=='physical_night_alignment_unverifiable' for w in r['warnings'])
+    assert len(r['hard_violations'])==161
+    assert {v['rule_code'] for v in r['hard_violations']}=={'closure','buffer'}
+    assert any(v['message']=="Activity inside another group's closure zone" for v in r['hard_violations'])
+    assert r['warnings']==[]
     assert r['completeness']['activities_complete']==54
     assert r['objective_components']['nights_scheduled']==192
     assert r['objective_components']['priority_weighted_overrun']=='48.30'
     assert r['objective_components']['overrun_days_total']==28
     assert r['objective_components']['excess_access_nights_total']==0
-    assert r['objective_score']=='48.30' and r['feasible']
-    assert r['validation_status']=='feasible'
+    assert r['objective_score'] is None and not r['feasible']
+    assert r['validation_status']=='infeasible'
     assert not r['physical_validation_complete']
     assert r['judge_validation']=='not_run' and r['validator_version']==VERSION
 
@@ -266,9 +267,9 @@ def test_preview_without_database_or_auth(monkeypatch):
     with TestClient(app) as client:
         r=client.post('/api/ps1/validate',json={'instance_files':load_files(),'scenario':'A','files':sample_files()})
         assert r.status_code==200,r.text
-        assert r.json()['hard_violations']==[]
-        assert len(r.json()['warnings'])==70
-        assert r.json()['objective_score']=='48.30'
+        assert len(r.json()['hard_violations'])==161
+        assert r.json()['warnings']==[]
+        assert r.json()['objective_score'] is None
         invalid=client.post('/api/ps1/validate',json={'scenario':'D'})
         assert invalid.status_code==422 and invalid.json()['error']['code']=='INVALID_INPUT'
 
@@ -303,13 +304,13 @@ def test_explicit_nights_and_local_labels():
     refresh(ds,rows)
     files=encode(rows)
     csv_report=validate(ds,files,'A')
-    assert csv_report['feasible'] and not csv_report['physical_validation_complete']
-    assert csv_report['warnings'][0]['candidate_collision_type']=='buffer'
+    assert not csv_report['feasible'] and not csv_report['physical_validation_complete']
+    assert 'closure' in {v['rule_code'] for v in csv_report['hard_violations']}
     same=validate(ds,files,'A',{('T0',1):1,('T1',1):1})
     assert not same['feasible'] and same['physical_validation_complete']
     assert 'buffer' in {v['rule_code'] for v in same['hard_violations']}
     different=validate(ds,files,'A',{('T0',1):1,('T1',1):2})
-    assert different['feasible'] and different['physical_validation_complete']
+    assert not different['feasible'] and different['physical_validation_complete']
     assert different['warnings']==[]
     assert same['submission_fingerprint']!=different['submission_fingerprint']
     assert same==validate(ds,files,'A',{('T1',1):1,('T0',1):1})
@@ -330,7 +331,21 @@ def test_rich_legal_sharing_and_separate_possession_collision():
     assert validate(ds,encode(rows),'A',{('T0',1):1,('T1',1):2})['validation_status']=='invalid_submission'
     for row in rows['SCHEDULE_OCCUPANCY.csv']:
         row['co_share_group']=row['activity_id']
-    assert 'closure' in codes(ds,rows,physical_nights=nights)
+    report=validate(ds,encode(rows),'A',nights)
+    closure=[v for v in report['hard_violations'] if v['rule_code']=='closure']
+    assert {v['evidence']['offending_activity'] for v in closure}=={'T0','T1'}
+    assert all(v['message']=="Activity inside another group's closure zone" for v in closure)
+
+def test_three_activity_possession_is_transitive_and_complete_group_is_legal():
+    ds,rows=fixture(n=3,nature='Non-live (Consist)')
+    nights={(f'T{i}',1):1 for i in range(3)}
+    assert validate(ds,encode(rows),'A',nights)['feasible']
+    for row in rows['SCHEDULE_OCCUPANCY.csv']:
+        if row['activity_id']=='T2': row['co_share_group']='split'
+    report=validate(ds,encode(rows),'A',nights)
+    assert not report['feasible']
+    assert any(v['rule_code']=='closure' and v['evidence']['offending_activity']=='T2'
+        for v in report['hard_violations'])
 
 def test_separate_nonlive_bounds_and_lines_never_merge_capacity():
     ds,rows=fixture(n=2); a,b=ds['tables']['activity_details']

@@ -50,14 +50,13 @@ def test_no_eclo_keeps_both_line_windows_inactive():
     assert all(window['active'] is False and window['start_week'] is None and window['end_week'] is None for window in result.eclo_windows.values())
 
 
-def test_scenario_a_full_shared_overlap_is_not_assumed_valid_for_c_buffers():
-    """Regression for the rejected organiser A-to-C conversion audit."""
+def test_all_scenarios_retain_overlap_until_a_real_possession_is_decided():
     dataset=small(n=2,nature='Non-live (Consist)')
     scenario_a=prepare(dataset,OptimiseInput(),'A')
     scenario_c=prepare(dataset,ScenarioCOptimiseInput(),'C')
-    assert scenario_a['pairs']==[]  # Established Scenario A full-sharing exemption.
-    assert len(scenario_c['pairs'])==1
-    assert 'buffer' in scenario_c['pairs'][0]['collisions']
+    assert scenario_a['pairs']==scenario_c['pairs']
+    assert len(scenario_c['pairs'])==1 and scenario_c['pairs'][0]['shareable']
+    assert {'closure','buffer'}<=set(scenario_c['pairs'][0]['collisions'])
 
 
 def test_two_consecutive_weeks_valid_but_disconnected_or_three_week_span_infeasible():

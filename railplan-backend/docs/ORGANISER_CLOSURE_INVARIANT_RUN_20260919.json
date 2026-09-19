@@ -1,0 +1,118 @@
+{
+  "dataset": "bundled organiser PS1 input (eight files under data/PS1/01_data)",
+  "dataset_fingerprint": "a5d66aa95c814376c0ca006ac966bef4982b45d00ac23d72fd3d7a39cf660e7b",
+  "notes": [
+    "Organiser submission samples are reference inputs to validation and are never treated as RailPlan-generated candidates.",
+    "Only rich-validator-accepted candidates may be written."
+  ],
+  "scenario_results": {
+    "A": {
+      "available": true,
+      "configured_deterministic_limit": 60.0,
+      "configured_wall_limit_seconds": 60.0,
+      "csv_files_written": [
+        "RESULTS.csv",
+        "SCHEDULE_ACCESS.csv",
+        "SCHEDULE_OCCUPANCY.csv"
+      ],
+      "deterministic_seed": 0,
+      "diagnostics": [],
+      "elapsed_seconds": 62.879701,
+      "execution_status": "COMPLETED",
+      "judge_validation": "not_run",
+      "objective_bound": 252.0,
+      "objective_score": "202.30",
+      "objective_stage": "weighted_overrun_scaled_10",
+      "objective_value": 2023,
+      "physical_validation_complete": true,
+      "physical_validation_status": "feasible",
+      "publishable": true,
+      "score_verification": "internal_only",
+      "solver_elapsed_seconds": 60.290396,
+      "solver_status": "FEASIBLE",
+      "validator_violations": []
+    },
+    "B": {
+      "available": true,
+      "configured_deterministic_limit": 60.0,
+      "configured_wall_limit_seconds": 60.0,
+      "csv_files_written": [
+        "RESULTS.csv",
+        "SCHEDULE_ACCESS.csv",
+        "SCHEDULE_OCCUPANCY.csv"
+      ],
+      "deterministic_seed": 0,
+      "diagnostics": [
+        {
+          "code": "model_telemetry",
+          "complete_hint_supplied": false,
+          "constraint_count": 102848,
+          "hint_source": null,
+          "incompatible_pair_count": 384,
+          "variable_count": 79887,
+          "variables_hinted": 0,
+          "variables_not_hinted": 79887
+        }
+      ],
+      "elapsed_seconds": 65.78587,
+      "execution_status": "COMPLETED",
+      "judge_validation": "not_run",
+      "objective_bound": 50.0,
+      "objective_score": "50.00",
+      "objective_stage": "official_scenario_b_objective",
+      "objective_value": 50,
+      "physical_validation_complete": true,
+      "physical_validation_status": "feasible",
+      "publishable": true,
+      "score_verification": "internal_only",
+      "solver_elapsed_seconds": 60.376109,
+      "solver_status": "FEASIBLE",
+      "validator_violations": []
+    },
+    "C": {
+      "available": true,
+      "configured_deterministic_limit": 60.0,
+      "configured_wall_limit_seconds": 120.0,
+      "csv_files_written": [
+        "RESULTS.csv",
+        "SCHEDULE_ACCESS.csv",
+        "SCHEDULE_OCCUPANCY.csv"
+      ],
+      "deterministic_seed": 0,
+      "diagnostics": [
+        {
+          "code": "model_telemetry",
+          "complete_hint_supplied": false,
+          "constraint_count": 105632,
+          "hint_source": null,
+          "incompatible_pair_count": 384,
+          "variable_count": 80284,
+          "variables_hinted": 0,
+          "variables_not_hinted": 80284
+        },
+        {
+          "code": "complete_incumbent_hint",
+          "complete_hint_supplied": true,
+          "hint_consistency": "solver_accepted",
+          "hint_source": "scenario_c_feasibility_stage",
+          "variables_hinted": 80284,
+          "variables_not_hinted": 0
+        }
+      ],
+      "elapsed_seconds": 125.202576,
+      "execution_status": "COMPLETED",
+      "judge_validation": "not_run",
+      "objective_bound": 182.0,
+      "objective_score": "11070.30",
+      "objective_stage": "official_scenario_c_objective_scaled_10",
+      "objective_value": 110703,
+      "physical_validation_complete": true,
+      "physical_validation_status": "feasible",
+      "publishable": true,
+      "score_verification": "internal_only",
+      "solver_elapsed_seconds": 120.273216,
+      "solver_status": "FEASIBLE",
+      "validator_violations": []
+    }
+  }
+}

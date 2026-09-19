@@ -2,7 +2,7 @@ from typing import Any, Literal, Annotated
 from pydantic import BaseModel, ConfigDict, Field
 from app.ps1_validation.contracts import ValidationReport
 
-VERSION = 'ps1-optimiser/1.2.0'
+VERSION = 'ps1-optimiser/1.3.0'
 
 class Placement(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True)

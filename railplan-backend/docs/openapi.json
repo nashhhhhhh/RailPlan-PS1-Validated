@@ -14515,7 +14515,7 @@
           "optimiser_version": {
             "type": "string",
             "title": "Optimiser Version",
-            "default": "ps1-optimiser/1.2.0"
+            "default": "ps1-optimiser/1.3.0"
           },
           "solver_status": {
             "type": "string",
@@ -15911,7 +15911,7 @@
           "optimiser_version": {
             "type": "string",
             "title": "Optimiser Version",
-            "default": "ps1-optimiser/1.2.0"
+            "default": "ps1-optimiser/1.3.0"
           },
           "solver_status": {
             "type": "string",

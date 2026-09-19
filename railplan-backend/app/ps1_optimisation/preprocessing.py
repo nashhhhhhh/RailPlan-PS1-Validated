@@ -37,19 +37,21 @@ def prepare(dataset, options, scenario='A'):
     for aid,bid in combinations(activities,2):
         a,b = footprints[aid],footprints[bid]
         kinds = [projects[activities[i]['contract_number'],activities[i]['activity_type']]['access_type'] for i in (aid,bid)]
-        shared_overlap=a['occupied'] & b['occupied'] if legal_mix(kinds) else set()
-        if scenario=='A' and shared_overlap:
-            continue # Preserve the established Scenario A possession policy.
+        common_occupied=a['occupied'] & b['occupied']
         collisions = {
-            # A legal possession exempts only its common occupied locations. Its
-            # buffers, mirrored closures and interchange closures remain physical.
-            'closure':(a['occupied'] & b['occupied'])-shared_overlap,
+            # Compatibility does not establish a possession.  Keep the complete
+            # collision footprint; the model may exempt it only by placing both
+            # activities in the same valid, transitive possession slot.
+            'closure':(a['occupied'] & b['closure']) | (b['occupied'] & a['closure']),
             'buffer':(a['buffer'] & (b['occupied']|b['buffer'])) | (b['buffer'] & a['occupied']),
             'live_opposite_bound':(a['opposite'] & b['closure']) | (b['opposite'] & a['closure']),
             'live_interchange':(a['interchange'] & b['closure']) | (b['interchange'] & a['closure']),
         }
         collisions = {code:sorted(locs) for code,locs in collisions.items() if locs}
-        if collisions: pairs.append({'activity_ids':[aid,bid], 'collisions':collisions})
+        if collisions:
+            pairs.append({'activity_ids':[aid,bid], 'collisions':collisions,
+                'shareable':bool(common_occupied) and legal_mix(kinds),
+                'common_occupied':sorted(common_occupied)})
     for aid,a in activities.items():
         minimum_accesses=(2*a['total_accesses']+2)//3 if scenario in ('B','C') else a['total_accesses']
         if a['planned_start_week']+minimum_accesses-1 > horizon:
@@ -64,6 +66,6 @@ def prepare(dataset, options, scenario='A'):
             diagnostics.append({'code':'results_consistency','contract_ids':[contract],'message':'Contract has no activities from which to derive completion.'})
     if sum(a['total_accesses']*len(footprints[aid]['occupied']) for aid,a in activities.items()) > 20000:
         return {'limit':True,'diagnostics':[{'code':'submission_limit','message':'Canonical occupancy exceeds validator 20,000-row limit.'}]}
-    if len(pairs)*horizon*options.physical_nights_per_week>300000:
-        return {'limit':True,'diagnostics':[{'code':'model_limit','message':'Model exceeds 300,000 physical pair/night exclusion constraints.'}]}
+    if len(pairs)*horizon>300000:
+        return {'limit':True,'diagnostics':[{'code':'model_limit','message':'Model exceeds 300,000 weekly possession-conflict constraints.'}]}
     return dict(activities=activities,projects=projects,horizon=horizon,footprints=footprints,supply=supply,pairs=pairs,diagnostics=diagnostics,limit=False)
