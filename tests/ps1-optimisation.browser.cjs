@@ -315,6 +315,16 @@ fs.mkdirSync(screenshots, { recursive: true });
   try {
     await page.goto(base, { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(1200);
+    const activityKpi = page.locator(".psd-kpi.orange strong");
+    const alphaEastbound = page.getByRole("button", { name: "Filter dashboard to Line Alpha EB" });
+    await alphaEastbound.click();
+    assert.equal((await activityKpi.textContent()).trim(), "9");
+    assert.match(await page.getByRole("button", { name: "Line Alpha", exact: true }).getAttribute("class"), /active/);
+    assert.match(await page.getByRole("button", { name: "EB", exact: true }).getAttribute("class"), /active/);
+    await alphaEastbound.click();
+    assert.equal((await activityKpi.textContent()).trim(), "23");
+    assert.doesNotMatch((await page.getByRole("button", { name: "EB", exact: true }).getAttribute("class")) || "", /active/);
+    check("map direction controls filter KPI cards and clear the bound independently");
     await page.getByRole("button", {name:"Competition Demo",exact:true}).click();
     await page.getByRole("region", {name:"Competition Demo"}).getByText("Step 1 of 6: Dataset").waitFor();
     await page.getByRole("button", {name:"Next step"}).click();

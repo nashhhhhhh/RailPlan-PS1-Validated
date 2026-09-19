@@ -524,14 +524,17 @@
 .psd-card h2 { font-size: 16px; }
 .psd-card-kicker { color: #9aa9bf; font-size: 9px; }
 .psd-chip { padding: 6px 9px; color: #b2bfd0; font-size: 10px; }
-.psd-network-card > footer b { font-size: 11px; }
+.psd-network-card > footer b { font-size: 12px; }
 .psd-network-card > footer span,
-.psd-network-card > footer p { color: #aab6c8; font-size: 10px; line-height: 1.5; }
+.psd-network-card > footer p { color: #aab6c8; font-size: 11px; line-height: 1.5; }
+.psd-pressure-summary { font-size: 10px; }
+.psd-pressure-summary b { font-size: 13px; }
 .psd-pressure-card > button { padding: 13px 7px 12px; }
 .psd-pressure-card > button > div,
-.psd-pressure-card > button > div b { font-size: 11px; }
+.psd-pressure-card > button > div b { font-size: 12px; }
+.psd-pressure-card > button > div b em { font-size: 9px; }
 .psd-pressure-card > button small,
-.psd-pressure-card > footer { color: #a9b6c8; font-size: 9px; }
+.psd-pressure-card > footer { color: #a9b6c8; font-size: 10px; line-height: 1.5; }
 .psd-empty { font-size: 11px; }
 .psd-week-chart button small { color: #98a6ba; font-size: 9px; }
 .psd-week-detail > div:first-child span { color: #aab7c9; font-size: 10px; }
@@ -581,14 +584,14 @@
   border-radius: 7px;
   background: rgba(12, 22, 38, .94);
   color: #bdc9d8;
-  font-size: 11px;
+  font-size: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, .24);
 }
-.psd-map-title { fill: #f2f6fc; font-size: 14px; letter-spacing: 1.5px; }
-.psd-map-subtitle { fill: #a7b5c8; font-size: 12px; }
+.psd-map-title { fill: #f2f6fc; font-size: 16px; letter-spacing: 1.5px; }
+.psd-map-subtitle { fill: #a7b5c8; font-size: 13px; }
 .psd-map-legend rect { fill: #152137; stroke: #40516b; }
-.psd-map-legend text { fill: #d4dce8; font-size: 10px; }
-.psd-map-legend .legend-detail { fill: #9ba9bc; font-size: 9px; }
+.psd-map-legend text { fill: #d4dce8; font-size: 11px; }
+.psd-map-legend .legend-detail { fill: #9ba9bc; font-size: 10px; }
 .legend-eb-line,
 .legend-wb-line { fill: none; stroke-width: 3; stroke-linecap: round; }
 .legend-eb-line { stroke: #72dff3; }
@@ -600,9 +603,16 @@
 .psd-line-label-panel { fill: #142036; stroke: #3a4b64; stroke-width: 1.2; }
 .psd-line-accent { fill: #65d9ef; }
 .psd-svg-line.beta .psd-line-accent { fill: #c18df0; }
-.psd-line-code { fill: #f8faff; font-size: 16px; letter-spacing: .7px; }
-.psd-line-name { fill: #c7d0dd; font-size: 10px; }
-.psd-line-bound { fill: #b7c2d1; font: 700 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.psd-line-code { fill: #f8faff; font-size: 17px; letter-spacing: .7px; }
+.psd-line-name { fill: #c7d0dd; font-size: 11px; }
+.psd-line-bound-control { cursor: pointer; outline: none; }
+.psd-line-bound-control rect { fill: rgba(7, 14, 26, .62); stroke: #52647e; transition: fill .18s, stroke .18s, filter .18s; }
+.psd-line-bound-control text { fill: #cbd5e3; font: 800 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace; pointer-events: none; }
+.psd-line-bound-control:hover rect,
+.psd-line-bound-control:focus rect { fill: #243550; stroke: #d6e7fa; }
+.psd-line-bound-control.active rect { fill: #dcecff; stroke: #f7fbff; filter: drop-shadow(0 0 5px rgba(122, 220, 244, .5)); }
+.psd-svg-line.beta .psd-line-bound-control.active rect { fill: #eadcff; filter: drop-shadow(0 0 5px rgba(189, 145, 242, .5)); }
+.psd-line-bound-control.active text { fill: #101b2e; }
 .psd-svg-line.dimmed { opacity: .22; filter: saturate(.45); }
 .psd-track { stroke-width: 5; filter: none; }
 .psd-svg-line.beta .psd-track { filter: none; }
@@ -619,7 +629,7 @@
 .psd-station-outer { fill: #0c1728; stroke-width: 2.5; filter: none; }
 .psd-station-inner { opacity: .72; }
 .psd-station:hover .psd-station-outer { r: 13px; fill: #16253b; }
-.psd-station-label { fill: #f0f3f8; font-size: 12px; font-weight: 700; }
+.psd-station-label { fill: #f0f3f8; font-size: 13px; font-weight: 700; }
 .psd-hub-node { fill: #1b2940; stroke: #e4bd5e; stroke-width: 2; }
 .psd-hub-core { fill: #e4bd5e; stroke: #fff2bd; stroke-width: 1; animation: none; filter: none; }
 .psd-station-label.hub-label { fill: #f3d57d; }

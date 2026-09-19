@@ -7,6 +7,7 @@ type Props = {
   focusLine: "ALL" | LineCode;
   focusBound: "ALL" | Bound;
   onSelectLine: (line: LineCode) => void;
+  onSelectBound: (line: LineCode, bound: Bound) => void;
 };
 
 const alphaStations = ["S01", "S02", "S03", "S04", "H01", "H02", "S05", "S06", "S07", "S08"];
@@ -29,6 +30,7 @@ function NetworkLine({
   dimmed,
   focusBound,
   onSelect,
+  onSelectBound,
 }: {
   code: LineCode;
   name: string;
@@ -37,6 +39,7 @@ function NetworkLine({
   dimmed: boolean;
   focusBound: "ALL" | Bound;
   onSelect: () => void;
+  onSelectBound: (bound: Bound) => void;
 }) {
   const className = code === "ALP" ? "alpha" : "beta";
   const trackColor = code === "ALP" ? "#7adcf4" : "#bd91f2";
@@ -57,8 +60,28 @@ function NetworkLine({
       <rect x="40" y={y - 28} width="4" height="56" rx="2" className="psd-line-accent"/>
       <text x="58" y={y - 3} className="psd-line-code">{code}</text>
       <text x="58" y={y + 14} className="psd-line-name">{name}</text>
-      <text x="151" y={y - 8} textAnchor="end" className="psd-line-bound">EB</text>
-      <text x="151" y={y + 14} textAnchor="end" className="psd-line-bound">WB</text>
+      {(["EB", "WB"] as const).map((bound, index) => <g
+        key={bound}
+        className={`psd-line-bound-control ${focusBound === bound ? "active" : ""}`}
+        transform={`translate(116 ${y - 24 + index * 27})`}
+        role="button"
+        tabIndex={0}
+        aria-label={`Filter dashboard to ${name} ${bound}`}
+        onClick={event => {
+          event.stopPropagation();
+          onSelectBound(bound);
+        }}
+        onKeyDown={event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            event.stopPropagation();
+            onSelectBound(bound);
+          }
+        }}
+      >
+        <rect width="42" height="22" rx="7"/>
+        <text x="21" y="15" textAnchor="middle">{bound}</text>
+      </g>)}
     </g>
 
     <path d={ebPath} className="psd-track-bed"/>
@@ -94,9 +117,9 @@ function NetworkLine({
   </g>;
 }
 
-export default function PS1NetworkMap({ focusLine, focusBound, onSelectLine }: Props) {
+export default function PS1NetworkMap({ focusLine, focusBound, onSelectLine, onSelectBound }: Props) {
   return <div className="psd-smart-network">
-    <div className="psd-map-hint">Select a line to filter the dashboard</div>
+    <div className="psd-map-hint">Select a line or its EB / WB direction to filter</div>
     <svg viewBox="0 0 1180 430" role="img" aria-labelledby="psd-network-title psd-network-description">
       <title id="psd-network-title">Line Alpha and Line Beta network topology</title>
       <desc id="psd-network-description">Two independent directional metro lines with separate H01 and H02 capacity. Live work can create cross-line closure.</desc>
@@ -124,8 +147,8 @@ export default function PS1NetworkMap({ focusLine, focusBound, onSelectLine }: P
       <path d="M 575 115 L 575 265" className="psd-crossline-link"/>
       <path d="M 685 115 L 685 265" className="psd-crossline-link"/>
 
-      <NetworkLine code="ALP" name="Line Alpha" stations={alphaStations} y={165} dimmed={focusLine === "BET"} focusBound={focusBound} onSelect={() => onSelectLine("ALP")}/>
-      <NetworkLine code="BET" name="Line Beta" stations={betaStations} y={315} dimmed={focusLine === "ALP"} focusBound={focusBound} onSelect={() => onSelectLine("BET")}/>
+      <NetworkLine code="ALP" name="Line Alpha" stations={alphaStations} y={165} dimmed={focusLine === "BET"} focusBound={focusBound} onSelect={() => onSelectLine("ALP")} onSelectBound={bound => onSelectBound("ALP", bound)}/>
+      <NetworkLine code="BET" name="Line Beta" stations={betaStations} y={315} dimmed={focusLine === "ALP"} focusBound={focusBound} onSelect={() => onSelectLine("BET")} onSelectBound={bound => onSelectBound("BET", bound)}/>
 
       <g className="psd-crossover">
         <rect x="548" y="194" width="164" height="48" rx="10"/>

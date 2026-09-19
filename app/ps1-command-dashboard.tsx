@@ -270,7 +270,16 @@ export default function PS1CommandDashboard() {
           <section className="psd-overview-grid">
             <article className="psd-card psd-network-card" data-tour="network">
               <header><div><span className="psd-card-kicker">01_DATA / NETWORK TOPOLOGY</span><h2>Dual-line track access topology</h2></div><span className="psd-chip psd-live-chip"><i/>Interactive schematic</span></header>
-              <div className="psd-network-scroll"><PS1NetworkMap focusLine={line} focusBound={bound} onSelectLine={selected => setLine(current => current === selected ? "ALL" : selected)}/></div>
+              <div className="psd-network-scroll"><PS1NetworkMap
+                focusLine={line}
+                focusBound={bound}
+                onSelectLine={selected => setLine(current => current === selected ? "ALL" : selected)}
+                onSelectBound={(selectedLine, selectedBound) => {
+                  const isCurrentSelection = line === selectedLine && bound === selectedBound;
+                  setLine(selectedLine);
+                  setBound(isCurrentSelection ? "ALL" : selectedBound);
+                }}
+              /></div>
               <footer><div><i className="alp"/><b>Line Alpha</b><span>{dataset.tables.activity_details.filter(activity => activity.line_code === "ALP").length} activities · {dataset.tables.activity_details.filter(activity => activity.line_code === "ALP").reduce((sum, activity) => sum + activity.total_accesses, 0)} access-nights</span></div><div><i className="bet"/><b>Line Beta</b><span>{dataset.tables.activity_details.filter(activity => activity.line_code === "BET").length} activities · {dataset.tables.activity_details.filter(activity => activity.line_code === "BET").reduce((sum, activity) => sum + activity.total_accesses, 0)} access-nights</span></div><p>H01↔H02 has separate capacity per line. Only Live work propagates closure across both lines.</p></footer>
             </article>
 
