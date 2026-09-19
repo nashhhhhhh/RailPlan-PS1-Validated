@@ -16,10 +16,10 @@ export default function PS1ValidationPanel({scenario,files,instanceId,busy,api,a
  onSelect:(v:PS1Violation|null)=>void;
 }){
  const [submission,setSubmission]=useState<Record<string,string>>({});
- const [report,setReport]=useState<Report|null>(null),[filter,setFilter]=useState(''),[week,setWeek]=useState('');
+ const [report,setReport]=useState<Report|null>(null),[filter,setFilter]=useState(''),[week,setWeek]=useState(''),[term,setTerm]=useState(''),[selectedViolation,setSelectedViolation]=useState<PS1Violation|null>(null);
  const [error,setError]=useState(''),[validationId,setValidationId]=useState('');
  const [history,setHistory]=useState<{id:string;scenario:string;feasible:boolean}[]>([]);
- function accept(raw:unknown){const next=contextualReportSchema.parse(raw);setReport(next);onSelect(null);setFilter('');setWeek('');}
+ function accept(raw:unknown){const next=contextualReportSchema.parse(raw);setReport(next);onSelect(null);setSelectedViolation(null);setFilter('');setWeek('');setTerm('');}
  async function upload(list:FileList|null){
   if(!list)return;const selected=Array.from(list);setError('');setReport(null);setSubmission({});setValidationId('');onSelect(null);
   if(selected.length!==3||new Set(selected.map(f=>f.name)).size!==3||selected.some(f=>!names.includes(f.name))){setError('Select exactly SCHEDULE_ACCESS.csv, SCHEDULE_OCCUPANCY.csv and RESULTS.csv.');return;}
@@ -32,9 +32,9 @@ export default function PS1ValidationPanel({scenario,files,instanceId,busy,api,a
   else {const result=await api('/api/ps1/validate',c,{...body,instance_files:files});if(!c.signal.aborted){accept(result);setValidationId('');}}
  });}
  function download(){if(!report)return;const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`PS1-${report.scenario}-validation.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
- const violations=report?.hard_violations.filter(v=>(!filter||v.rule_code===filter)&&(!week||String(v.week)===week))||[];
+ const violations=report?.hard_violations.filter(v=>(!filter||v.rule_code===filter)&&(!week||String(v.week)===week)&&(!term||`${v.message} ${v.activity_ids.join(' ')} ${v.location_ids.join(' ')}`.toLowerCase().includes(term.toLowerCase())))||[];
  return <section className="ps1-detail ps1-validator" aria-label="PS1 submission validator">
-  <h3>Internal PS1 validator</h3><p>Judge validation not run · CSV feasibility is not physical-night clearance · Conflict severity is separate from schedule objective</p>
+  <h3>Internal provisional validator</h3><p>Judge validation not run · Score verification: internal only · CSV feasibility is not physical-night clearance · Conflict severity is separate from schedule objective</p>
   <div className="ps1-actions"><label className="control">Upload 3 submission CSVs<input type="file" multiple accept=".csv" disabled={busy} onChange={e=>{void upload(e.target.files);e.target.value='';}}/></label>
    <button className="control primary" disabled={busy||Object.keys(submission).length!==3||!Object.keys(files).length} onClick={()=>validate(false)}>Preview Scenario {scenario}</button>
    <button className="control" disabled={busy||!instanceId||Object.keys(submission).length!==3} onClick={()=>validate(true)}>Validate and save run</button>
@@ -54,8 +54,9 @@ export default function PS1ValidationPanel({scenario,files,instanceId,busy,api,a
    <button className="control" onClick={download}>Download JSON report</button>
    <details><summary>Active assumptions and warnings ({report.warnings.length})</summary><ul>{report.active_rule_assumptions.map(a=><li key={a}>{a}</li>)}</ul>{report.warnings.map((w,i)=><pre key={i}>{JSON.stringify(w,null,2)}</pre>)}</details>
    <details><summary>Capacity hotspots ({report.capacity_hotspots.length})</summary><div className="ps1-table-wrap"><table><thead><tr><th>Location</th><th>Week</th><th>Used / supply</th><th>Excess</th></tr></thead><tbody>{report.capacity_hotspots.map(h=><tr key={`${h.location_id}/${h.week}`}><td>{h.location_id}</td><td>{h.week}</td><td>{h.used} / {h.supply}</td><td>{h.excess}</td></tr>)}</tbody></table></div></details>
-   <div className="ps1-actions"><select aria-label="Violation rule" value={filter} onChange={e=>setFilter(e.target.value)}><option value="">All rules</option>{[...new Set(report.hard_violations.map(v=>v.rule_code))].sort().map(r=><option key={r}>{r}</option>)}</select><input aria-label="Violation week" placeholder="Filter week" value={week} onChange={e=>setWeek(e.target.value)}/><button className="control" onClick={()=>onSelect(null)}>Clear highlight</button></div>
-   <div className="ps1-table-wrap"><table><thead><tr><th>Rule</th><th>Week</th><th>Activities</th><th>Message / evidence</th></tr></thead><tbody>{violations.map((v,i)=><tr key={i}><td><button onClick={()=>onSelect(v)}>{v.rule_code}</button></td><td>{v.week??'—'}</td><td>{v.activity_ids.join(', ')}</td><td>{v.message}<details><summary>Evidence</summary><pre>{JSON.stringify({locations:v.location_ids,group:v.possession_group,...v.evidence},null,2)}</pre></details></td></tr>)}</tbody></table></div>
+   <div className="ps1-actions"><select aria-label="Violation rule" value={filter} onChange={e=>setFilter(e.target.value)}><option value="">All rules</option>{[...new Set(report.hard_violations.map(v=>v.rule_code))].sort().map(r=><option key={r}>{r}</option>)}</select><input aria-label="Violation week" placeholder="Filter week" value={week} onChange={e=>setWeek(e.target.value)}/><input aria-label="Violation activity or location" placeholder="Activity or location" value={term} onChange={e=>setTerm(e.target.value)}/><button className="control" onClick={()=>{setSelectedViolation(null);onSelect(null);}}>Clear highlight</button></div>
+   {selectedViolation&&<section className="ps1-selected-evidence" aria-label="Selected violation"><h4>Selected violation: {selectedViolation.rule_code}</h4><p>Selected week: {selectedViolation.week??'Not applicable'}</p><p>Selected activity IDs: {selectedViolation.activity_ids.join(', ')||'None'}</p><p>Selected location IDs: {selectedViolation.location_ids.join(', ')||'None'}</p><details open><summary>Structured evidence</summary><pre>{JSON.stringify({possession_group:selectedViolation.possession_group,...selectedViolation.evidence},null,2)}</pre></details></section>}
+   <div className="ps1-table-wrap"><table><thead><tr><th>Rule</th><th>Week</th><th>Activities</th><th>Message / evidence</th></tr></thead><tbody>{violations.map((v,i)=><tr key={i}><td><button onClick={()=>{setSelectedViolation(v);onSelect(v);}}>{v.rule_code}</button></td><td>{v.week??'—'}</td><td>{v.activity_ids.join(', ')}</td><td>{v.message}<details><summary>Evidence</summary><pre>{JSON.stringify({locations:v.location_ids,group:v.possession_group,...v.evidence},null,2)}</pre></details></td></tr>)}</tbody></table></div>
   </>}
  </section>;
 }

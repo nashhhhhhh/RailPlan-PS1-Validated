@@ -10,6 +10,7 @@ execFileSync(
   [
     path.join(root, "node_modules/typescript/bin/tsc"),
     "app/ps1-optimisation-data.ts",
+    "app/components/ps1/demo-state.ts",
     "--outDir",
     output,
     "--module",
@@ -26,7 +27,31 @@ execFileSync(
 );
 fs.writeFileSync(path.join(output, "package.json"), ' {"type":"commonjs"}');
 const d = require(path.join(output, "app/ps1-optimisation-data.js"));
+const demo = require(path.join(output, "app/components/ps1/demo-state.js"));
 after(() => fs.rmSync(output, { recursive: true, force: true }));
+test("demo progression, scenarios and bounded solver presets", () => {
+  assert.deepEqual(demo.demoSteps, ["Dataset", "Scenario", "Optimisation", "Validation", "Objective", "Export"]);
+  for (const scenario of ["A", "B", "C"]) assert.equal(demo.scenarioDescriptions[scenario].length >= 2, true);
+  assert.match(demo.scenarioDescriptions.A.join(" "), /ECLO forbidden/);
+  assert.match(demo.scenarioDescriptions.B.join(" "), /planned completion dates/);
+  assert.match(demo.scenarioDescriptions.C.join(" "), /Separate Alpha and Beta/);
+  for (const preset of Object.values(demo.solverPresets)) assert.equal(d.optionsSchema.safeParse({...d.defaults,...preset}).success, true);
+});
+test("unknown remains distinct from proven infeasibility", () => {
+  assert.equal(demo.solverExplanation("UNKNOWN"), "No schedule was found or disproved within the configured search limit.");
+  assert.match(demo.solverExplanation("INFEASIBLE"), /proved/);
+  assert.match(demo.solverExplanation("VALIDATOR_REJECTED"), /rejected/);
+});
+test("publication gate requires every validated condition", () => {
+  const good = {candidate:true,feasible:true,physicalComplete:true,hardViolations:0,backendAccepted:true};
+  assert.equal(demo.publicationGate(good).eligible, true);
+  for (const key of ["candidate","feasible","physicalComplete","backendAccepted"]) {
+    const result = demo.publicationGate({...good,[key]:false});
+    assert.equal(result.eligible, false);
+    assert.ok(result.reason.length > 0);
+  }
+  assert.match(demo.publicationGate({...good,hardViolations:2}).reason, /2 hard violation/);
+});
 const access = (i) => ({
   activity_id: `A${i}`,
   access_seq: 1,

@@ -77,6 +77,8 @@ function detail(run) {
             contracts_overrunning: 1,
             overrun_days_total: 7,
             priority_weighted_overrun: "48.30",
+            excess_access_nights_total: 0,
+            eclo_nights_total: 0,
           }
         : null,
       completion_changes: [],
@@ -88,6 +90,8 @@ function detail(run) {
       ? {
           validator_version: "ps1-validator/1.1.0",
           validation_status: "feasible",
+          feasible: true,
+          physical_validation_complete: true,
           hard_violations: [],
           warnings: [],
         }
@@ -156,6 +160,11 @@ fs.mkdirSync(screenshots, { recursive: true });
       headers: { "Access-Control-Allow-Origin": "*" },
     });
   }
+  await page.route("**/health*", async route => {
+    const ready=route.request().url().endsWith("/health/ready");
+    return fulfill(route,ready?{status:"ready",mode:"persisted"}:{status:"ok"});
+  });
+  await page.route("**/health/ready", route => fulfill(route,{status:"ready",mode:"persisted"}));
   await page.route("**/api/ps1/**", async (route) => {
     const req = route.request(),
       url = new URL(req.url()),
@@ -286,7 +295,17 @@ fs.mkdirSync(screenshots, { recursive: true });
   };
   try {
     await page.goto(base, { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(1200);
+    await page.getByRole("button", {name:"Competition Demo",exact:true}).click();
+    await page.getByRole("region", {name:"Competition Demo"}).getByText("Step 1 of 6: Dataset").waitFor();
+    await page.getByRole("button", {name:"Next step"}).click();
+    for(const label of ["Scenario A","Scenario B","Scenario C"]) assert.equal(await page.getByRole("region",{name:"Competition Demo"}).getByText(label,{exact:true}).count(),1);
+    await page.getByRole("button", {name:"Restart demo"}).click();
+    await page.getByText("Step 1 of 6: Dataset").waitFor();
+    await page.keyboard.press("Escape");
+    check("demo steps, scenario cards and restart");
     await page.getByRole("button", { name: "Open optimiser", exact: true }).click();
+    await page.getByRole("status",{name:""}).filter({hasText:"Connected · Persisted mode"}).waitFor();
     await page
       .getByRole("button", { name: "Load organiser dataset", exact: true })
       .click();
@@ -322,6 +341,11 @@ fs.mkdirSync(screenshots, { recursive: true });
     assert.equal(posts.length, 0);
     await page.getByRole("button", { name: "Scenario A", exact: true }).click();
     check("B and C generation are enabled without generating Scenario A requests");
+    await opt().getByRole("button",{name:"Quick",exact:true}).click();
+    assert.equal(await opt().getByRole("spinbutton",{name:"Time limit in seconds"}).inputValue(),"5");
+    await opt().getByRole("button",{name:"Balanced",exact:true}).click();
+    assert.equal(await opt().getByRole("spinbutton",{name:"Time limit in seconds"}).inputValue(),"20");
+    check("solver presets apply bounded search options");
     delayPost = true;
     await opt()
       .getByRole("button", { name: "Generate schedule", exact: true })
@@ -334,6 +358,12 @@ fs.mkdirSync(screenshots, { recursive: true });
     await opt()
       .getByRole("heading", { name: "Feasible schedule found", exact: true })
       .waitFor();
+    assert.equal(await opt().getByText("No schedule was found or disproved within the configured search limit.").count(),0);
+    for(const label of ["Candidate exists","Schedule feasible","Physical validation complete","Zero hard violations","CSV export permitted"]) assert.ok((await opt().getByRole("region",{name:"Publication gate"}).getByText(label,{exact:false}).count())>0);
+    for(const label of ["Raw overrun","Weighted overrun","Excess access nights","ECLO nights","Final objective"]) assert.ok((await opt().getByText(label,{exact:true}).count())>0);
+    for(const term of ["physical_night:","access_night:","co_share_group:"]) assert.ok((await opt().getByText(term,{exact:true}).count())>0);
+    assert.ok((await opt().getByRole("region",{name:"Demo summary"}).count())>0);
+    check("publication checklist, objective components, physical terms and summary render");
     assert.equal(posts[0].body.time_limit_seconds, 20);
     assert.equal(posts[0].body.physical_nights_per_week, 7);
     assert.ok(posts[0].body.idempotency_key);
@@ -394,6 +424,11 @@ fs.mkdirSync(screenshots, { recursive: true });
     await opt().getByRole("tab", { name: "Validation", exact: true }).click();
     await shot("07-validation");
     await opt().getByRole("tab", { name: "Downloads", exact: true }).click();
+    const reportEvent=page.waitForEvent("download");
+    await opt().getByRole("button",{name:"Download JSON validation report"}).click();
+    const reportDownload=await reportEvent;
+    assert.match(fs.readFileSync(await reportDownload.path(),"utf8"),/"validator_version"/);
+    check("JSON validation report downloads for selected run");
     assert.ok(
       (await opt()
         .getByText(
@@ -438,6 +473,10 @@ fs.mkdirSync(screenshots, { recursive: true });
         exact: true,
       })
       .waitFor();
+    assert.ok((await opt().getByText("No schedule was found or disproved within the configured search limit.").count())>0);
+    await opt().getByRole("tab",{name:"Downloads",exact:true}).click();
+    assert.ok((await opt().getByText(/CSV downloads disabled:/).count())>0);
+    check("UNKNOWN has a distinct explanation and exact disabled download reason");
     assert.equal(
       await opt()
         .getByRole("button", { name: "Load saved artifacts", exact: true })
@@ -492,6 +531,7 @@ fs.mkdirSync(screenshots, { recursive: true });
     );
     check("stale run response cannot replace newer selection");
     await page.reload();
+    await page.waitForTimeout(1200);
     await page.getByRole("button", { name: "Open optimiser", exact: true }).click();
     await page
       .getByText("Connection and saved instances", { exact: true })
@@ -530,6 +570,25 @@ fs.mkdirSync(screenshots, { recursive: true });
     await page.setViewportSize({ width: 820, height: 1180 });
     await shot("10-tablet");
     check("tablet viewport renders");
+    await page.route("**/health/ready",route=>fulfill(route,{status:"ready",mode:"stateless"}));
+    await page.reload();await page.waitForTimeout(1200);
+    await page.getByRole("button",{name:"Open optimiser",exact:true}).click();
+    await page.getByText("Connected · Stateless mode",{exact:false}).waitFor();
+    assert.equal(await page.getByText("Demo planner ID",{exact:true}).count(),0);
+    check("stateless connection hides demo planner control");
+    await page.route("**/health/ready",route=>fulfill(route,{detail:"Database unavailable"},503));
+    await page.reload();await page.waitForTimeout(1200);
+    await page.getByRole("button",{name:"Open optimiser",exact:true}).click();
+    await page.getByText("Backend: Unavailable",{exact:true}).waitFor();
+    check("unavailable readiness displays explicit status");
+    let releaseReady;
+    await page.route("**/health/ready",async route=>{await new Promise(resolve=>{releaseReady=resolve;});return fulfill(route,{status:"ready",mode:"persisted"});});
+    await page.reload();await page.waitForTimeout(1200);
+    await page.getByRole("button",{name:"Open optimiser",exact:true}).click();
+    await page.getByText("Backend: Connecting",{exact:true}).waitFor();
+    releaseReady();
+    await page.getByText("Connected · Persisted mode",{exact:false}).waitFor();
+    check("connecting state resolves to connected persisted mode");
     console.log(
       `${checks} browser checks passed; disposable mock screenshots saved in ${screenshots}.`,
     );
