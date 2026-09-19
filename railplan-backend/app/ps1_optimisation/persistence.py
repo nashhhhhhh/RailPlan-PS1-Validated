@@ -20,7 +20,8 @@ OUTCOMES={s:('bounded' if s=='UNKNOWN' else s.lower()) for s in
 
 def resolve_options_snapshot(configuration):
     """Rehydrate the already validated immutable options captured for a job."""
-    return OptimiseInput.model_validate(configuration['solver_options'])
+    option_type={'A':OptimiseInput,'B':ScenarioBOptimiseInput,'C':ScenarioCOptimiseInput}[configuration['scenario']]
+    return option_type.model_validate(configuration['solver_options'])
 
 def get_run(db,actor,run_id,instance_id=None):
     row=db.execute(text('''SELECT * FROM railplan.ps1_optimisation_runs

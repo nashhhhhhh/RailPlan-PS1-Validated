@@ -43,17 +43,33 @@ class OptimisationArtifacts(BaseModel):
     judge_validation: str = 'not_run'
     score_verification: str = 'internal_only'
 
-JobStatus = Literal['QUEUED','RUNNING','CANCELLATION_REQUESTED','SUCCEEDED','FAILED','CANCELLED']
+JobStatus = Literal['QUEUED','RUNNING','SUCCEEDED','FAILED','CANCELLED']
 
 class OptimisationJob(BaseModel):
     id: UUID
     instance_id: UUID
+    operator_id: UUID
+    created_by: UUID
     scenario: Literal['A','B','C']
     status: JobStatus
     progress: int = Field(ge=0,le=100)
     stage: str
     cancel_requested: bool
     run_id: UUID | None = None
+    input_fingerprint: str
+    solver_seed: int
+    time_limit_seconds: float
+    deterministic_time_limit: float
+    option_snapshot: dict[str,Any]
+    validator_version: str
+    policy_version: str
+    solver_status: str | None = None
+    objective_components: dict[str,Any] | None = None
+    best_objective: str | None = None
+    best_bound: str | None = None
+    validation_result: dict[str,Any] | None = None
+    diagnostics: list[dict[str,Any]] = Field(default_factory=list)
+    artifact_eligible: bool = False
     diagnostic: dict[str,Any] | None = None
     created_at: datetime
     started_at: datetime | None = None

@@ -65,15 +65,20 @@ test("stateless preview and persisted job routes remain distinct",async()=>{
  }});
  await api.optimisePs1ScenarioAPreview({instance_files:{},time_limit_seconds:2});
  await api.startPs1ScenarioAJob("instance",{idempotency_key:"key"});
+ await api.startPs1ScenarioBJob("instance",{idempotency_key:"key"});
+ await api.startPs1ScenarioCJob("instance",{idempotency_key:"key"});
  await api.ps1OptimisationJob("job");
- await api.ps1OptimisationJobs("instance",{limit:5});
+ await api.ps1OptimisationJobs("instance",{limit:5,scenario:"C"});
  await api.cancelPs1OptimisationJob("job");
  assert.equal(calls[0].url.pathname,"/api/ps1/optimise/scenario-a/preview");
  assert.equal(calls[1].url.pathname,"/api/ps1/instances/instance/optimise/scenario-a/jobs");
- assert.equal(calls[2].url.pathname,"/api/ps1/optimisation-jobs/job");
- assert.equal(calls[3].url.searchParams.get("limit"),"5");
- assert.equal(calls[4].url.pathname,"/api/ps1/optimisation-jobs/job/cancel");
- assert.equal(calls[4].init.method,"POST");
+ assert.equal(calls[2].url.pathname,"/api/ps1/instances/instance/optimise/scenario-b/jobs");
+ assert.equal(calls[3].url.pathname,"/api/ps1/instances/instance/optimise/scenario-c/jobs");
+ assert.equal(calls[4].url.pathname,"/api/ps1/optimisation-jobs/job");
+ assert.equal(calls[5].url.searchParams.get("limit"),"5");
+ assert.equal(calls[5].url.searchParams.get("scenario"),"C");
+ assert.equal(calls[6].url.pathname,"/api/ps1/optimisation-jobs/job/cancel");
+ assert.equal(calls[6].init.method,"POST");
 });
 test("Scenario B exposes saved and database-free preview paths",async()=>{
  const calls=[];
