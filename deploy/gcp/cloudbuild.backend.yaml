@@ -1,0 +1,13 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --pull
+      - --file
+      - railplan-backend/Dockerfile
+      - --tag
+      - ${_IMAGE}
+      - railplan-backend
+
+images:
+  - ${_IMAGE}

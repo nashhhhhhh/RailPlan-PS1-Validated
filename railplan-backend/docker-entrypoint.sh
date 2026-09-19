@@ -7,6 +7,6 @@ fi
 
 exec python -m uvicorn app.main:app \
   --host "${RAILPLAN_HOST:-0.0.0.0}" \
-  --port "${RAILPLAN_PORT:-8000}" \
+  --port "${PORT:-${RAILPLAN_PORT:-8000}}" \
   --workers "${RAILPLAN_API_WORKERS:-1}" \
   --proxy-headers
