@@ -19,6 +19,6 @@ RUN pip install . && chmod 0555 docker-entrypoint.sh && chown -R railplan:railpl
 USER railplan
 EXPOSE 8000
 HEALTHCHECK --interval=20s --timeout=5s --start-period=20s --retries=5 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready',timeout=3)"
+  CMD python -c "import os,urllib.request; port=os.getenv('PORT',os.getenv('RAILPLAN_PORT','8000')); urllib.request.urlopen(f'http://127.0.0.1:{port}/health/ready',timeout=3)"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]

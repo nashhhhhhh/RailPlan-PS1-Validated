@@ -1,0 +1,15 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --pull
+      - --build-arg
+      - NEXT_PUBLIC_RAILPLAN_API_URL=${_API_URL}
+      - --file
+      - Dockerfile.frontend
+      - --tag
+      - ${_IMAGE}
+      - .
+
+images:
+  - ${_IMAGE}

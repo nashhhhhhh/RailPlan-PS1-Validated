@@ -1,0 +1,1059 @@
+diff --git a/.dockerignore b/.dockerignore
+new file mode 100644
+index 0000000..c2c14c7
+--- /dev/null
++++ b/.dockerignore
+@@ -0,0 +1,72 @@
++.git
++.git/**
++.github
++.agents
++.codex
++.env*
++**/.env*
++.npmrc
++**/.npmrc
++secrets
++**/secrets
++.secrets
++**/.secrets
++**/*secret*
++**/credentials*
++**/service-account*.json
++*.pem
++**/*.pem
++*.key
++**/*.key
++*.p12
++**/*.p12
++*.pfx
++**/*.pfx
++
++node_modules
++**/node_modules
++.venv
++venv
++**/.venv
++**/venv
++
++.next
++dist
++build
++**/build
++coverage
++htmlcov
++.wrangler
++.vinext
++.vite
++.cache
++**/.cache
++__pycache__
++**/__pycache__
++.pytest_cache
++**/.pytest_cache
++.mypy_cache
++**/.mypy_cache
++.ruff_cache
++**/.ruff_cache
++*.py[cod]
++*.tsbuildinfo
++
++*.log
++*.out
++logs
++**/logs
++screenshots
++**/screenshots
++.test-artifacts
++**/.test-artifacts
++
++pgdata
++postgres-data
++**/pgdata
++**/postgres-data
++*.zip
++**/*.zip
++
++RailPlan-PS1-Validated-release.zip
++gcp-deployment.patch
+diff --git a/.gcloudignore b/.gcloudignore
+new file mode 100644
+index 0000000..c2c14c7
+--- /dev/null
++++ b/.gcloudignore
+@@ -0,0 +1,72 @@
++.git
++.git/**
++.github
++.agents
++.codex
++.env*
++**/.env*
++.npmrc
++**/.npmrc
++secrets
++**/secrets
++.secrets
++**/.secrets
++**/*secret*
++**/credentials*
++**/service-account*.json
++*.pem
++**/*.pem
++*.key
++**/*.key
++*.p12
++**/*.p12
++*.pfx
++**/*.pfx
++
++node_modules
++**/node_modules
++.venv
++venv
++**/.venv
++**/venv
++
++.next
++dist
++build
++**/build
++coverage
++htmlcov
++.wrangler
++.vinext
++.vite
++.cache
++**/.cache
++__pycache__
++**/__pycache__
++.pytest_cache
++**/.pytest_cache
++.mypy_cache
++**/.mypy_cache
++.ruff_cache
++**/.ruff_cache
++*.py[cod]
++*.tsbuildinfo
++
++*.log
++*.out
++logs
++**/logs
++screenshots
++**/screenshots
++.test-artifacts
++**/.test-artifacts
++
++pgdata
++postgres-data
++**/pgdata
++**/postgres-data
++*.zip
++**/*.zip
++
++RailPlan-PS1-Validated-release.zip
++gcp-deployment.patch
+diff --git a/Dockerfile.frontend b/Dockerfile.frontend
+new file mode 100644
+index 0000000..7abedd6
+--- /dev/null
++++ b/Dockerfile.frontend
+@@ -0,0 +1,46 @@
++# syntax=docker/dockerfile:1
++
++FROM node:22-bookworm-slim AS pnpm-base
++
++ENV PNPM_HOME=/pnpm \
++    PATH=/pnpm:$PATH \
++    NEXT_TELEMETRY_DISABLED=1
++
++RUN corepack enable && corepack prepare pnpm@11.25.0 --activate
++WORKDIR /app
++
++FROM pnpm-base AS dependencies
++COPY package.json pnpm-lock.yaml ./
++RUN pnpm install --frozen-lockfile
++
++FROM pnpm-base AS production-dependencies
++COPY package.json pnpm-lock.yaml ./
++RUN pnpm install --prod --frozen-lockfile
++
++FROM pnpm-base AS builder
++ARG NEXT_PUBLIC_RAILPLAN_API_URL
++ENV NEXT_PUBLIC_RAILPLAN_API_URL=${NEXT_PUBLIC_RAILPLAN_API_URL}
++
++COPY --from=dependencies /app/node_modules ./node_modules
++COPY . .
++RUN pnpm exec next build
++
++FROM node:22-bookworm-slim AS runner
++
++ENV NODE_ENV=production \
++    NEXT_TELEMETRY_DISABLED=1 \
++    HOSTNAME=0.0.0.0
++
++RUN groupadd --system --gid 1001 nodejs \
++    && useradd --system --uid 1001 --gid nodejs --home-dir /app nextjs
++
++WORKDIR /app
++COPY --from=production-dependencies --chown=nextjs:nodejs /app/node_modules ./node_modules
++COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
++COPY --from=builder --chown=nextjs:nodejs /app/public ./public
++COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
++
++USER nextjs
++EXPOSE 8080
++
++CMD ["sh", "-c", "exec ./node_modules/.bin/next start --hostname 0.0.0.0 --port \"${PORT:-8080}\""]
+diff --git a/deploy/gcp/README.md b/deploy/gcp/README.md
+new file mode 100644
+index 0000000..0d55108
+--- /dev/null
++++ b/deploy/gcp/README.md
+@@ -0,0 +1,173 @@
++# Stateless Google Cloud Run deployment
++
++This deployment runs the RailPlan frontend and FastAPI backend as two public Cloud Run services. It targets `us-central1`; the helper scripts also set the default compute zone to `us-central1-a`. Cloud Run is regional, so the zone setting does not pin an individual Cloud Run instance.
++
++The backend runs without PostgreSQL, migrations, or demo authentication. It exposes the stateless dataset validation and Scenario A, B, and C preview APIs. Persisted instances, saved optimisation runs, asynchronous persisted jobs, audit history, and operator-scoped storage require the separate PostgreSQL deployment.
++
++## Prerequisites
++
++- A Google Cloud project with billing enabled.
++- Google Cloud CLI (`gcloud`) authenticated to an account that can enable services, submit Cloud Builds, create Artifact Registry repositories, deploy public Cloud Run services, and act as the runtime service account.
++- Bash plus `curl`, or PowerShell 7 or Windows PowerShell 5.1.
++- Repository root as the working directory.
++
++Typical IAM roles are Service Usage Admin, Cloud Build Editor, Artifact Registry Administrator, Cloud Run Admin, and Service Account User. Organisation policies may require an administrator to grant the Cloud Build service account Artifact Registry write permission or to permit unauthenticated Cloud Run access.
++
++No deployment secret is read or written by these scripts. The source upload excludes environment files, credentials, dependencies, virtual environments, build output, caches, logs, screenshots, database volumes, and ZIP files.
++
++## Deploy from Cloud Shell
++
++Open [Google Cloud Shell](https://shell.cloud.google.com/), clone or upload this repository, and run:
++
++```bash
++cd RailPlan-PS1-Validated
++chmod +x deploy/gcp/*.sh
++./deploy/gcp/deploy-stateless.sh YOUR_PROJECT_ID
++```
++
++The complete Bash form is:
++
++```bash
++./deploy/gcp/deploy-stateless.sh PROJECT_ID [REGION] [ZONE]
++```
++
++Defaults are `us-central1` and `${REGION}-a`. For the requested target, the exact command is:
++
++```bash
++./deploy/gcp/deploy-stateless.sh YOUR_PROJECT_ID us-central1 us-central1-a
++```
++
++From PowerShell:
++
++```powershell
++.\deploy\gcp\deploy-stateless.ps1 `
++  -ProjectId YOUR_PROJECT_ID `
++  -Region us-central1 `
++  -Zone us-central1-a
++```
++
++An explicit project ID is mandatory. The scripts perform these operations in order:
++
++1. Select the project, region, and default compute zone.
++2. Enable Cloud Run, Cloud Build, and Artifact Registry.
++3. Create or reuse the regional Docker repository `railplan`.
++4. Build and deploy `railplan-api` with the required stateless environment.
++5. verify `/health`, `/health/live`, and `/health/ready`.
++6. Build `railplan-web` with the deployed API URL embedded as `NEXT_PUBLIC_RAILPLAN_API_URL`.
++7. Deploy the frontend, then create a new backend revision whose CORS origin is the exact frontend URL.
++8. Repeat the backend health checks, check the frontend root, verify the CORS response header, and print both public URLs.
++
++The backend service uses two CPUs, 4 GiB memory, concurrency `1`, a maximum of one instance, and a 900-second request timeout. It receives:
++
++```text
++RAILPLAN_RUN_MIGRATIONS=0
++RAILPLAN_REQUIRE_DATABASE=0
++RAILPLAN_ENV=production
++RAILPLAN_DEMO_AUTH=0
++```
++
++## CORS
++
++The initial backend revision uses the inert exact origin `https://pending.invalid`. After the frontend is deployed, the script replaces that value with the frontend Cloud Run URL and checks that the backend returns the same value in `Access-Control-Allow-Origin`. Wildcard CORS is never configured.
++
++If a custom domain is later attached to the frontend, update the backend to that exact origin and include the full stateless environment set:
++
++```bash
++gcloud run services update railplan-api \
++  --project YOUR_PROJECT_ID \
++  --region us-central1 \
++  --set-env-vars "RAILPLAN_RUN_MIGRATIONS=0,RAILPLAN_REQUIRE_DATABASE=0,RAILPLAN_ENV=production,RAILPLAN_DEMO_AUTH=0,RAILPLAN_CORS_ORIGINS=https://railplan.example.com"
++```
++
++Origins contain scheme and hostname only. Do not add a trailing slash or use `*`.
++
++## Health checks
++
++Replace `BACKEND_URL` with the printed backend URL:
++
++```bash
++curl --fail --show-error BACKEND_URL/health
++curl --fail --show-error BACKEND_URL/health/live
++curl --fail --show-error BACKEND_URL/health/ready
++```
++
++Readiness should report `"mode":"stateless"`. The frontend can be checked with:
++
++```bash
++curl --fail --show-error FRONTEND_URL
++```
++
++## Logs
++
++```bash
++gcloud run services logs read railplan-api \
++  --project YOUR_PROJECT_ID --region us-central1 --limit 100
++
++gcloud run services logs read railplan-web \
++  --project YOUR_PROJECT_ID --region us-central1 --limit 100
++```
++
++Use `--log-filter='severity>=ERROR'` to focus on failures.
++
++## Revise a deployment
++
++Commit the desired source revision and rerun the same deployment command. Each run uses a new timestamped backend and frontend image tag. The frontend must be rebuilt whenever the backend URL changes because `NEXT_PUBLIC_RAILPLAN_API_URL` is compiled into the browser bundle.
++
++To inspect revisions:
++
++```bash
++gcloud run revisions list --service railplan-api --project YOUR_PROJECT_ID --region us-central1
++gcloud run revisions list --service railplan-web --project YOUR_PROJECT_ID --region us-central1
++```
++
++## Roll back
++
++Choose a revision from the list and send all traffic to it:
++
++```bash
++gcloud run services update-traffic railplan-api \
++  --project YOUR_PROJECT_ID --region us-central1 \
++  --to-revisions BACKEND_REVISION=100
++
++gcloud run services update-traffic railplan-web \
++  --project YOUR_PROJECT_ID --region us-central1 \
++  --to-revisions FRONTEND_REVISION=100
++```
++
++Roll back both services as a compatible pair. Recheck the frontend build-time API URL and backend CORS origin after any rollback.
++
++## Delete resources
++
++The delete helpers remove both Cloud Run services and the `railplan` Artifact Registry repository, including its stored images:
++
++```bash
++./deploy/gcp/delete-stateless.sh YOUR_PROJECT_ID us-central1
++```
++
++```powershell
++.\deploy\gcp\delete-stateless.ps1 -ProjectId YOUR_PROJECT_ID -Region us-central1
++```
++
++The enabled Google APIs, Cloud Build history, and Cloud Logging entries remain in the project.
++
++## Cost warning
++
++Cloud Build minutes, Artifact Registry storage, Cloud Run CPU, memory, network egress, and logs can incur charges. The backend is intentionally capped at one instance and no minimum instance count is requested, but a long optimiser request can use two CPUs and 4 GiB for up to 900 seconds. Delete the services and repository when the deployment is no longer needed. Billing and free-tier eligibility depend on the Google Cloud account and region.
++
++## Stateless limitations
++
++- No PostgreSQL database is provisioned or required.
++- Migrations do not run.
++- Demo identity headers are disabled in production.
++- Saved instances, persisted validation history, saved optimisation runs, asynchronous persisted jobs, cancellation state, audit records, and operator isolation storage are unavailable.
++- Container filesystem changes are temporary and may disappear whenever Cloud Run replaces an instance.
++- The service maximum of one instance limits parallel capacity; concurrency `1` keeps solver requests isolated within that instance.
++- The public endpoints receive no application login in this mode. Use IAM or an authenticated gateway before deploying private datasets.
++
++The stateless Scenario A/B/C preview routes remain available. Each request must carry its input files and options.
++
++## Scenario C `UNKNOWN`
++
++`UNKNOWN` means the configured solve budget ended without an incumbent. It does not prove infeasibility. Treat the response as diagnostic, keep `judge_validation="not_run"` and `score_verification="internal_only"`, and do not publish or fabricate CSV output. A caller may retry with a realistic bounded time limit, but the request must complete within Cloud Run's 900-second timeout. Only candidates marked publishable and passing the rich physical validator should be used as generated schedules.
++
++See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common build, IAM, startup, CORS, and timeout failures.
+diff --git a/deploy/gcp/TROUBLESHOOTING.md b/deploy/gcp/TROUBLESHOOTING.md
+new file mode 100644
+index 0000000..a8970b7
+--- /dev/null
++++ b/deploy/gcp/TROUBLESHOOTING.md
+@@ -0,0 +1,128 @@
++# Google Cloud Run troubleshooting
++
++The deployment helpers stop on the first failed command. They do not report success or print service URLs until both services, backend health, frontend response, and exact CORS verification have passed.
++
++## Confirm the active account and project
++
++```bash
++gcloud auth list
++gcloud config get-value project
++gcloud projects describe YOUR_PROJECT_ID
++```
++
++The deployment command always requires a project ID and passes it explicitly to build and service commands. Billing must be enabled on that project.
++
++## API enablement or permission failure
++
++Confirm the required services:
++
++```bash
++gcloud services list --enabled --project YOUR_PROJECT_ID \
++  --filter='name:(run.googleapis.com OR cloudbuild.googleapis.com OR artifactregistry.googleapis.com)'
++```
++
++Permission errors commonly mean the caller cannot enable services, create the repository, submit builds, deploy Cloud Run, make a service public, or act as the runtime service account. Organisation policy may prohibit `--allow-unauthenticated`. Ask the project administrator for the required role or policy change; do not add credentials to the repository.
++
++If Cloud Build cannot push an image, identify its service account from the failed build and grant it Artifact Registry Writer on the `railplan` repository according to your organisation's IAM policy.
++
++## Inspect failed builds
++
++```bash
++gcloud builds list --project YOUR_PROJECT_ID --region us-central1 --limit 10
++gcloud builds log BUILD_ID --project YOUR_PROJECT_ID --region us-central1
++```
++
++The backend build context is `railplan-backend`. The frontend uses the repository root, Node.js 22, Corepack, pnpm `11.25.0`, a frozen lockfile, and the standard `next build`. Wrangler is not used by the Cloud Run image.
++
++If the frontend calls `127.0.0.1:8000` in a deployed browser, it was built without the correct `_API_URL`. Rebuild it through `cloudbuild.frontend.yaml` and confirm the build step contains:
++
++```text
++NEXT_PUBLIC_RAILPLAN_API_URL=https://...run.app
++```
++
++## Container does not listen on the assigned port
++
++Cloud Run sets `PORT`, normally to `8080`. The backend entrypoint resolves `PORT`, then `RAILPLAN_PORT`, then `8000`. The frontend starts Next.js with `--hostname 0.0.0.0` and `${PORT:-8080}`.
++
++Inspect the failed revision:
++
++```bash
++gcloud run services describe railplan-api --project YOUR_PROJECT_ID --region us-central1
++gcloud run services logs read railplan-api --project YOUR_PROJECT_ID --region us-central1 --limit 100
++```
++
++For the frontend, replace `railplan-api` with `railplan-web`.
++
++## Backend readiness returns 503
++
++Inspect the deployed environment:
++
++```bash
++gcloud run services describe railplan-api \
++  --project YOUR_PROJECT_ID --region us-central1 \
++  --format='yaml(spec.template.spec.containers[0].env)'
++```
++
++The stateless revision must contain:
++
++```text
++RAILPLAN_RUN_MIGRATIONS=0
++RAILPLAN_REQUIRE_DATABASE=0
++RAILPLAN_ENV=production
++RAILPLAN_DEMO_AUTH=0
++```
++
++Remove `DATABASE_URL` from a service that is intended to remain stateless. Readiness should then return `mode: stateless`. A persisted deployment has separate database, migration, security, and availability requirements.
++
++## CORS failure
++
++Get the current URLs:
++
++```bash
++BACKEND_URL=$(gcloud run services describe railplan-api --project YOUR_PROJECT_ID --region us-central1 --format='value(status.url)')
++FRONTEND_URL=$(gcloud run services describe railplan-web --project YOUR_PROJECT_ID --region us-central1 --format='value(status.url)')
++```
++
++Inspect the response:
++
++```bash
++curl -i -H "Origin: ${FRONTEND_URL}" "${BACKEND_URL}/health"
++```
++
++`Access-Control-Allow-Origin` must equal the frontend URL exactly. Scheme, hostname, and any port must match; omit a trailing slash. The backend intentionally rejects wildcard CORS.
++
++To repair it while preserving the stateless environment:
++
++```bash
++gcloud run services update railplan-api \
++  --project YOUR_PROJECT_ID --region us-central1 \
++  --set-env-vars "RAILPLAN_RUN_MIGRATIONS=0,RAILPLAN_REQUIRE_DATABASE=0,RAILPLAN_ENV=production,RAILPLAN_DEMO_AUTH=0,RAILPLAN_CORS_ORIGINS=${FRONTEND_URL}"
++```
++
++## Optimiser request times out
++
++The backend Cloud Run request timeout is 900 seconds. Keep every solver time limit below that boundary so request parsing, validation, response serialization, and network overhead can complete. The service uses concurrency `1` and a maximum of one instance, so another long request waits or may be rejected by upstream limits.
++
++Use a bounded realistic solver limit. For Scenario C, `UNKNOWN` means the solver reached its limit without an incumbent; it is distinct from `INFEASIBLE`. Do not create CSV files from an `UNKNOWN`, `INFEASIBLE`, or `MODEL_INVALID` result. Inspect diagnostics, retry only when useful, and accept output only when the response is publishable and its rich physical validation passes.
++
++## Revisions and rollback
++
++List traffic and revisions:
++
++```bash
++gcloud run services describe railplan-api --project YOUR_PROJECT_ID --region us-central1 --format='yaml(status.traffic)'
++gcloud run revisions list --service railplan-api --project YOUR_PROJECT_ID --region us-central1
++gcloud run revisions list --service railplan-web --project YOUR_PROJECT_ID --region us-central1
++```
++
++Move traffic to a known revision with `gcloud run services update-traffic SERVICE --to-revisions REVISION=100`. Roll back the backend and frontend as a pair, then verify all health URLs and exact CORS again.
++
++## Partial deployment cleanup
++
++If a deployment stopped after creating some resources, rerunning it is safe: the repository is reused and Cloud Run creates new revisions. To remove everything created for the stateless deployment:
++
++```bash
++./deploy/gcp/delete-stateless.sh YOUR_PROJECT_ID us-central1
++```
++
++This removes `railplan-api`, `railplan-web`, and the `railplan` image repository. It does not disable APIs or erase Cloud Build and Cloud Logging history.
+diff --git a/deploy/gcp/cloudbuild.backend.yaml b/deploy/gcp/cloudbuild.backend.yaml
+new file mode 100644
+index 0000000..47b66c7
+--- /dev/null
++++ b/deploy/gcp/cloudbuild.backend.yaml
+@@ -0,0 +1,13 @@
++steps:
++  - name: gcr.io/cloud-builders/docker
++    args:
++      - build
++      - --pull
++      - --file
++      - railplan-backend/Dockerfile
++      - --tag
++      - ${_IMAGE}
++      - railplan-backend
++
++images:
++  - ${_IMAGE}
+diff --git a/deploy/gcp/cloudbuild.frontend.yaml b/deploy/gcp/cloudbuild.frontend.yaml
+new file mode 100644
+index 0000000..c83d6af
+--- /dev/null
++++ b/deploy/gcp/cloudbuild.frontend.yaml
+@@ -0,0 +1,15 @@
++steps:
++  - name: gcr.io/cloud-builders/docker
++    args:
++      - build
++      - --pull
++      - --build-arg
++      - NEXT_PUBLIC_RAILPLAN_API_URL=${_API_URL}
++      - --file
++      - Dockerfile.frontend
++      - --tag
++      - ${_IMAGE}
++      - .
++
++images:
++  - ${_IMAGE}
+diff --git a/deploy/gcp/delete-stateless.ps1 b/deploy/gcp/delete-stateless.ps1
+new file mode 100644
+index 0000000..b3750b1
+--- /dev/null
++++ b/deploy/gcp/delete-stateless.ps1
+@@ -0,0 +1,58 @@
++[CmdletBinding()]
++param(
++    [Parameter(Mandatory = $true)]
++    [ValidateNotNullOrEmpty()]
++    [string]$ProjectId,
++
++    [ValidateNotNullOrEmpty()]
++    [string]$Region = "us-central1"
++)
++
++$ErrorActionPreference = "Stop"
++Set-StrictMode -Version Latest
++
++if (-not (Get-Command gcloud -ErrorAction SilentlyContinue)) {
++    throw "Required command not found: gcloud"
++}
++
++function Invoke-Gcloud {
++    param([Parameter(Mandatory = $true)][string[]]$Arguments)
++    & gcloud @Arguments
++    if ($LASTEXITCODE -ne 0) {
++        throw "gcloud failed with exit code $LASTEXITCODE`: gcloud $($Arguments -join ' ')"
++    }
++}
++
++function Remove-CloudRunService {
++    param([Parameter(Mandatory = $true)][string]$Service)
++    & gcloud run services describe $Service --project $ProjectId --region $Region *> $null
++    if ($LASTEXITCODE -eq 0) {
++        Invoke-Gcloud -Arguments @(
++            "run", "services", "delete", $Service,
++            "--project", $ProjectId,
++            "--region", $Region,
++            "--quiet"
++        )
++    }
++    else {
++        Write-Host "Cloud Run service already absent: $Service"
++    }
++}
++
++Remove-CloudRunService -Service "railplan-web"
++Remove-CloudRunService -Service "railplan-api"
++
++& gcloud artifacts repositories describe railplan --project $ProjectId --location $Region *> $null
++if ($LASTEXITCODE -eq 0) {
++    Invoke-Gcloud -Arguments @(
++        "artifacts", "repositories", "delete", "railplan",
++        "--project", $ProjectId,
++        "--location", $Region,
++        "--quiet"
++    )
++}
++else {
++    Write-Host "Artifact Registry repository already absent: railplan"
++}
++
++Write-Host "Deleted RailPlan stateless Cloud Run services and Artifact Registry repository from $ProjectId/$Region."
+diff --git a/deploy/gcp/delete-stateless.sh b/deploy/gcp/delete-stateless.sh
+new file mode 100755
+index 0000000..2ac3bbe
+--- /dev/null
++++ b/deploy/gcp/delete-stateless.sh
+@@ -0,0 +1,40 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++
++if [[ $# -lt 1 || -z "${1:-}" ]]; then
++  echo "Usage: $0 PROJECT_ID [REGION]" >&2
++  exit 2
++fi
++
++PROJECT_ID="$1"
++REGION="${2:-us-central1}"
++REPOSITORY="railplan"
++
++if ! command -v gcloud >/dev/null 2>&1; then
++  echo "Required command not found: gcloud" >&2
++  exit 1
++fi
++
++delete_service() {
++  local service="$1"
++  if gcloud run services describe "${service}" \
++    --project "${PROJECT_ID}" --region "${REGION}" >/dev/null 2>&1; then
++    gcloud run services delete "${service}" \
++      --project "${PROJECT_ID}" --region "${REGION}" --quiet
++  else
++    echo "Cloud Run service already absent: ${service}"
++  fi
++}
++
++delete_service railplan-web
++delete_service railplan-api
++
++if gcloud artifacts repositories describe "${REPOSITORY}" \
++  --project "${PROJECT_ID}" --location "${REGION}" >/dev/null 2>&1; then
++  gcloud artifacts repositories delete "${REPOSITORY}" \
++    --project "${PROJECT_ID}" --location "${REGION}" --quiet
++else
++  echo "Artifact Registry repository already absent: ${REPOSITORY}"
++fi
++
++echo "Deleted RailPlan stateless Cloud Run services and Artifact Registry repository from ${PROJECT_ID}/${REGION}."
+diff --git a/deploy/gcp/deploy-stateless.ps1 b/deploy/gcp/deploy-stateless.ps1
+new file mode 100644
+index 0000000..b21bae4
+--- /dev/null
++++ b/deploy/gcp/deploy-stateless.ps1
+@@ -0,0 +1,202 @@
++[CmdletBinding()]
++param(
++    [Parameter(Mandatory = $true)]
++    [ValidateNotNullOrEmpty()]
++    [string]$ProjectId,
++
++    [ValidateNotNullOrEmpty()]
++    [string]$Region = "us-central1",
++
++    [string]$Zone
++)
++
++$ErrorActionPreference = "Stop"
++Set-StrictMode -Version Latest
++
++if (-not $Zone) {
++    $Zone = "${Region}-a"
++}
++
++$Repository = "railplan"
++$BackendService = "railplan-api"
++$FrontendService = "railplan-web"
++$Tag = (Get-Date).ToUniversalTime().ToString("yyyyMMddHHmmss")
++$Registry = "$Region-docker.pkg.dev/$ProjectId/$Repository"
++$BackendImage = "$Registry/backend:$Tag"
++$FrontendImage = "$Registry/frontend:$Tag"
++$PendingCorsOrigin = "https://pending.invalid"
++
++if (-not (Get-Command gcloud -ErrorAction SilentlyContinue)) {
++    throw "Required command not found: gcloud"
++}
++
++function Invoke-Gcloud {
++    param([Parameter(Mandatory = $true)][string[]]$Arguments)
++    & gcloud @Arguments
++    if ($LASTEXITCODE -ne 0) {
++        throw "gcloud failed with exit code $LASTEXITCODE`: gcloud $($Arguments -join ' ')"
++    }
++}
++
++function Get-GcloudValue {
++    param([Parameter(Mandatory = $true)][string[]]$Arguments)
++    $value = (& gcloud @Arguments | Out-String).Trim()
++    if ($LASTEXITCODE -ne 0) {
++        throw "gcloud failed with exit code $LASTEXITCODE`: gcloud $($Arguments -join ' ')"
++    }
++    return $value
++}
++
++function Test-Url {
++    param(
++        [Parameter(Mandatory = $true)][string]$Url,
++        [Parameter(Mandatory = $true)][string]$Label
++    )
++
++    Write-Host "Checking $Label`: $Url"
++    for ($attempt = 1; $attempt -le 12; $attempt++) {
++        try {
++            $response = Invoke-WebRequest -Uri $Url -Method Get -TimeoutSec 30 -UseBasicParsing
++            if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 300) {
++                return
++            }
++        }
++        catch {
++            if ($attempt -eq 12) {
++                throw "Health check failed for $Label at $Url after 12 attempts: $($_.Exception.Message)"
++            }
++            Start-Sleep -Seconds 5
++        }
++    }
++    throw "Health check failed for $Label at $Url"
++}
++
++Write-Host "Configuring project $ProjectId, region $Region, zone $Zone"
++Invoke-Gcloud -Arguments @("config", "set", "project", $ProjectId, "--quiet")
++Invoke-Gcloud -Arguments @("config", "set", "run/region", $Region, "--quiet")
++Invoke-Gcloud -Arguments @("config", "set", "compute/zone", $Zone, "--quiet")
++
++Write-Host "Enabling Cloud Run, Cloud Build, and Artifact Registry APIs"
++Invoke-Gcloud -Arguments @(
++    "services", "enable",
++    "run.googleapis.com",
++    "cloudbuild.googleapis.com",
++    "artifactregistry.googleapis.com",
++    "--project", $ProjectId,
++    "--quiet"
++)
++
++& gcloud artifacts repositories describe $Repository --project $ProjectId --location $Region *> $null
++if ($LASTEXITCODE -eq 0) {
++    Write-Host "Reusing Artifact Registry repository $Repository"
++}
++else {
++    Write-Host "Creating Artifact Registry repository $Repository"
++    Invoke-Gcloud -Arguments @(
++        "artifacts", "repositories", "create", $Repository,
++        "--project", $ProjectId,
++        "--location", $Region,
++        "--repository-format", "docker",
++        "--description", "RailPlan Cloud Run images",
++        "--quiet"
++    )
++}
++
++Write-Host "Building backend image $BackendImage"
++Invoke-Gcloud -Arguments @(
++    "builds", "submit", ".",
++    "--project", $ProjectId,
++    "--region", $Region,
++    "--config", "deploy/gcp/cloudbuild.backend.yaml",
++    "--substitutions", "_IMAGE=$BackendImage",
++    "--quiet"
++)
++
++Write-Host "Deploying stateless backend"
++Invoke-Gcloud -Arguments @(
++    "run", "deploy", $BackendService,
++    "--project", $ProjectId,
++    "--region", $Region,
++    "--platform", "managed",
++    "--image", $BackendImage,
++    "--allow-unauthenticated",
++    "--port", "8080",
++    "--cpu", "2",
++    "--memory", "4Gi",
++    "--concurrency", "1",
++    "--max-instances", "1",
++    "--timeout", "900",
++    "--set-env-vars", "RAILPLAN_RUN_MIGRATIONS=0,RAILPLAN_REQUIRE_DATABASE=0,RAILPLAN_ENV=production,RAILPLAN_DEMO_AUTH=0,RAILPLAN_CORS_ORIGINS=$PendingCorsOrigin",
++    "--quiet"
++)
++
++$BackendUrl = Get-GcloudValue -Arguments @(
++    "run", "services", "describe", $BackendService,
++    "--project", $ProjectId,
++    "--region", $Region,
++    "--format=value(status.url)"
++)
++if (-not $BackendUrl) {
++    throw "Cloud Run did not return a backend URL"
++}
++
++Test-Url -Url "$BackendUrl/health" -Label "backend health"
++Test-Url -Url "$BackendUrl/health/live" -Label "backend liveness"
++Test-Url -Url "$BackendUrl/health/ready" -Label "backend readiness"
++
++Write-Host "Building frontend image $FrontendImage with API URL $BackendUrl"
++Invoke-Gcloud -Arguments @(
++    "builds", "submit", ".",
++    "--project", $ProjectId,
++    "--region", $Region,
++    "--config", "deploy/gcp/cloudbuild.frontend.yaml",
++    "--substitutions", "_IMAGE=$FrontendImage,_API_URL=$BackendUrl",
++    "--quiet"
++)
++
++Write-Host "Deploying frontend"
++Invoke-Gcloud -Arguments @(
++    "run", "deploy", $FrontendService,
++    "--project", $ProjectId,
++    "--region", $Region,
++    "--platform", "managed",
++    "--image", $FrontendImage,
++    "--allow-unauthenticated",
++    "--port", "8080",
++    "--quiet"
++)
++
++$FrontendUrl = Get-GcloudValue -Arguments @(
++    "run", "services", "describe", $FrontendService,
++    "--project", $ProjectId,
++    "--region", $Region,
++    "--format=value(status.url)"
++)
++if (-not $FrontendUrl) {
++    throw "Cloud Run did not return a frontend URL"
++}
++
++Write-Host "Restricting backend CORS to $FrontendUrl"
++Invoke-Gcloud -Arguments @(
++    "run", "services", "update", $BackendService,
++    "--project", $ProjectId,
++    "--region", $Region,
++    "--set-env-vars", "RAILPLAN_RUN_MIGRATIONS=0,RAILPLAN_REQUIRE_DATABASE=0,RAILPLAN_ENV=production,RAILPLAN_DEMO_AUTH=0,RAILPLAN_CORS_ORIGINS=$FrontendUrl",
++    "--quiet"
++)
++
++Test-Url -Url "$BackendUrl/health" -Label "final backend health"
++Test-Url -Url "$BackendUrl/health/live" -Label "final backend liveness"
++Test-Url -Url "$BackendUrl/health/ready" -Label "final backend readiness"
++Test-Url -Url $FrontendUrl -Label "frontend"
++
++$corsResponse = Invoke-WebRequest -Uri "$BackendUrl/health" -Method Get -Headers @{ Origin = $FrontendUrl } -TimeoutSec 30 -UseBasicParsing
++$corsOrigin = [string]$corsResponse.Headers["Access-Control-Allow-Origin"]
++if ($corsOrigin -ne $FrontendUrl) {
++    throw "Backend CORS verification failed: expected $FrontendUrl, received $corsOrigin"
++}
++
++Write-Host ""
++Write-Host "Deployment complete."
++Write-Host "Backend: $BackendUrl"
++Write-Host "Frontend: $FrontendUrl"
+diff --git a/deploy/gcp/deploy-stateless.sh b/deploy/gcp/deploy-stateless.sh
+new file mode 100755
+index 0000000..e4f13a7
+--- /dev/null
++++ b/deploy/gcp/deploy-stateless.sh
+@@ -0,0 +1,148 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++
++if [[ $# -lt 1 || -z "${1:-}" ]]; then
++  echo "Usage: $0 PROJECT_ID [REGION] [ZONE]" >&2
++  exit 2
++fi
++
++PROJECT_ID="$1"
++REGION="${2:-us-central1}"
++ZONE="${3:-${REGION}-a}"
++REPOSITORY="railplan"
++BACKEND_SERVICE="railplan-api"
++FRONTEND_SERVICE="railplan-web"
++TAG="$(date -u +%Y%m%d%H%M%S)"
++REGISTRY="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}"
++BACKEND_IMAGE="${REGISTRY}/backend:${TAG}"
++FRONTEND_IMAGE="${REGISTRY}/frontend:${TAG}"
++PENDING_CORS_ORIGIN="https://pending.invalid"
++
++for command_name in gcloud curl; do
++  if ! command -v "${command_name}" >/dev/null 2>&1; then
++    echo "Required command not found: ${command_name}" >&2
++    exit 1
++  fi
++done
++
++check_url() {
++  local url="$1"
++  local label="$2"
++  echo "Checking ${label}: ${url}"
++  curl --fail --silent --show-error \
++    --retry 12 --retry-delay 5 --retry-all-errors \
++    --max-time 30 "${url}" >/dev/null
++}
++
++echo "Configuring project ${PROJECT_ID}, region ${REGION}, zone ${ZONE}"
++gcloud config set project "${PROJECT_ID}" --quiet
++gcloud config set run/region "${REGION}" --quiet
++gcloud config set compute/zone "${ZONE}" --quiet
++
++echo "Enabling Cloud Run, Cloud Build, and Artifact Registry APIs"
++gcloud services enable \
++  run.googleapis.com \
++  cloudbuild.googleapis.com \
++  artifactregistry.googleapis.com \
++  --project "${PROJECT_ID}" \
++  --quiet
++
++if gcloud artifacts repositories describe "${REPOSITORY}" \
++  --project "${PROJECT_ID}" --location "${REGION}" >/dev/null 2>&1; then
++  echo "Reusing Artifact Registry repository ${REPOSITORY}"
++else
++  echo "Creating Artifact Registry repository ${REPOSITORY}"
++  gcloud artifacts repositories create "${REPOSITORY}" \
++    --project "${PROJECT_ID}" \
++    --location "${REGION}" \
++    --repository-format docker \
++    --description "RailPlan Cloud Run images" \
++    --quiet
++fi
++
++echo "Building backend image ${BACKEND_IMAGE}"
++gcloud builds submit . \
++  --project "${PROJECT_ID}" \
++  --region "${REGION}" \
++  --config deploy/gcp/cloudbuild.backend.yaml \
++  --substitutions "_IMAGE=${BACKEND_IMAGE}" \
++  --quiet
++
++echo "Deploying stateless backend"
++gcloud run deploy "${BACKEND_SERVICE}" \
++  --project "${PROJECT_ID}" \
++  --region "${REGION}" \
++  --platform managed \
++  --image "${BACKEND_IMAGE}" \
++  --allow-unauthenticated \
++  --port 8080 \
++  --cpu 2 \
++  --memory 4Gi \
++  --concurrency 1 \
++  --max-instances 1 \
++  --timeout 900 \
++  --set-env-vars "RAILPLAN_RUN_MIGRATIONS=0,RAILPLAN_REQUIRE_DATABASE=0,RAILPLAN_ENV=production,RAILPLAN_DEMO_AUTH=0,RAILPLAN_CORS_ORIGINS=${PENDING_CORS_ORIGIN}" \
++  --quiet
++
++BACKEND_URL="$(gcloud run services describe "${BACKEND_SERVICE}" \
++  --project "${PROJECT_ID}" --region "${REGION}" \
++  --format='value(status.url)')"
++if [[ -z "${BACKEND_URL}" ]]; then
++  echo "Cloud Run did not return a backend URL" >&2
++  exit 1
++fi
++
++check_url "${BACKEND_URL}/health" "backend health"
++check_url "${BACKEND_URL}/health/live" "backend liveness"
++check_url "${BACKEND_URL}/health/ready" "backend readiness"
++
++echo "Building frontend image ${FRONTEND_IMAGE} with API URL ${BACKEND_URL}"
++gcloud builds submit . \
++  --project "${PROJECT_ID}" \
++  --region "${REGION}" \
++  --config deploy/gcp/cloudbuild.frontend.yaml \
++  --substitutions "_IMAGE=${FRONTEND_IMAGE},_API_URL=${BACKEND_URL}" \
++  --quiet
++
++echo "Deploying frontend"
++gcloud run deploy "${FRONTEND_SERVICE}" \
++  --project "${PROJECT_ID}" \
++  --region "${REGION}" \
++  --platform managed \
++  --image "${FRONTEND_IMAGE}" \
++  --allow-unauthenticated \
++  --port 8080 \
++  --quiet
++
++FRONTEND_URL="$(gcloud run services describe "${FRONTEND_SERVICE}" \
++  --project "${PROJECT_ID}" --region "${REGION}" \
++  --format='value(status.url)')"
++if [[ -z "${FRONTEND_URL}" ]]; then
++  echo "Cloud Run did not return a frontend URL" >&2
++  exit 1
++fi
++
++echo "Restricting backend CORS to ${FRONTEND_URL}"
++gcloud run services update "${BACKEND_SERVICE}" \
++  --project "${PROJECT_ID}" \
++  --region "${REGION}" \
++  --set-env-vars "RAILPLAN_RUN_MIGRATIONS=0,RAILPLAN_REQUIRE_DATABASE=0,RAILPLAN_ENV=production,RAILPLAN_DEMO_AUTH=0,RAILPLAN_CORS_ORIGINS=${FRONTEND_URL}" \
++  --quiet
++
++check_url "${BACKEND_URL}/health" "final backend health"
++check_url "${BACKEND_URL}/health/live" "final backend liveness"
++check_url "${BACKEND_URL}/health/ready" "final backend readiness"
++check_url "${FRONTEND_URL}" "frontend"
++
++CORS_ORIGIN="$(curl --fail --silent --show-error \
++  --retry 6 --retry-delay 5 --retry-all-errors \
++  --max-time 30 -D - -o /dev/null \
++  -H "Origin: ${FRONTEND_URL}" "${BACKEND_URL}/health" \
++  | tr -d '\r' \
++  | awk -F': ' 'tolower($1)=="access-control-allow-origin" {print $2; exit}')"
++if [[ "${CORS_ORIGIN}" != "${FRONTEND_URL}" ]]; then
++  echo "Backend CORS verification failed: expected ${FRONTEND_URL}, received ${CORS_ORIGIN:-<none>}" >&2
++  exit 1
++fi
++
++printf '\nDeployment complete.\nBackend: %s\nFrontend: %s\n' "${BACKEND_URL}" "${FRONTEND_URL}"
+diff --git a/railplan-backend/Dockerfile b/railplan-backend/Dockerfile
+index 91cb90d..8ff2e2d 100644
+--- a/railplan-backend/Dockerfile
++++ b/railplan-backend/Dockerfile
+@@ -19,6 +19,6 @@ RUN pip install . && chmod 0555 docker-entrypoint.sh && chown -R railplan:railpl
+ USER railplan
+ EXPOSE 8000
+ HEALTHCHECK --interval=20s --timeout=5s --start-period=20s --retries=5 \
+-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready',timeout=3)"
++  CMD python -c "import os,urllib.request; port=os.getenv('PORT',os.getenv('RAILPLAN_PORT','8000')); urllib.request.urlopen(f'http://127.0.0.1:{port}/health/ready',timeout=3)"
+ 
+ ENTRYPOINT ["./docker-entrypoint.sh"]
+diff --git a/railplan-backend/docker-entrypoint.sh b/railplan-backend/docker-entrypoint.sh
+old mode 100644
+new mode 100755
+index 2c1e513..a35bd17
+--- a/railplan-backend/docker-entrypoint.sh
++++ b/railplan-backend/docker-entrypoint.sh
+@@ -7,6 +7,6 @@ fi
+ 
+ exec python -m uvicorn app.main:app \
+   --host "${RAILPLAN_HOST:-0.0.0.0}" \
+-  --port "${RAILPLAN_PORT:-8000}" \
++  --port "${PORT:-${RAILPLAN_PORT:-8000}}" \
+   --workers "${RAILPLAN_API_WORKERS:-1}" \
+   --proxy-headers
