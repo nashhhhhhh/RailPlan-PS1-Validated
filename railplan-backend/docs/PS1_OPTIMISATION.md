@@ -179,14 +179,14 @@ concurrency and cannot be locked directly. Unknown, duplicate or out-of-domain p
 operator/missing instance: 404; wrong role: 403. Bounded/infeasible solves return HTTP 200
 with status, not transport failure. Existing 10 MB wire limit applies.
 
-Response includes solver status, publishable/optimality flags, solve time, stage values
+Response includes solver status, `candidate_source`, `optimality_proven`, publishable/lexicographic flags, solve time, stage values
 and bounds, settings/policy, objective components, three CSV strings, explicit assignments,
 rich report, completion changes and diagnostics. Always `judge_validation:"not_run"`
 and `score_verification:"internal_only"`. Typed client:
 `RailPlanClient.optimisePs1ScenarioA(instanceId, options, signal)`,
 `optimisePs1ScenarioB(...)`, and `previewPs1ScenarioB(...)`.
 
-The PS1 workspace exposes Scenario A/B/C generation while preserving the existing style. Scenario B/C also have stateless preview routes; the saved routes retain immutable history and the UI compares the latest A/B/C results while warning that their formulas differ. Legacy generic optimiser capability remains false and does not describe these PS1 routes. Dedicated immutable
+The PS1 workspace exposes Scenario A/B/C generation while preserving the existing style. All three scenarios have stateless preview routes; the saved routes retain immutable history and the UI compares the latest A/B/C results while warning that their formulas differ. Legacy generic optimiser capability remains false and does not describe these PS1 routes. Dedicated immutable
 optimisation history now retains rich results and physical assignments; see
 [persistence APIs](PS1_OPTIMISATION_PERSISTENCE.md) for additive request/response fields.
 There is no approval/publication write. Do not store rich results via the CSV-only

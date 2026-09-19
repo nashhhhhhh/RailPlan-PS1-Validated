@@ -43,6 +43,8 @@ class OptimiseResult(BaseModel):
     scenario: Literal['A', 'B', 'C'] = 'A'
     optimiser_version: str = VERSION
     solver_status: str
+    candidate_source: str = 'cp_sat'
+    optimality_proven: bool = False
     publishable: bool = False
     primary_optimal: bool = False
     lexicographic_complete: bool = False

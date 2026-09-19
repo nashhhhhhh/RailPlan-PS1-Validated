@@ -121,8 +121,11 @@ export default function PS1OptimisationPanel({
   onSelectActivity,
   onHighlightLocations,
 }: Props) {
+  const previewSupported = (["A", "B", "C"] as const).includes(scenario);
   const elasticScenario = scenario === "B" || scenario === "C";
-  const [mode, setMode] = useState<"preview" | "saved">("saved");
+  const [mode, setMode] = useState<"preview" | "saved">(
+    instanceId ? "saved" : "preview",
+  );
   const [options, setOptions] = useState(defaults),
     [baseline, setBaseline] = useState(""),
     [locks, setLocks] = useState<Placement[]>([]);
@@ -216,7 +219,9 @@ export default function PS1OptimisationPanel({
     const result = previewResultSchema.parse(raw);
     const validation = result.validation_report as Record<string, unknown> | null;
     const objective = result.objective_components as Record<string, unknown> | null;
-    const firstStage = result.stages[0] as Record<string, unknown> | undefined;
+    const firstStage = (result.stages.find((stage) =>
+      String((stage as Record<string, unknown>).name).startsWith("official_scenario_"),
+    ) ?? result.stages[0]) as Record<string, unknown> | undefined;
     const run = summarySchema.parse({
       id: "local-preview", instance_id: instanceId || "stateless", baseline_run_id: null, scenario,
       solver_status: result.solver_status,
@@ -402,7 +407,7 @@ export default function PS1OptimisationPanel({
     return () => clearInterval(timer);
   }, [solving]);
   async function run(retry = false) {
-    if (solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))) return;
+    if (solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!previewSupported || !Object.keys(instanceFiles).length))) return;
     setRunError("");
     setNotice("");
     let next: Attempt;
@@ -435,7 +440,7 @@ export default function PS1OptimisationPanel({
     solveController.current = c;
     const currentEpoch = epoch.current;
     try {
-      if (elasticScenario && mode === "preview") {
+      if (previewSupported && mode === "preview") {
         const { baseline_run_id: _baseline, idempotency_key: _key, ...solver } = next.body;
         const raw = await backend(`/api/ps1/optimise/scenario-${scenario.toLowerCase()}/preview`, { ...solver, instance_files: instanceFiles }, c.signal);
         if (c.signal.aborted || currentEpoch !== epoch.current) return;
@@ -597,14 +602,14 @@ export default function PS1OptimisationPanel({
             <Activity size={13} /> SCENARIO {scenario} / PLANNING ENGINE
           </span>
           <h2>Make every night count.</h2>
-          <p>{scenario === "B" ? "Meet every planned completion date with explicit ECLO and capacity trade-offs." : scenario === "C" ? "Balance weighted delay, bounded capacity elasticity and line-scoped ECLO windows." : "Generate, inspect and refine a saved track-access plan."}</p>
+          <p>{scenario === "B" ? "Meet every planned completion date with explicit ECLO and capacity trade-offs." : scenario === "C" ? "Balance weighted delay, bounded capacity elasticity and line-scoped ECLO windows." : "Generate, inspect and refine a track-access plan."}</p>
         </div>
         <span className="opt-engine">
           <i /> OR-Tools CP-SAT
         </span>
       </header>
       <div className="opt-night-terms"><p><strong>physical_night:</strong> Network-wide engineering night used for physical conflicts.</p><p><strong>access_night:</strong> Local contract/type/week allocation index.</p><p><strong>co_share_group:</strong> Local possession-sharing group at one location/week.</p></div>
-      {!instanceId && (!elasticScenario || mode === "saved") && (
+      {!instanceId && mode === "saved" && (
         <div className="opt-callout">
           <Layers size={20} />
           <div>
@@ -614,6 +619,12 @@ export default function PS1OptimisationPanel({
           <button className="control" onClick={onSaveDataset}>
             Go to Save Dataset <ArrowRight size={14} />
           </button>
+        </div>
+      )}
+      {scenario === "A" && (
+        <div className="opt-callout">
+          <div><strong>Scenario A · fixed supply, no ECLO</strong>
+            <p>Stateless preview uses the same optimiser and rich validation gate as a saved run, but creates no PostgreSQL history.</p></div>
         </div>
       )}
       {scenario === "B" && (
@@ -649,7 +660,7 @@ export default function PS1OptimisationPanel({
         </div>
         <div className="opt-fields">
           <div className="opt-presets" role="group" aria-label="Solver presets">{(Object.keys(solverPresets) as Array<keyof typeof solverPresets>).map(name=><button type="button" className="control" key={name} disabled={solving} onClick={()=>setOptions({...options,...solverPresets[name]})}>{name}</button>)}<p>Longer limits improve search but do not guarantee optimality.</p></div>
-          {elasticScenario && <label>Run mode<select aria-label="Optimisation mode" value={mode} disabled={solving} onChange={(e) => setMode(e.target.value as "preview" | "saved")}>
+          {previewSupported && <label>Run mode<select aria-label="Optimisation mode" value={mode} disabled={solving} onChange={(e) => setMode(e.target.value as "preview" | "saved")}>
             <option value="preview">Local preview · no saved history</option><option value="saved">Saved optimisation · PostgreSQL history</option>
           </select></label>}
           <label>
@@ -757,7 +768,7 @@ export default function PS1OptimisationPanel({
         <div className="opt-actions">
           <button
             className="opt-primary"
-            disabled={solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))}
+            disabled={solving || (mode === "saved" && !instanceId) || (mode === "preview" && (!previewSupported || !Object.keys(instanceFiles).length))}
             onClick={() => void run()}
           >
             <Play size={15} />
@@ -847,7 +858,7 @@ export default function PS1OptimisationPanel({
         <div className="opt-actions">
           <button
             className="control"
-            disabled={(mode === "saved" && !instanceId) || (mode === "preview" && (!elasticScenario || !Object.keys(instanceFiles).length))}
+            disabled={(mode === "saved" && !instanceId) || (mode === "preview" && (!previewSupported || !Object.keys(instanceFiles).length))}
             onClick={() => void run(true)}
           >
             Retry exact attempt

@@ -44,7 +44,8 @@ def run_scenario(scenario: str, seconds: float, deterministic_seconds: float, se
     started = monotonic()
     result = solver(dataset, options)
     elapsed = monotonic() - started
-    primary = result.stages[0] if result.stages else {}
+    primary_name = {"A": "weighted_overrun_scaled_10", "B": "official_scenario_b_objective", "C": "official_scenario_c_objective_scaled_10"}[scenario]
+    primary = next((stage for stage in result.stages if stage.get("name") == primary_name), {})
     validation = result.validation_report
     if candidate_dir is not None and result.publishable:
         destination = candidate_dir / f"scenario-{scenario.lower()}"

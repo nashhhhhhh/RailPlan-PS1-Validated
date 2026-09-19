@@ -22,13 +22,14 @@ def _optimise(dataset, options, scenario):
               'elastic_workload_policy':'Integer scale 2: normal=2, ECLO=3, required=2*total_accesses; over-delivery is allowed and lexicographically minimised.' if scenario in ('B','C') else None,
               'scenario_c_policy':'Each line has its own active ECLO span of at most two consecutive calendar weeks; capacity excess is hard-limited to one per location/week; objective scale is 10.' if scenario=='C' else None}
     data=prepare(dataset,options,scenario)
-    result=OptimiseResult(scenario=scenario,solver_status='UNKNOWN',solve_time_seconds=0,settings=settings)
+    result=OptimiseResult(scenario=scenario,solver_status='UNKNOWN',candidate_source=f'scenario_{scenario.lower()}_cp_sat',solve_time_seconds=0,settings=settings)
     if data['limit'] or data['diagnostics']:
         result.solver_status='MODEL_LIMIT' if data['limit'] else 'INFEASIBLE'
         result.diagnostics=data['diagnostics']; return result
     solved={'A':solve_a,'B':solve_b,'C':solve_c}[scenario](dataset,data,options)
     result.solver_status=solved['status']; result.solve_time_seconds=solved['solve_time_seconds']
     result.primary_optimal=solved['primary_optimal']; result.lexicographic_complete=solved['lexicographic_complete']
+    result.optimality_proven=solved['primary_optimal']
     result.stages=solved['stages']; result.diagnostics=solved['diagnostics']
     result.settings['model_build_seconds']=solved['build_seconds']
     result.baseline_movement=solved.get('baseline_movement',0)
@@ -55,7 +56,8 @@ def _optimise(dataset, options, scenario):
         components=report['objective_components']
         expected=(Decimal(components['priority_weighted_overrun'])+Decimal(7*components['excess_access_nights_total']+5*components['eclo_nights_total'])).quantize(Decimal('0.01'))
         primary=next((stage for stage in solved['stages'] if stage['name']=='official_scenario_c_objective_scaled_10'),None)
-        model_score=Decimal(primary['value'])/Decimal(10) if primary and 'value' in primary else None
+        raw_model_score=solved.get('model_objective_value')
+        model_score=Decimal(raw_model_score)/Decimal(10) if raw_model_score is not None else (Decimal(primary['value'])/Decimal(10) if primary and 'value' in primary else None)
         if Decimal(report['objective_score']) != expected or model_score != expected:
             report['hard_violations'].append({'rule_code':'results_consistency','message':'Scenario C objective does not equal weighted overrun + 7 * excess access nights + 5 * ECLO nights.','week':None,'activity_ids':[],'contract_ids':[],'location_ids':[],'possession_group':None,'evidence':{'expected':str(expected),'reported':report['objective_score'],'model_score':str(model_score) if model_score is not None else None}})
             report['feasible']=False;report['validation_status']='infeasible'

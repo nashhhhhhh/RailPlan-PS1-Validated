@@ -1,0 +1,578 @@
+{
+  "candidate_source": "scenario_b_cp_sat",
+  "dataset_fingerprint": "a5d66aa95c814376c0ca006ac966bef4982b45d00ac23d72fd3d7a39cf660e7b",
+  "deterministic_limit": 60.0,
+  "diagnostics": [
+    {
+      "code": "model_telemetry",
+      "complete_hint_supplied": false,
+      "constraint_count": 100688,
+      "hint_source": null,
+      "incompatible_pair_count": 312,
+      "variable_count": 79887,
+      "variables_hinted": 0,
+      "variables_not_hinted": 79887
+    }
+  ],
+  "hard_violation_count": 0,
+  "internal_physical_night_fingerprint": "a3f9f15c1bb1fc548d4652689156f71aec5802941273898cc93833c34db2ac7f",
+  "judge_validation": "not_run",
+  "objective_bound": 30.0,
+  "objective_components": {
+    "activity_components": [
+      {
+        "activity_id": "A001",
+        "completion_date": "2027-06-13",
+        "contract_number": "C001",
+        "overrun_days": 0,
+        "weight": "1.20",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A002",
+        "completion_date": "2027-01-17",
+        "contract_number": "C001",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A003",
+        "completion_date": "2027-05-16",
+        "contract_number": "C001",
+        "overrun_days": 0,
+        "weight": "1.30",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A004",
+        "completion_date": "2027-06-13",
+        "contract_number": "C001",
+        "overrun_days": 0,
+        "weight": "1.20",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A006",
+        "completion_date": "2027-05-30",
+        "contract_number": "C001",
+        "overrun_days": 0,
+        "weight": "1.20",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A007",
+        "completion_date": "2027-06-06",
+        "contract_number": "C001",
+        "overrun_days": 0,
+        "weight": "1.30",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A008",
+        "completion_date": "2027-05-30",
+        "contract_number": "C002",
+        "overrun_days": 0,
+        "weight": "13.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A009",
+        "completion_date": "2027-05-09",
+        "contract_number": "C002",
+        "overrun_days": 0,
+        "weight": "10.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A011",
+        "completion_date": "2027-07-04",
+        "contract_number": "C002",
+        "overrun_days": 0,
+        "weight": "12.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A012",
+        "completion_date": "2027-05-30",
+        "contract_number": "C002",
+        "overrun_days": 0,
+        "weight": "13.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A013",
+        "completion_date": "2027-07-04",
+        "contract_number": "C002",
+        "overrun_days": 0,
+        "weight": "12.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A014",
+        "completion_date": "2027-07-04",
+        "contract_number": "C003",
+        "overrun_days": 0,
+        "weight": "100.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A017",
+        "completion_date": "2027-07-04",
+        "contract_number": "C003",
+        "overrun_days": 0,
+        "weight": "120.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A019",
+        "completion_date": "2027-05-02",
+        "contract_number": "C003",
+        "overrun_days": 0,
+        "weight": "100.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A020",
+        "completion_date": "2027-05-23",
+        "contract_number": "C003",
+        "overrun_days": 0,
+        "weight": "120.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A021",
+        "completion_date": "2027-04-04",
+        "contract_number": "C004",
+        "overrun_days": 0,
+        "weight": "120.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A023",
+        "completion_date": "2027-07-25",
+        "contract_number": "C004",
+        "overrun_days": 0,
+        "weight": "130.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A025",
+        "completion_date": "2027-07-25",
+        "contract_number": "C004",
+        "overrun_days": 0,
+        "weight": "130.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A028",
+        "completion_date": "2027-03-21",
+        "contract_number": "C005",
+        "overrun_days": 0,
+        "weight": "1.20",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A031",
+        "completion_date": "2027-03-14",
+        "contract_number": "C005",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A035",
+        "completion_date": "2027-05-02",
+        "contract_number": "C006",
+        "overrun_days": 0,
+        "weight": "1.30",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A036",
+        "completion_date": "2027-07-04",
+        "contract_number": "C006",
+        "overrun_days": 0,
+        "weight": "1.30",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A037",
+        "completion_date": "2027-05-09",
+        "contract_number": "C006",
+        "overrun_days": 0,
+        "weight": "1.30",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A038",
+        "completion_date": "2027-05-30",
+        "contract_number": "C006",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A039",
+        "completion_date": "2027-06-27",
+        "contract_number": "C006",
+        "overrun_days": 0,
+        "weight": "1.20",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A040",
+        "completion_date": "2027-07-11",
+        "contract_number": "C007",
+        "overrun_days": 0,
+        "weight": "130.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A041",
+        "completion_date": "2027-05-23",
+        "contract_number": "C007",
+        "overrun_days": 0,
+        "weight": "100.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A042",
+        "completion_date": "2027-06-27",
+        "contract_number": "C007",
+        "overrun_days": 0,
+        "weight": "120.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A043",
+        "completion_date": "2027-06-27",
+        "contract_number": "C007",
+        "overrun_days": 0,
+        "weight": "100.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A046",
+        "completion_date": "2027-07-11",
+        "contract_number": "C007",
+        "overrun_days": 0,
+        "weight": "100.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A047",
+        "completion_date": "2027-05-23",
+        "contract_number": "C008",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A048",
+        "completion_date": "2027-02-07",
+        "contract_number": "C008",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A049",
+        "completion_date": "2027-05-02",
+        "contract_number": "C008",
+        "overrun_days": 0,
+        "weight": "1.20",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A050",
+        "completion_date": "2027-06-13",
+        "contract_number": "C008",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A051",
+        "completion_date": "2027-07-11",
+        "contract_number": "C008",
+        "overrun_days": 0,
+        "weight": "1.30",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A054",
+        "completion_date": "2027-05-09",
+        "contract_number": "C009",
+        "overrun_days": 0,
+        "weight": "1.20",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A055",
+        "completion_date": "2027-06-20",
+        "contract_number": "C009",
+        "overrun_days": 0,
+        "weight": "1.30",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A056",
+        "completion_date": "2027-05-23",
+        "contract_number": "C009",
+        "overrun_days": 0,
+        "weight": "1.20",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A057",
+        "completion_date": "2027-06-27",
+        "contract_number": "C009",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A058",
+        "completion_date": "2027-04-18",
+        "contract_number": "C010",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A059",
+        "completion_date": "2027-05-16",
+        "contract_number": "C010",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A060",
+        "completion_date": "2027-05-16",
+        "contract_number": "C010",
+        "overrun_days": 0,
+        "weight": "1.20",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A061",
+        "completion_date": "2027-04-04",
+        "contract_number": "C010",
+        "overrun_days": 0,
+        "weight": "1.30",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A063",
+        "completion_date": "2027-02-28",
+        "contract_number": "C010",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A064",
+        "completion_date": "2027-04-25",
+        "contract_number": "C010",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A065",
+        "completion_date": "2027-05-23",
+        "contract_number": "C011",
+        "overrun_days": 0,
+        "weight": "12.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A066",
+        "completion_date": "2027-06-27",
+        "contract_number": "C011",
+        "overrun_days": 0,
+        "weight": "10.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A069",
+        "completion_date": "2027-05-02",
+        "contract_number": "C011",
+        "overrun_days": 0,
+        "weight": "12.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A070",
+        "completion_date": "2027-05-09",
+        "contract_number": "C011",
+        "overrun_days": 0,
+        "weight": "13.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A071",
+        "completion_date": "2027-07-11",
+        "contract_number": "C011",
+        "overrun_days": 0,
+        "weight": "13.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A072",
+        "completion_date": "2027-07-11",
+        "contract_number": "C012",
+        "overrun_days": 0,
+        "weight": "120.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A073",
+        "completion_date": "2027-06-13",
+        "contract_number": "C012",
+        "overrun_days": 0,
+        "weight": "100.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A074",
+        "completion_date": "2027-05-30",
+        "contract_number": "C013",
+        "overrun_days": 0,
+        "weight": "12.00",
+        "weighted_overrun": "0.00"
+      },
+      {
+        "activity_id": "A075",
+        "completion_date": "2027-07-18",
+        "contract_number": "C014",
+        "overrun_days": 0,
+        "weight": "1.00",
+        "weighted_overrun": "0.00"
+      }
+    ],
+    "contract_results": [
+      {
+        "contract_number": "C001",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-06-13"
+      },
+      {
+        "contract_number": "C002",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-07-04"
+      },
+      {
+        "contract_number": "C003",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-07-04"
+      },
+      {
+        "contract_number": "C004",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-07-25"
+      },
+      {
+        "contract_number": "C005",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-03-21"
+      },
+      {
+        "contract_number": "C006",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-07-04"
+      },
+      {
+        "contract_number": "C007",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-07-11"
+      },
+      {
+        "contract_number": "C008",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-07-11"
+      },
+      {
+        "contract_number": "C009",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-06-27"
+      },
+      {
+        "contract_number": "C010",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-05-16"
+      },
+      {
+        "contract_number": "C011",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-07-11"
+      },
+      {
+        "contract_number": "C012",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-07-11"
+      },
+      {
+        "contract_number": "C013",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-05-30"
+      },
+      {
+        "contract_number": "C014",
+        "overrun_days": 0,
+        "simulated_completion_date": "2027-07-18"
+      }
+    ],
+    "contracts_overrunning": 0,
+    "diagnostic_objective": "130.00",
+    "earliness_days_total": 7,
+    "eclo_nights_total": 12,
+    "eclo_penalty": "60.00",
+    "excess_access_nights_total": 10,
+    "excess_penalty": "70.00",
+    "formula": "7 * excess_access_nights_total + 5 * eclo_nights_total",
+    "metrics_complete": true,
+    "nights_scheduled": 186,
+    "overrun_days_total": 0,
+    "priority_overrun": {
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    "priority_weighted_overrun": "0.00"
+  },
+  "objective_value": "130.00",
+  "optimality_proven": false,
+  "physical_validation_complete": true,
+  "policy_version": "ps1-policy/4-scenario-c-line-windows",
+  "publishable": true,
+  "scenario": "B",
+  "score_verification": "internal_only",
+  "seed": 0,
+  "solve_time_seconds": 120.2591481001582,
+  "solver_status": "FEASIBLE",
+  "solver_version": "ps1-optimiser/1.2.0",
+  "stages": [
+    {
+      "best_bound": 30.0,
+      "branches": 363970,
+      "conflicts": 6077,
+      "constraint_count": 100688,
+      "deterministic_seconds": 14.170618550590458,
+      "gap": 0.7692307692307693,
+      "name": "official_scenario_b_objective",
+      "optimality_proven": false,
+      "solution_info": "main",
+      "status": "FEASIBLE",
+      "stop_reason": "FEASIBLE",
+      "value": 130,
+      "variable_count": 79887,
+      "wall_seconds": 120.04297500000001
+    }
+  ],
+  "submission_fingerprint": "77fd67c6de1dbaed5cedafb56033c784f1bc1c1e44c2b9b46b5fd72513153c0b",
+  "time_limit_seconds": 120.0,
+  "validator_version": "ps1-validator/1.1.0"
+}

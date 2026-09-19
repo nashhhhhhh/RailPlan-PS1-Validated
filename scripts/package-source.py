@@ -16,7 +16,7 @@ def excluded(path):
                 p.startswith('.test-tmp') or p.startswith('pytest-cache-files-') for p in path.parts)
 
             or name.startswith('.env') or name in {'.DS_Store','.npmrc','.coverage','next-env.d.ts'}
-            or path.suffix.lower() in {'.pyc','.pyo','.tsbuildinfo','.log','.out','.pem','.key','.zip'}
+            or path.suffix.lower() in {'.pyc','.pyo','.tsbuildinfo','.log','.out','.pem','.key','.zip','.patch'}
             or name.startswith('credentials') or name.startswith('secrets'))
 
 def main():

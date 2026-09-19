@@ -114,7 +114,11 @@ def solve(dataset, data, options, scenario='B'):
     for pair in data['pairs']:
         aid,bid=pair['activity_ids']
         for w in weeks:
-            for n in night_ids:enforce(x[aid,w,n]+x[bid,w,n]<=1,'physical_closure')
+            # Both channel variables are zero when absent.  One conditional
+            # inequality is exactly equivalent to seven per-night clauses and
+            # substantially reduces Scenario C presolve work.
+            model.Add(physical_week[aid,w]!=physical_week[bid,w]).OnlyEnforceIf(
+                present[aid,w],present[bid,w],guard('physical_closure'))
 
     line_windows={}
     if scenario=='C':
@@ -200,18 +204,93 @@ def solve(dataset, data, options, scenario='B'):
             ('eclo_nights_total',total_eclo),('workload_over_delivery_scaled',sum(over_delivery.values())),
             ('completion_weeks',sum(completion.values())+sum(contract_completion.values())),('baseline_movements',sum(movement)),
             ('stable_placement_rank',stable)]
+
+    # A baseline is both a soft movement preference and a CP-SAT search hint.  Hint
+    # every placement/channel variable whose value is implied by the baseline;
+    # CP-SAT may repair the hint when it is valid for B but violates a C-only rule.
+    baseline_by_key={(p.activity_id,p.access_seq):p for p in options.baseline_placements}
+    baseline_by_week={(p.activity_id,p.week):p for p in options.baseline_placements}
+    if baseline_by_key:
+        for aid,a in activities.items():
+            for k in range(1,a['total_accesses']+1):
+                key=aid,k;placement=baseline_by_key.get(key)
+                model.AddHint(active[key],int(placement is not None))
+                model.AddHint(W[key],placement.week if placement else 0)
+                model.AddHint(N[key],placement.physical_night if placement else 0)
+                model.AddHint(L[key],(placement.access_night or 0) if placement else 0)
+                model.AddHint(E[key],(placement.eclo or 0) if placement else 0)
+                for w in weeks:
+                    for n in night_ids:
+                        model.AddHint(z[aid,k,w,n],int(placement is not None and placement.week==w and placement.physical_night==n))
+            for w in weeks:
+                placement=baseline_by_week.get((aid,w))
+                model.AddHint(present[aid,w],int(placement is not None))
+                model.AddHint(physical_week[aid,w],placement.physical_night if placement else 0)
+                model.AddHint(local[aid,w],(placement.access_night or 0) if placement else 0)
+                for n in night_ids:model.AddHint(x[aid,w,n],int(placement is not None and placement.physical_night==n))
     build_seconds=monotonic()-built_at;error=model.Validate()
     if error:return {'status':'MODEL_INVALID','placements':None,'diagnostics':[{'code':'model_invalid','message':error}], 'stages':[], 'solve_time_seconds':0,'primary_optimal':False,'lexicographic_complete':False,'build_seconds':build_seconds,'baseline_movement':0}
-    solved_at=monotonic();deterministic_used=0.0;candidate=None;status='UNKNOWN';primary_optimal=False;stages=[];diagnostics=[];movement_value=0;window_values={};cross_line=[]
+    model_variables=len(model.Proto().variables);model_constraints=len(model.Proto().constraints)
+    initial_hints=len(model.Proto().solution_hint.vars)
+    solved_at=monotonic();deterministic_used=0.0;candidate=None;status='UNKNOWN';primary_optimal=False;stages=[];diagnostics=[];movement_value=0;window_values={};cross_line=[];model_objective_value=None
+    diagnostics.append({'code':'model_telemetry','variable_count':model_variables,'constraint_count':model_constraints,
+        'incompatible_pair_count':len(data['pairs']),'hint_source':'baseline_placements' if initial_hints else None,
+        'variables_hinted':initial_hints,'variables_not_hinted':model_variables-initial_hints,'complete_hint_supplied':initial_hints==model_variables})
+
+    def stage_record(name,solver,result):
+        response=solver.ResponseProto()
+        return {'name':name,'status':solver.StatusName(result),'wall_seconds':solver.WallTime(),
+            'deterministic_seconds':response.deterministic_time,'best_bound':solver.BestObjectiveBound(),
+            'optimality_proven':result==cp_model.OPTIMAL,'branches':solver.NumBranches(),'conflicts':solver.NumConflicts(),
+            'solution_info':response.solution_info,'stop_reason':solver.StatusName(result),
+            'variable_count':model_variables,'constraint_count':model_constraints}
+
+    def capture(solver):
+        nonlocal candidate,movement_value,window_values,cross_line,model_objective_value
+        candidate=[]
+        for aid,a in activities.items():
+            seq=0
+            for k in range(1,a['total_accesses']+1):
+                if solver.Value(active[aid,k]):
+                    seq+=1;candidate.append(Placement(activity_id=aid,access_seq=seq,week=solver.Value(W[aid,k]),physical_night=solver.Value(N[aid,k]),access_night=solver.Value(L[aid,k]),eclo=solver.Value(E[aid,k])))
+        candidate.sort(key=lambda r:(r.activity_id,r.access_seq));movement_value=sum(solver.Value(v) for v in movement)
+        model_objective_value=int(solver.Value(official))
+        if scenario=='C':
+            window_values={line:{'active':bool(solver.Value(values['active'])),'start_week':solver.Value(values['start']) or None,
+                'end_week':solver.Value(values['end']) or None,
+                'activity_ids':sorted({key[0] for key in values['keys'] if solver.Value(E[key])})} for line,values in line_windows.items()}
+            cross_line=sorted({key[0] for key in E if solver.Value(E[key]) and data['footprints'][key[0]]['lines']=={'ALP','BET'}})
+
+    # Scenario C used to spend the entire budget proving bounds before finding an
+    # incumbent.  A satisfaction pass first finds a hard-constraint-feasible plan;
+    # its complete assignment then becomes the warm start for exact optimisation.
+    if scenario=='C':
+        model.ClearObjective();solver=cp_model.CpSolver();solver.parameters.num_search_workers=1
+        solver.parameters.random_seed=options.random_seed;solver.parameters.max_time_in_seconds=options.time_limit_seconds
+        solver.parameters.max_deterministic_time=options.deterministic_time_limit
+        result=solver.Solve(model);deterministic_used+=solver.ResponseProto().deterministic_time
+        stage=stage_record('hard_constraint_feasibility',solver,result);stages.append(stage)
+        if result in (cp_model.OPTIMAL,cp_model.FEASIBLE):
+            capture(solver);status='FEASIBLE';stage['value']=model_objective_value
+            model.ClearHints()
+            for index in range(model_variables):
+                variable=model.get_int_var_from_proto_index(index);model.AddHint(variable,solver.Value(variable))
+            diagnostics.append({'code':'complete_incumbent_hint','hint_source':'scenario_c_feasibility_stage',
+                'variables_hinted':model_variables,'variables_not_hinted':0,'complete_hint_supplied':True,'hint_consistency':'solver_accepted'})
+        elif result==cp_model.INFEASIBLE:
+            status='INFEASIBLE'
+        else:
+            status=solver.StatusName(result)
+            diagnostics.append({'code':'search_limit','message':'No incumbent within the configured feasibility budget. This does not prove infeasibility.'})
+
+    objective_stages=[]
     for name,objective in objectives:
         wall=options.time_limit_seconds-(monotonic()-solved_at);det=options.deterministic_time_limit-deterministic_used
         if wall<=0 or det<=0:break
         model.Minimize(objective);solver=cp_model.CpSolver();solver.parameters.num_search_workers=1
         solver.parameters.random_seed=options.random_seed;solver.parameters.max_time_in_seconds=wall;solver.parameters.max_deterministic_time=det
         result=solver.Solve(model);stage_status=solver.StatusName(result);deterministic_used+=solver.ResponseProto().deterministic_time
-        stage={'name':name,'status':stage_status,'wall_seconds':solver.WallTime(),'deterministic_seconds':solver.ResponseProto().deterministic_time,
-            'best_bound':solver.BestObjectiveBound(),'optimality_proven':result==cp_model.OPTIMAL}
-        stages.append(stage)
+        stage=stage_record(name,solver,result);stages.append(stage);objective_stages.append(stage)
         if result not in (cp_model.OPTIMAL,cp_model.FEASIBLE):
             if candidate is None:
                 status=stage_status
@@ -222,27 +301,16 @@ def solve(dataset, data, options, scenario='B'):
             break
         value=int(solver.Value(objective));stage['value']=value
         stage['gap']=0 if result==cp_model.OPTIMAL else max(0,(value-solver.BestObjectiveBound())/max(abs(value),1))
-        candidate=[]
-        for aid,a in activities.items():
-            seq=0
-            for k in range(1,a['total_accesses']+1):
-                if solver.Value(active[aid,k]):
-                    seq+=1;candidate.append(Placement(activity_id=aid,access_seq=seq,week=solver.Value(W[aid,k]),physical_night=solver.Value(N[aid,k]),access_night=solver.Value(L[aid,k]),eclo=solver.Value(E[aid,k])))
-        candidate.sort(key=lambda r:(r.activity_id,r.access_seq));movement_value=sum(solver.Value(v) for v in movement)
-        if scenario=='C':
-            window_values={line:{'active':bool(solver.Value(values['active'])),'start_week':solver.Value(values['start']) or None,
-                'end_week':solver.Value(values['end']) or None,
-                'activity_ids':sorted({key[0] for key in values['keys'] if solver.Value(E[key])})} for line,values in line_windows.items()}
-            cross_line=sorted({key[0] for key in E if solver.Value(E[key]) and data['footprints'][key[0]]['lines']=={'ALP','BET'}})
+        capture(solver)
         status='FEASIBLE'
         if name==objectives[0][0]:primary_optimal=result==cp_model.OPTIMAL
         if result!=cp_model.OPTIMAL:break
         model.Add(objective==value);model.ClearHints()
         for variable in list(W.values())+list(N.values())+list(L.values())+list(E.values()):model.AddHint(variable,solver.Value(variable))
-    complete=len(stages)==len(objectives) and all(s['status']=='OPTIMAL' for s in stages)
+    complete=len(objective_stages)==len(objectives) and all(s['status']=='OPTIMAL' for s in objective_stages)
     if complete:status='OPTIMAL'
     if candidate is None and status=='UNKNOWN':diagnostics.append({'code':'search_limit','message':'No incumbent within the configured solve budgets. This does not prove infeasibility.'})
     if candidate is None:diagnostics.append({'code':'physical_pair_constraints','incompatible_pairs':data['pairs']})
     return {'status':status,'placements':candidate,'diagnostics':diagnostics,'stages':stages,'primary_optimal':primary_optimal,
         'lexicographic_complete':complete,'solve_time_seconds':monotonic()-solved_at,'build_seconds':build_seconds,'baseline_movement':movement_value,
-        'eclo_windows':window_values,'cross_line_eclo_activities':cross_line}
+        'eclo_windows':window_values,'cross_line_eclo_activities':cross_line,'model_objective_value':model_objective_value}

@@ -117,6 +117,21 @@ function detail(run) {
   };
 }
 const csv = 'activity_id,note\r\nA1,"α,β"\r\n';
+const previewFiles = {
+  "SCHEDULE_ACCESS.csv": `activity_id,access_seq,week,eclo,access_night\n${aid},1,1,0,1\n`,
+  "SCHEDULE_OCCUPANCY.csv": `activity_id,week,location_id,co_share_group\n${aid},1,${loc},g001\n`,
+  "RESULTS.csv": `scenario,contract_number,simulated_completion_date,overrun_days\nA,${contract},2026-12-31,7\n`,
+};
+const previewResult = {
+  ...detail(accepted).result,
+  scenario: "A",
+  submission_files: previewFiles,
+  physical_nights: [{ activity_id: aid, access_seq: 1, week: 1,
+    physical_night: 1, access_night: 1, eclo: 0 }],
+  validation_report: { ...detail(accepted).validation, objective_score: "48.30",
+    objective_components: detail(accepted).result.objective_components },
+  diagnostics: [],
+};
 const screenshots = path.resolve(
   process.env.RAILPLAN_SCREENSHOT_DIR ||
     path.join(__dirname, "../.test-artifacts/ui-screenshots"),
@@ -140,7 +155,7 @@ fs.mkdirSync(screenshots, { recursive: true });
     console.log("REQUEST FAILED", r.url(), r.failure()?.errorText),
   );
   let checks = 0;
-  const posts = [],
+  const posts = [], previewPosts = [],
     pageCalls = [];
   let delayPost = false,
     failNext = false,
@@ -178,6 +193,10 @@ fs.mkdirSync(screenshots, { recursive: true });
           "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
         },
       });
+    if (p === "/api/ps1/optimise/scenario-a/preview") {
+      previewPosts.push({ body: req.postDataJSON(), headers: req.headers() });
+      return fulfill(route, previewResult);
+    }
     if (p.endsWith("/optimise/scenario-a")) {
       posts.push({ body: req.postDataJSON(), headers: req.headers() });
       if (failNext) {
@@ -281,7 +300,7 @@ fs.mkdirSync(screenshots, { recursive: true });
   const opt = () => page.locator('[aria-label$="optimisation workspace"]');
   const shot = async (name) => {
     const focus = name.startsWith("01")
-      ? opt().locator(".opt-callout")
+      ? opt().locator(".opt-callout").first()
       : name.startsWith("02")
         ? opt().locator(".opt-solving")
         : name.startsWith("03") || name.startsWith("10")
@@ -310,6 +329,7 @@ fs.mkdirSync(screenshots, { recursive: true });
       .getByRole("button", { name: "Load organiser dataset", exact: true })
       .click();
     await opt().waitFor();
+    await opt().getByLabel("Optimisation mode").selectOption("saved");
     assert.equal(
       await opt()
         .getByRole("button", { name: "Generate schedule", exact: true })
@@ -575,7 +595,21 @@ fs.mkdirSync(screenshots, { recursive: true });
     await page.getByRole("button",{name:"Open optimiser",exact:true}).click();
     await page.getByText("Connected · Stateless mode",{exact:false}).waitFor();
     assert.equal(await page.getByText("Demo planner ID",{exact:true}).count(),0);
-    check("stateless connection hides demo planner control");
+    await page.getByRole("button", { name: "Load organiser dataset", exact: true }).click();
+    await opt().waitFor();
+    assert.equal(await opt().getByLabel("Optimisation mode").inputValue(),"preview");
+    assert.equal(await opt().getByRole("button",{name:"Generate schedule",exact:true}).isDisabled(),false);
+    assert.equal(await opt().getByText(/flexible supply/i).count(),0);
+    await opt().getByRole("button",{name:"Generate schedule",exact:true}).click();
+    await opt().getByText("Local preview completed. No server-side history was created.",{exact:true}).waitFor();
+    assert.equal(previewPosts.length,1);
+    assert.equal(Object.keys(previewPosts[0].body.instance_files).length,8);
+    assert.equal(previewPosts[0].headers["x-demo-user-id"],undefined);
+    assert.equal(previewResult.physical_nights.every(row=>row.eclo===0),true);
+    await opt().getByRole("tab",{name:"Downloads",exact:true}).click();
+    for(const name of Object.keys(previewFiles))
+      assert.equal(await opt().getByRole("button",{name:new RegExp(name.replace(".","\\."))}).count(),1);
+    check("Scenario A stateless preview sends eight files, no user identity, and exposes only validator-gated output");
     await page.route("**/health/ready",route=>fulfill(route,{detail:"Database unavailable"},503));
     await page.reload();await page.waitForTimeout(1200);
     await page.getByRole("button",{name:"Open optimiser",exact:true}).click();

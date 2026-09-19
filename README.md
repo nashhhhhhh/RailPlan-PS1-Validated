@@ -2,9 +2,11 @@
 
 ## Scenario A/B/C track-access optimisation
 
-The PS1 workspace supports Scenario A, B and C generation. Scenario B enforces planned completion dates and minimises `7 × excess access nights + 5 × ECLO nights`. Scenario C allows delay, limits capacity excess to one per location/week, enforces independent two-week Alpha/Beta ECLO windows, and minimises `priority-weighted overrun + 7 × excess + 5 × ECLO`. Choose **Local preview** for stateless Scenario B/C solves or **Saved optimisation** for PostgreSQL-backed immutable history. See [SCENARIO_C_RELEASE.md](SCENARIO_C_RELEASE.md).
+The PS1 workspace supports Scenario A, B and C generation. Scenario B enforces planned completion dates and minimises `7 × excess access nights + 5 × ECLO nights`. Scenario C allows delay, limits capacity excess to one per location/week, enforces independent two-week Alpha/Beta ECLO windows, and minimises `priority-weighted overrun + 7 × excess + 5 × ECLO`. Choose **Local preview** for a stateless A/B/C solve or **Saved optimisation** for PostgreSQL-backed immutable history. See [SCENARIO_C_RELEASE.md](SCENARIO_C_RELEASE.md).
 
-`app.py` remains a frontend-only launcher; it does not start FastAPI. Internal validation is not official judge validation, and score verification remains internal only.
+`python app.py` is the one-command local launcher: it starts FastAPI and the frontend in stateless mode; `--persisted` additionally starts PostgreSQL/PostGIS and applies migrations. Internal validation is not official judge validation, and score verification remains internal only.
+
+RailPlan-generated, rich-validator-accepted public schedules and their evidence are under [`competition-submission/`](competition-submission/). The files under `public/ps1/` remain organiser reference samples.
 
 
 The official **PS1 dataset is now integrated**. Open **PS1 · Hackathon dataset**
@@ -24,7 +26,7 @@ Optimiser POSTs now save immutable terminal runs, rich reports, physical assignm
 and accepted CSVs, with idempotency and baseline references. See
 [persistence design](railplan-backend/docs/PS1_OPTIMISATION_PERSISTENCE.md) and
 [manual test guide](railplan-backend/docs/PS1_PERSISTENCE_TEST_GUIDE.md).
-The Scenario A offline CLI and Scenario B/C previews remain database-free. The PS1 workspace exposes all three solvers; no operational publication workflow is added.
+The Scenario A offline CLI and all three preview endpoints remain database-free. The PS1 workspace exposes all three solvers; no operational publication workflow is added.
 
 RailPlan is a rail-maintenance planning prototype with a Vinext/React interface and a FastAPI/PostgreSQL/PostGIS backend. This merged build includes persistent maintenance data, deterministic conflict detection, conflict severity scoring, and an analysis dialog connected to the backend.
 

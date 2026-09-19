@@ -189,6 +189,7 @@ node_modules/
 pytest-cache-files-*/
 *.tsbuildinfo
 *.zip
+*.patch
 
 # Generated output, local evidence and database volumes
 build/

@@ -5,7 +5,7 @@ evidence from checks that the machine could not run.
 
 ## Release outcome
 
-The database-free dashboard, FastAPI service, Scenario A preview, rich validator, existing
+The database-free dashboard, FastAPI service, Scenario A/B/C previews, rich validator, existing
 synchronous persistence contract, new asynchronous job contract, generated API artifacts,
 typed clients and production frontend build pass their available checks. The one-command
 stateless launcher returned HTTP 200 from the dashboard, `/health` and `/health/ready`.
@@ -20,19 +20,20 @@ tests are retained for a suitably equipped release runner.
 
 | Check | Result |
 |---|---|
-| Complete Python suite | **469 passed, 96 skipped, 0 failed**, 2 dependency deprecation warnings, 23.62 s |
-| PostgreSQL-only selection | **96 skipped** across rollback, committed-database and clean-migration fixtures |
-| Root frontend client tests | **16 passed, 0 failed** |
+| Complete Python suite | **487 passed, 100 skipped, 0 failed**, 1 dependency deprecation warning, 29.85 s |
+| PostgreSQL-only selection | **100 skipped** across rollback, committed-database and clean-migration fixtures |
+| Root frontend client tests | **19 passed, 0 failed** |
 | Generated backend TypeScript client tests | **21 passed, 0 failed** |
 | Strict TypeScript (`tsc --noEmit`, strict project config) | Passed |
-| Browser workflow | **17 checks passed** using installed Chrome and mocked PS1 HTTP boundaries |
+| Browser workflow | **25 checks passed** using installed Chrome and mocked PS1 HTTP boundaries, including stateless Scenario A |
+| Standard Next.js production build | Passed; static `/` and `/_not-found` routes generated |
 | Production Vinext build | Passed all five build phases; emitted only Vinext's route-classification notice |
 | Clean dependency install | `pnpm install --frozen-lockfile` passed after removing the prior `node_modules` tree |
 | Stateless launcher smoke | Dashboard 200; FastAPI health 200; stateless readiness 200 |
-| OpenAPI/contracts | Regenerated and parsed: **73 paths, 80 schemas**, API version 0.5.0 |
+| OpenAPI/contracts | Regenerated and parsed: **75 paths, 80 schemas**, API version 0.5.0 |
 | Alembic graph | `0001 -> ... -> 0011 (head)` |
 
-The 96 skipped PostgreSQL tests cover clean migrations, PostGIS/schema behavior, immutable
+The 100 skipped PostgreSQL tests cover clean migrations, PostGIS/schema behavior, immutable
 instances, persisted validation and optimiser runs, audit/sealing triggers, operator
 isolation, idempotency collisions and deduplication, rollback, concurrent requests, job
 progress/cancellation and destructive-downgrade refusal. They skipped because the three
@@ -42,19 +43,25 @@ was reported as equivalent evidence.
 ## Organiser dataset exercise
 
 The checked-in [machine-readable result](railplan-backend/docs/ORGANISER_RUN_RESULTS.json)
-was produced by `scripts/run_release_scenarios.py` with seed 0, a 20-second wall limit and
-a 10-unit deterministic limit per scenario.
+was produced by `scripts.generate_public_test_results` with seed 0, a 120-second wall limit
+and a 60-unit deterministic limit per scenario. Each written candidate was re-imported and
+revalidated; outputs and evidence are under `competition-submission/`.
 
 | Scenario | Source availability | Result | Elapsed | Objective bound/value | Physical validation | CSV policy |
 |---|---|---|---:|---|---|---|
-| A | Available | `FEASIBLE` | 22.484 s total; 20.109 s solve | bound 252, incumbent 16926; internal score 1692.60 | Feasible, complete, **0 violations** | Rich-validator-accepted CSVs retained in memory; none written to the source tree |
-| B | Available | `FEASIBLE` | 22.969 s total; 19.390 s solve | bound 30, incumbent 253; internal score 253.00 | Feasible, complete, **0 violations** | Rich-validator-accepted CSVs retained in memory; none written to the source tree |
-| C | Available | `UNKNOWN` | 16.968 s total; 13.360 s solve | bound 182, no incumbent | Not complete; **0 reported violations** because no candidate existed | No CSV generated or written |
+| A | Available | `FEASIBLE` | 120.241 s solve | scaled bound/value 252/252; internal score 25.20 | Feasible, complete, **0 violations** | `competition-submission/scenario-a` |
+| B | Available | `FEASIBLE` | 120.259 s solve | bound 30, incumbent 130; internal score 130.00 | Feasible, complete, **0 violations** | `competition-submission/scenario-b` |
+| C | Available | `FEASIBLE` | 120.307 s solve | scaled bound 182, incumbent 42945; internal score 4294.50 | Feasible, complete, **0 violations** | `competition-submission/scenario-c` |
 
-The elapsed wall time includes about five seconds of deterministic model preparation in
-addition to the configured CP-SAT solve budget. All entries retain
+Scenario A proved its primary objective but ended before all secondary stages; B and C did
+not prove primary optimality, so all three overall statuses remain `FEASIBLE`. Scenario C's
+hard-feasibility stage used a Scenario B placement hint, found an unrestricted incumbent,
+then improved the exact Scenario C objective. All entries retain
 `judge_validation="not_run"` and `score_verification="internal_only"`. The organiser's
 sample submission files remain reference material and were not relabelled as RailPlan output.
+SHA-256 was recorded before development and rechecked afterward for all eight organiser
+inputs and all three sample outputs; all eleven hashes are unchanged. The exact hashes are
+enforced by `tests/test_public_outputs.py`.
 
 ## Functional changes
 
@@ -64,7 +71,7 @@ sample submission files remain reference material and were not relabelled as Rai
   endpoints without changing their documented solver rules.
 - Added migrations 0010–0011 for operator-scoped durable optimisation jobs, guarded
   transitions, monotonic progress, audit history, idempotency and cancellation.
-- Added asynchronous Scenario A start/list/poll/cancel APIs. Terminal solver evidence is
+- Added asynchronous Scenario A/B/C start/list/poll/cancel APIs. Terminal solver evidence is
   stored through the existing sealed-run path; unsuccessful candidates expose no CSVs.
 - Added `python app.py` stateless launcher and `--persisted` mode that starts PostGIS only
   when requested and applies migrations before serving.
@@ -92,7 +99,8 @@ Core/runtime:
 - `railplan-backend/sql/014_ps1_optimisation_job_guards.sql`
 - `railplan-backend/migrations/versions/0010_ps1_optimisation_jobs.py`
 - `railplan-backend/migrations/versions/0011_ps1_optimisation_job_guards.py`
-- `railplan-backend/scripts/run_release_scenarios.py`, `scripts/package-source.py`
+- `railplan-backend/scripts/{run_release_scenarios,generate_public_test_results}.py`, `scripts/{package-source,package-public-results}.py`
+- `competition-submission/` accepted A/B/C CSVs, evidence and checksums
 
 Deployment/generated clients:
 
@@ -103,7 +111,7 @@ Deployment/generated clients:
 
 Tests:
 
-- `railplan-backend/tests/test_{api,conflict_engine,postgres,ps1_optimisation,ps1_optimisation_persistence,ps1_optimisation_postgres,static}.py`
+- `railplan-backend/tests/test_{api,conflict_engine,postgres,ps1_optimisation,ps1_optimisation_persistence,ps1_optimisation_postgres,public_outputs,static}.py`
 
 Documentation:
 

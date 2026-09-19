@@ -1,85 +1,46 @@
 {
   "dataset": "bundled organiser PS1 input (eight files under data/PS1/01_data)",
   "dataset_fingerprint": "a5d66aa95c814376c0ca006ac966bef4982b45d00ac23d72fd3d7a39cf660e7b",
+  "generation_command": "python -m scripts.generate_public_test_results --output ../competition-submission --scenarios A B C --seed 0 --time-limit-seconds 120 --deterministic-limit 60",
   "notes": [
-    "Organiser submission samples are reference inputs to validation and are never treated as RailPlan-generated candidates.",
-    "Only rich-validator-accepted candidates may be written."
+    "Organiser samples remain reference material and were never used as RailPlan candidates.",
+    "The exact generated Scenario A candidate was tested as Scenario C and rejected for Scenario C physical buffer conflicts; it was not used as a fallback.",
+    "Scenario C used Scenario B placements as a repairable search hint, then found its own unrestricted CP-SAT incumbent.",
+    "Every written candidate was re-imported and accepted by the rich validator.",
+    "Judge validation was not run and score verification is internal only."
   ],
   "scenario_results": {
     "A": {
-      "available": true,
-      "configured_deterministic_limit": 10.0,
-      "configured_wall_limit_seconds": 20.0,
-      "csv_files_written": [],
-      "deterministic_seed": 0,
-      "diagnostics": [],
-      "elapsed_seconds": 22.484,
-      "execution_status": "COMPLETED",
-      "judge_validation": "not_run",
-      "objective_bound": 252.0,
-      "objective_score": "1692.60",
-      "objective_stage": "weighted_overrun_scaled_10",
-      "objective_value": 16926,
-      "physical_validation_complete": true,
-      "physical_validation_status": "feasible",
-      "publishable": true,
-      "score_verification": "internal_only",
-      "solver_elapsed_seconds": 20.109,
-      "solver_status": "FEASIBLE",
-      "validator_violations": []
+      "solver_status": "FEASIBLE", "candidate_source": "scenario_a_cp_sat", "optimality_proven": true,
+      "configured_wall_limit_seconds": 120.0, "configured_deterministic_limit": 60.0, "deterministic_seed": 0,
+      "solver_elapsed_seconds": 120.241464, "objective_score": "25.20", "objective_bound_scaled": 252.0,
+      "publishable": true, "physical_validation_complete": true, "hard_violation_count": 0,
+      "submission_fingerprint": "0e973803d161941977dfd3acad6d149aa06a0a80850e0ea7d1f747280557b050",
+      "output_directory": "competition-submission/scenario-a", "judge_validation": "not_run", "score_verification": "internal_only"
     },
     "B": {
-      "available": true,
-      "configured_deterministic_limit": 10.0,
-      "configured_wall_limit_seconds": 20.0,
-      "csv_files_written": [],
-      "deterministic_seed": 0,
-      "diagnostics": [],
-      "elapsed_seconds": 22.969,
-      "execution_status": "COMPLETED",
-      "judge_validation": "not_run",
-      "objective_bound": 30.0,
-      "objective_score": "253.00",
-      "objective_stage": "official_scenario_b_objective",
-      "objective_value": 253,
-      "physical_validation_complete": true,
-      "physical_validation_status": "feasible",
-      "publishable": true,
-      "score_verification": "internal_only",
-      "solver_elapsed_seconds": 19.39,
-      "solver_status": "FEASIBLE",
-      "validator_violations": []
+      "solver_status": "FEASIBLE", "candidate_source": "scenario_b_cp_sat", "optimality_proven": false,
+      "configured_wall_limit_seconds": 120.0, "configured_deterministic_limit": 60.0, "deterministic_seed": 0,
+      "solver_elapsed_seconds": 120.259148, "objective_score": "130.00", "objective_bound": 30.0,
+      "publishable": true, "physical_validation_complete": true, "hard_violation_count": 0,
+      "submission_fingerprint": "77fd67c6de1dbaed5cedafb56033c784f1bc1c1e44c2b9b46b5fd72513153c0b",
+      "output_directory": "competition-submission/scenario-b", "judge_validation": "not_run", "score_verification": "internal_only"
     },
     "C": {
-      "available": true,
-      "configured_deterministic_limit": 10.0,
-      "configured_wall_limit_seconds": 20.0,
-      "csv_files_written": [],
-      "deterministic_seed": 0,
-      "diagnostics": [
-        {
-          "code": "search_limit",
-          "message": "No incumbent within the configured solve budgets. This does not prove infeasibility."
-        },
-        {
-          "code": "physical_pair_constraints",
-          "incompatible_pair_count": 312
-        }
-      ],
-      "elapsed_seconds": 16.968,
-      "execution_status": "COMPLETED",
-      "judge_validation": "not_run",
-      "objective_bound": 182.0,
-      "objective_score": null,
-      "objective_stage": "official_scenario_c_objective_scaled_10",
-      "objective_value": null,
-      "physical_validation_complete": false,
-      "physical_validation_status": "not_complete",
-      "publishable": false,
-      "score_verification": "internal_only",
-      "solver_elapsed_seconds": 13.36,
-      "solver_status": "UNKNOWN",
-      "validator_violations": []
+      "solver_status": "FEASIBLE", "candidate_source": "scenario_c_cp_sat", "optimality_proven": false,
+      "configured_wall_limit_seconds": 120.0, "configured_deterministic_limit": 60.0, "deterministic_seed": 0,
+      "solver_elapsed_seconds": 120.3073, "objective_score": "4294.50", "objective_bound_scaled": 182.0,
+      "publishable": true, "physical_validation_complete": true, "hard_violation_count": 0,
+      "submission_fingerprint": "284aa2dfbd1d13d2cc4cda2c8c9f8f97fe9e76c4587ea2ed13e4051a26bd1c3a",
+      "output_directory": "competition-submission/scenario-c", "judge_validation": "not_run", "score_verification": "internal_only",
+      "model_telemetry": {
+        "variable_count": 81214, "constraint_count": 105146, "incompatible_pair_count": 312,
+        "initial_hint_variables": 57480, "complete_incumbent_hint_variables": 81214,
+        "feasibility_stage_wall_seconds": 43.080387, "feasibility_stage_deterministic_seconds": 9.652208,
+        "feasibility_stage_branches": 113079, "feasibility_stage_conflicts": 220,
+        "objective_stage_wall_seconds": 76.301514, "objective_stage_deterministic_seconds": 13.651984,
+        "objective_stage_branches": 231120, "objective_stage_conflicts": 1606
+      }
     }
   }
 }

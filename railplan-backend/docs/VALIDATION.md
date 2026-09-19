@@ -5,16 +5,17 @@
 | Command / check | Actual result |
 |---|---|
 | `python -m compileall -q app migrations tests scripts` | Passed |
-| `python -m pytest -q` | **469 passed, 96 skipped**, 0 failed; two dependency deprecation warnings |
+| `python -m pytest -q` | **487 passed, 100 skipped**, 0 failed; one dependency deprecation warning |
 | Focused A/B/C, validator, API/static and conflict tests | **306 passed**, 0 failed; included above |
-| Scenario C module | **11 passed**, included above |
-| PostgreSQL/PostGIS suites | **96 skipped** because `TEST_DATABASE_URL`, `TEST_COMMITTED_DATABASE_URL`, and `TEST_MIGRATION_DATABASE_URL` were not configured; no live migration/persistence claim |
-| `python scripts/export_contracts.py` | **68 paths, 77 schemas** |
-| API-client `npm test` | TypeScript build passed; **20 passed**, 0 failed |
-| Modified root TS/TSX transpilation and frontend-test syntax | Passed |
-| Root strict typecheck / production build | Not completed: the clean dependency install exhausted available disk; the build attempt reports missing `vinext` |
-| Browser workflow | Not run because the root browser/build dependency tree is unavailable; browser test source parses |
-| Official dataset, wall budget 3 s / deterministic budget 0.1 | `UNKNOWN` after 1.853 s, no incumbent, no accepted artifacts; primary optimality not proven and this is not an infeasibility proof |
+| Scenario C module | **12 passed**, included above |
+| PostgreSQL/PostGIS suites | **100 skipped** because `TEST_DATABASE_URL`, `TEST_COMMITTED_DATABASE_URL`, and `TEST_MIGRATION_DATABASE_URL` were not configured; no live migration/persistence claim |
+| `python -m scripts.export_contracts` | **75 paths, 80 schemas** |
+| API-client `npm test` | TypeScript build passed; **21 passed**, 0 failed |
+| Root PS1 client tests | **19 passed**, 0 failed |
+| Root strict typecheck | Passed |
+| Next.js and Vinext production builds | Both passed |
+| Browser workflow | **25 checks passed**, including stateless Scenario A preview |
+| Official A/B/C generation, wall budget 120 s / deterministic budget 60 | A, B and C all `FEASIBLE`, rich-validation complete, zero hard violations; see `ORGANISER_RUN_RESULTS.json` |
 
 The official judge was not run. `judge_validation` remains `not_run` and all scores remain
 `internal_only`. The guarded PostgreSQL tests cover Scenario C ECLO windows, objective and physical

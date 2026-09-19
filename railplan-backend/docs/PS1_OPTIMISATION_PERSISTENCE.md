@@ -144,7 +144,7 @@ Publishable describes the internal gate, not operational authority or official a
 | GET `/api/ps1/optimisations/{run_id}/accesses` | Paginated rows ordered week/activity/sequence; optional week and activity_id. |
 | GET `/api/ps1/optimisations/{run_id}/occupancies` | Paginated rows ordered week/location/activity; optional week, activity_id, location_id. |
 | GET `/api/ps1/optimisations/{run_id}/artifacts` | Exact saved filename-to-CSV-text `files` plus internal validation labels; 409 if visible run has no accepted files. |
-| POST `/api/ps1/instances/{id}/optimise/scenario-a/jobs` | Create or reuse an asynchronous job; returns 202 with durable status. |
+| POST `/api/ps1/instances/{id}/optimise/scenario-{a,b,c}/jobs` | Create or reuse an asynchronous A, B or C job; returns 202 with durable status. |
 | GET `/api/ps1/instances/{id}/optimisation-jobs` | Paginated job history for the same operator instance. |
 | GET `/api/ps1/optimisation-jobs/{job_id}` | Poll status, progress, stage, diagnostics and terminal run link. |
 | POST `/api/ps1/optimisation-jobs/{job_id}/cancel` | Request cancellation at a safe solver/persistence boundary. |

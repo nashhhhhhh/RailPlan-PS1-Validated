@@ -8,13 +8,18 @@ from decimal import Decimal
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.ps1_optimisation.contracts import Placement,ScenarioCOptimiseInput
+from app.ps1_optimisation.contracts import OptimiseInput,Placement,ScenarioCOptimiseInput
+from app.ps1_optimisation.preprocessing import prepare
 from app.ps1_optimisation.service import optimise_scenario_c
 from test_ps1_optimisation import small
 
 
 def run(dataset,**kwargs):
     return optimise_scenario_c(dataset,ScenarioCOptimiseInput(time_limit_seconds=5,**kwargs))
+
+
+def primary(result):
+    return next(stage for stage in result.stages if stage['name']=='official_scenario_c_objective_scaled_10')
 
 
 def accesses(result):
@@ -36,13 +41,23 @@ def test_scaled_workload_eclo_window_and_exact_official_objective():
     components=result.objective_components
     expected=Decimal(components['priority_weighted_overrun'])+Decimal(7*components['excess_access_nights_total']+5*components['eclo_nights_total'])
     assert Decimal(result.validation_report.objective_score)==expected
-    assert Decimal(result.stages[0]['value'])/10==expected
+    assert Decimal(primary(result)['value'])/10==expected
 
 
 def test_no_eclo_keeps_both_line_windows_inactive():
     result=run(small())
     assert result.publishable
     assert all(window['active'] is False and window['start_week'] is None and window['end_week'] is None for window in result.eclo_windows.values())
+
+
+def test_scenario_a_full_shared_overlap_is_not_assumed_valid_for_c_buffers():
+    """Regression for the rejected organiser A-to-C conversion audit."""
+    dataset=small(n=2,nature='Non-live (Consist)')
+    scenario_a=prepare(dataset,OptimiseInput(),'A')
+    scenario_c=prepare(dataset,ScenarioCOptimiseInput(),'C')
+    assert scenario_a['pairs']==[]  # Established Scenario A full-sharing exemption.
+    assert len(scenario_c['pairs'])==1
+    assert 'buffer' in scenario_c['pairs'][0]['collisions']
 
 
 def test_two_consecutive_weeks_valid_but_disconnected_or_three_week_span_infeasible():
@@ -102,7 +117,7 @@ def test_activity_weighting_raw_contract_overrun_and_decimal_scale_match_validat
     assert components['priority_weighted_overrun']=='23.10'
     assert components['overrun_days_total']==14
     assert components['diagnostic_objective']=='23.10'
-    assert result.stages[0]['value']==231
+    assert primary(result)['value']==231
 
 
 def test_headers_scenario_value_and_no_internal_columns():

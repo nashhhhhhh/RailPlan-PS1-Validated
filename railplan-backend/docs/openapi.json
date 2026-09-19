@@ -14521,6 +14521,16 @@
             "type": "string",
             "title": "Solver Status"
           },
+          "candidate_source": {
+            "type": "string",
+            "title": "Candidate Source",
+            "default": "cp_sat"
+          },
+          "optimality_proven": {
+            "type": "boolean",
+            "title": "Optimality Proven",
+            "default": false
+          },
           "publishable": {
             "type": "boolean",
             "title": "Publishable",
@@ -15906,6 +15916,16 @@
           "solver_status": {
             "type": "string",
             "title": "Solver Status"
+          },
+          "candidate_source": {
+            "type": "string",
+            "title": "Candidate Source",
+            "default": "cp_sat"
+          },
+          "optimality_proven": {
+            "type": "boolean",
+            "title": "Optimality Proven",
+            "default": false
           },
           "publishable": {
             "type": "boolean",

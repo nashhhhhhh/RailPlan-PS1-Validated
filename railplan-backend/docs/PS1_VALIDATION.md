@@ -1,8 +1,8 @@
 # Internal provisional PS1 submission validator
 
-## Scenario B/C optimiser gate
+## Scenario A/B/C optimiser gate
 
-Generated Scenario B/C candidates call `validate(dataset, files, scenario, physical_nights=mapping)`. Artifacts are accepted only when `feasible`, `physical_validation_complete`, and an empty hard-violation list agree. Scenario C additionally cross-checks the validator objective against the scale-10 model objective. Rejected candidates retain diagnostic physical assignments and Scenario C ECLO windows but expose no accepted CSVs. `judge_validation` remains `not_run`; `score_verification` remains `internal_only`.
+Generated Scenario A/B/C candidates call `validate(dataset, files, scenario, physical_nights=mapping)`. Artifacts are accepted only when `feasible`, `physical_validation_complete`, and an empty hard-violation list agree. Scenario C additionally cross-checks the validator objective against the scale-10 model objective. Rejected candidates retain diagnostic physical assignments and Scenario C ECLO windows but expose no accepted CSVs. `judge_validation` remains `not_run`; `score_verification` remains `internal_only`.
 
 Version: `ps1-validator/1.1.0`. Policy: `ps1-policy/4-scenario-c-line-windows`.
 **Judge validation not run. Objectives are internal, not officially verified.**

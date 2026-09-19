@@ -2,7 +2,7 @@
 
 ## PS1 Scenario A/B/C
 
-Scenario B and C are available through stateless previews and auditable saved-run endpoints. Both use deterministic CP-SAT, scaled workload integers, explicit physical nights, canonical footprints, and Validator 1.1.0's rich publication gate. Scenario B has hard planned-date completion; Scenario C balances priority-weighted delay, ECLO and capacity excess while enforcing the one-unit capacity ceiling and separate Alpha/Beta ECLO windows. Apply migration `0011` before saved optimisation. `/health` reports validator and Scenario A/B/C solver availability separately from database readiness.
+Scenario A, B and C are available through stateless previews and auditable saved-run endpoints. They use deterministic CP-SAT, explicit physical nights, canonical footprints, and Validator 1.1.0's rich publication gate. Scenario B has hard planned-date completion; Scenario C balances priority-weighted delay, ECLO and capacity excess while enforcing the one-unit capacity ceiling and separate Alpha/Beta ECLO windows. Apply migration `0011` before saved optimisation. `/health` reports validator and Scenario A/B/C solver availability separately from database readiness.
 
 Scenario A now has a separate OR-Tools CP-SAT optimiser with explicit physical nights,
 locks, lexicographic objectives and a fail-closed rich-validation gate. Read
@@ -22,6 +22,15 @@ Prototype scores remain partial/unvalidated; blocking rules are never weakened.
 Latest verification is recorded in [VALIDATION.md](docs/VALIDATION.md).
 PS1 submission validation is separate from severity scoring: see
 [PS1_VALIDATION.md](docs/PS1_VALIDATION.md) for rules and provisional assumptions.
+
+Generate public-data release candidates only through the rich validation gate:
+
+```bash
+python -m scripts.generate_public_test_results --output ../competition-submission \
+  --scenarios A B C --seed 0 --time-limit-seconds 120 --deterministic-limit 60
+```
+
+The command writes only accepted RailPlan-generated candidates, revalidates them, and records checksums and internal-only evidence. It never reads the organiser sample outputs as candidate schedules.
 
 This package extends the original PostgreSQL foundation with APIs for the existing RailPlan UI.
 Start here, then read [the endpoint inventory](docs/API_ENDPOINTS.md) and [frontend integration](frontend/README.md).
@@ -45,9 +54,8 @@ control. UI colours, camera controls, animation and replay cursor remain fronten
 
 ## What remains unavailable
 
-A background optimiser worker/queue, real AI copilot, verified OIDC adapter and
-operational approval/publication are not implemented. PS1 Scenario A/B/C optimisation is
-synchronous and bounded. Generic non-PS1 optimisation remains unavailable. Synthetic seed
+A distributed optimiser queue, real AI copilot, verified OIDC adapter and
+operational approval/publication are not implemented. Persisted PS1 Scenario A/B/C jobs use the bounded in-process asynchronous executor documented in `docs/PS1_ASYNC_JOBS.md`; stateless previews remain synchronous. Generic non-PS1 optimisation remains unavailable. Synthetic seed
 scenarios remain clearly unvalidated UI presets.
 
 ## Local setup

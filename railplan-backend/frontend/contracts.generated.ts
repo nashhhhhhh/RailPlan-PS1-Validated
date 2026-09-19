@@ -370,6 +370,8 @@ export type OptimiseResult = {
   "scenario"?: "A" | "B" | "C";
   "optimiser_version"?: string;
   "solver_status": string;
+  "candidate_source"?: string;
+  "optimality_proven"?: boolean;
   "publishable"?: boolean;
   "primary_optimal"?: boolean;
   "lexicographic_complete"?: boolean;
@@ -625,6 +627,8 @@ export type SavedOptimiseResult = {
   "scenario"?: "A" | "B" | "C";
   "optimiser_version"?: string;
   "solver_status": string;
+  "candidate_source"?: string;
+  "optimality_proven"?: boolean;
   "publishable"?: boolean;
   "primary_optimal"?: boolean;
   "lexicographic_complete"?: boolean;

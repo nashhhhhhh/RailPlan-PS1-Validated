@@ -1,6 +1,6 @@
 # PS1 optimiser UI integration
 
-Current workflow: load/import all eight source CSVs, then choose Scenario A, B or C. Scenario B/C can run as stateless local previews; saved Scenario A/B/C runs additionally require a configured FastAPI connection, planner identity, and saved instance.
+Current workflow: load/import all eight source CSVs, then choose Scenario A, B or C. All three can run as stateless local previews; saved Scenario A/B/C runs additionally require PostgreSQL, a planner identity, and a saved instance.
 
 Scenario C is enabled in the optimiser reached from the command dashboard. The panel shows its weighted-overrun/excess/ECLO formula, independent Alpha/Beta ECLO windows, cross-line ECLO activities, workload delivery, capacity hotspots, explicit physical/access nights, co-share groups, solver proof status, physical validation, filtered history, A/B/C comparison, downloads, and failed-run diagnostics. Local preview is not a browser-only solver: it calls FastAPI but does not require PostgreSQL.
 

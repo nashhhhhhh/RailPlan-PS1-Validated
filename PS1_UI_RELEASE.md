@@ -1,6 +1,6 @@
 # RailPlan PS1 optimiser UI integration release
 
-> Historical Scenario A release record. Scenario B generation is now enabled; see `SCENARIO_B_RELEASE.md` and `docs/PS1_UI_INTEGRATION.md` for current behaviour.
+> Historical Scenario A release record. Scenario A, B and C generation and stateless previews are now enabled; see the scenario release files and `docs/PS1_UI_INTEGRATION.md` for current behaviour.
 
 Built from `RailPlan-PS1-Optimiser-Persistence.zip`. This release connects the existing Vinext/React PS1 workspace to the persistent Scenario A FastAPI API. It does not deploy the application or change the optimiser, validator, persistence schema or organiser dataset.
 
@@ -18,7 +18,7 @@ Built from `RailPlan-PS1-Optimiser-Persistence.zip`. This release connects the e
 - Soft saved-run baselines and hard access-placement locks for the next solve.
 - Exact stored CSV downloads; unavailable artifacts remain explicit on rejected runs.
 - Responsive tablet layout, keyboard tab navigation, visible focus states, reduced-motion support and non-colour status cues.
-- At the time of this historical release, Scenario B/C generation was disabled.
+- Current releases enable Scenario A/B/C stateless preview, saved optimisation and persisted asynchronous jobs.
 
 ## Files added
 
@@ -41,7 +41,7 @@ No backend Python, migration, SQL, generated contract or organiser input file wa
 ## Verification
 
 - New PS1 data/integration checks: **16 passed, 0 failed**.
-- Mock-API browser flow: **17 checks passed**. It covered save prerequisite, Scenario A request shape, demo-user header, B/C blocking, all-page loading, activity highlighting, baseline and lock payloads, internal trust labels, artifact 409, byte-exact CSV download, UNKNOWN handling, exact retry, stale-response protection, browser reload, idempotency collision recovery and tablet rendering.
+- Current mock-API browser flow: **25 checks passed**, including stateless Scenario A request routing, all eight files, absent user identity and validator-gated downloads.
 - Existing typed API client: **18 passed, 0 failed**.
 - Existing Python/API suite: **436 passed, 91 skipped, 0 failed** with two dependency deprecation warnings.
 - Strict TypeScript: passed.

@@ -166,8 +166,8 @@ Cloud Build minutes, Artifact Registry storage, Cloud Run CPU, memory, network e
 
 The stateless Scenario A/B/C preview routes remain available. Each request must carry its input files and options.
 
-## Scenario C `UNKNOWN`
+## Scenario C bounded search
 
-`UNKNOWN` means the configured solve budget ended without an incumbent. It does not prove infeasibility. Treat the response as diagnostic, keep `judge_validation="not_run"` and `score_verification="internal_only"`, and do not publish or fabricate CSV output. A caller may retry with a realistic bounded time limit, but the request must complete within Cloud Run's 900-second timeout. Only candidates marked publishable and passing the rich physical validator should be used as generated schedules.
+The bundled organiser run now has an internally accepted `FEASIBLE` Scenario C candidate at a 120-second limit; optimality was not proved. Any individual deployment request can still return `UNKNOWN` when its configured budget ends without an incumbent. `UNKNOWN` is not infeasibility: keep it diagnostic and never publish or fabricate CSV output. A retry must complete within Cloud Run's 900-second timeout. Only candidates marked publishable and passing the rich physical validator may be used as generated schedules.
 
 See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common build, IAM, startup, CORS, and timeout failures.

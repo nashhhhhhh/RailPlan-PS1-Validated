@@ -23,7 +23,7 @@ Week, physical night, local access night and ECLO can be locked. Co-share labels
 - `POST /api/ps1/optimise/scenario-b/preview` accepts eight source CSV texts and creates no history, authentication state, or database records.
 - `GET /api/ps1/instances/{instance_id}/optimisations?scenario=B` returns filtered history.
 
-Both preview and saved optimisation require FastAPI. The root `app.py` launches only the frontend. Candidates pass rich validation with a complete explicit physical-night map. CSVs are released only when feasibility is true, physical validation is complete, and hard violations are empty.
+Both preview and saved optimisation require FastAPI. The root `python app.py` launcher starts FastAPI and the frontend; PostgreSQL is started only with `--persisted`. Candidates pass rich validation with a complete explicit physical-night map. CSVs are released only when feasibility is true, physical validation is complete, and hard violations are empty.
 
 ## Bounded deterministic solving
 

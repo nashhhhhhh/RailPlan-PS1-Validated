@@ -1,6 +1,6 @@
-# RailPlan AI
+# RailPlan
 
-A frontend-only engineering planning demonstration. No real AI, solver, operational database or rail-system connection is included. All scenarios and rule explanations are synthetic presets.
+RailPlan combines an engineering-planning demonstration with a FastAPI/PostgreSQL backend and deterministic PS1 Scenario A/B/C CP-SAT optimisation. AI/Ollama/Qwen remains optional and never decides feasibility. The application is a prototype, not an operational rail-system connection or authority.
 
 ## Explore
 
@@ -19,7 +19,7 @@ Install with the package manager pinned in package.json. Run `pnpm dev`; `pnpm b
 
 ## Validation
 
-TypeScript checking and production compilation passed. Browser-based visual/end-to-end testing was not performed. The optional WebMCP navigation tool is feature-detected; runtime validation was unavailable in this environment.
+Current TypeScript, Next.js and Vinext production builds pass, together with the mocked browser workflow. See `RELEASE_VERIFICATION.md` for exact totals and limitations.
 
 ## Boundaries
 
