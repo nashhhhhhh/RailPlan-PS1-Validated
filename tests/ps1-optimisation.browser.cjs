@@ -429,7 +429,7 @@ fs.mkdirSync(screenshots, { recursive: true });
     assert.equal(fs.readFileSync(await download.path(), "utf8"), csv);
     check("download bytes match exact saved CSV");
     await opt()
-      .locator(".opt-history-item")
+      .locator("button.opt-history-item")
       .filter({ hasText: "UNKNOWN" })
       .click();
     await opt()
@@ -472,7 +472,7 @@ fs.mkdirSync(screenshots, { recursive: true });
       .click();
     while (!releaseDetail) await page.waitForTimeout(20);
     await opt()
-      .locator(".opt-history-item")
+      .locator("button.opt-history-item")
       .filter({ hasText: "UNKNOWN" })
       .click();
     await opt()
@@ -503,7 +503,7 @@ fs.mkdirSync(screenshots, { recursive: true });
       .getByRole("button", { name: "Browser fixture", exact: true })
       .click();
     await opt()
-      .locator(".opt-history-item")
+      .locator("button.opt-history-item")
       .filter({ hasText: "FEASIBLE" })
       .click();
     await opt()

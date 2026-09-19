@@ -1,21 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Pause, Play, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, MousePointer2, Pause, Play, X } from "lucide-react";
 
 type TourView = "overview" | "activities" | "contracts" | "schedule" | "data";
 type Props = { open: boolean; onClose: () => void; onNavigate: (view: TourView) => void };
+type Step = { target: string; view: TourView; kicker: string; page: string; title: string; copy: string; action: string };
 
-const steps: { target: string; view: TourView; kicker: string; title: string; copy: string }[] = [
-  { target: "[data-tour='welcome']", view: "overview", kicker: "01 / ORIENT", title: "Your PS1 planning command", copy: "This workspace turns official challenge inputs and organiser reference output into an explorable operating picture. Dashboard data is reference data, not a newly generated RailPlan schedule." },
-  { target: "[data-tour='filters']", view: "overview", kicker: "02 / FILTER", title: "Slice line, bound or location", copy: "Focus Line Alpha or Beta, switch Eastbound and Westbound, or search by activity, contract and location ID. Every metric below reacts to the same filter." },
-  { target: "[data-tour='kpis']", view: "overview", kicker: "03 / READ", title: "Read the filtered workload", copy: "The KPI strip shows source activities, required access-nights, affected contracts, capacity locations and sample completion performance." },
-  { target: "[data-tour='network']", view: "overview", kicker: "04 / EXPLORE", title: "Use the animated digital twin", copy: "Select a line directly on the map. The twin preserves each line’s own H01↔H02 capacity; the central bridge represents Live-only cross-line closure." },
-  { target: "[data-tour='pressure']", view: "overview", kicker: "05 / DIAGNOSE", title: "Find capacity pressure", copy: "Each row compares distinct co-share groups with weekly location supply. Select one to apply its line and bound and jump to its peak week." },
-  { target: "[data-tour='horizon']", view: "overview", kicker: "06 / SCHEDULE", title: "Move across the 30-week horizon", copy: "Choose any bar to inspect that week’s scheduled access load and open an activity from the queue." },
-  { target: "[data-tour='navigation']", view: "overview", kicker: "07 / DETAIL", title: "Change analytical views", copy: "Open full activity and contract tables, inspect the 30-week activity grid, or trace every visual back to its CSV source." },
-  { target: "[data-tour='data-catalog']", view: "data", kicker: "08 / PROVENANCE", title: "Trace and download the data", copy: "The lineage catalogue explains where each CSV appears in the dashboard and provides a direct link to the exact file served by the app." },
-  { target: "[data-tour='optimizer']", view: "data", kicker: "09 / OPTIMISE", title: "Move from insight to a plan", copy: "Open the optimiser to generate a new schedule. Scenario B enforces planned dates; Scenario C balances weighted delay with bounded excess and independent two-week ECLO windows. Internal rich validation remains separate from official judge validation." },
+const steps: Step[] = [
+  { target: "[data-tour='welcome']", view: "overview", kicker: "01 / START", page: "Overview", title: "Start with the operating picture", copy: "The overview combines official challenge inputs with the organiser’s Scenario A reference output. It is an exploration view, not a newly generated RailPlan schedule.", action: "Read the title and source badge first so you know which evidence is on screen." },
+  { target: "[data-tour='navigation']", view: "overview", kicker: "02 / MOVE", page: "All pages", title: "Use the five connected pages", copy: "Overview explains pressure and workload. Activities and Contracts show the source records. Schedule shows when work happens. Data lineage traces every dashboard signal back to its file.", action: "Select any navigation icon. Your line, bound and search filters stay active between pages." },
+  { target: "[data-tour='filters']", view: "overview", kicker: "03 / FILTER", page: "Overview", title: "Narrow the whole dashboard", copy: "Line, bound and search work together. The KPI cards, map, pressure list, charts and tables all recalculate from the same filtered population.", action: "Try Line Alpha, then EB. Select All and Both to reset." },
+  { target: "[data-tour='kpis']", view: "overview", kicker: "04 / READ", page: "Overview", title: "Check scope before details", copy: "These cards summarise the filtered activities, workload, contracts, capacity locations and organiser-sample completion performance.", action: "Change a filter and watch every card update." },
+  { target: "[data-tour='network']", view: "overview", kicker: "05 / MAP", page: "Overview", title: "Read and filter the network", copy: "The two tracks preserve separate Alpha and Beta capacity through H01 and H02. The highlighted interchange zone shows where Live work may cause a closure across both lines.", action: "Select either line on the map to apply or clear that line filter." },
+  { target: "[data-tour='pressure']", view: "overview", kicker: "06 / PRESSURE", page: "Overview", title: "Jump from pressure to its week", copy: "Each row compares distinct co-share groups with weekly supply at one location. Selecting a row applies its line and bound and opens the relevant week below.", action: "Select a pressure row, then inspect the updated week panel." },
+  { target: "[data-tour='horizon']", view: "overview", kicker: "07 / TIME", page: "Overview", title: "Move through the 30-week plan", copy: "The bars show scheduled access volume by week. The detail strip lists active work for the selected week and links each activity to its source record.", action: "Select a week bar, then open an activity to move to the Activities page." },
+  { target: "[data-tour='activities-view']", view: "activities", kicker: "08 / WORK", page: "Activities", title: "Inspect the work behind the plan", copy: "This table connects activity workload, occupied span, planned start, priority and predecessor. It uses the same filters you set on Overview.", action: "Search an activity or contract, then return to Overview without losing the filter." },
+  { target: "[data-tour='contracts-view']", view: "contracts", kicker: "09 / DELIVERY", page: "Contracts", title: "Compare rules and completion", copy: "Contract rows bring delivery targets, access rules and organiser-sample completion together. Overrun labels show which reference results miss plan.", action: "Use line and bound filters to see only contracts touched by that work." },
+  { target: "[data-tour='schedule-view']", view: "schedule", kicker: "10 / SEQUENCE", page: "Schedule", title: "Connect activities to weeks", copy: "Each row shows planned start and scheduled access across all 30 weeks. Selecting a row opens the matching activity record.", action: "Select a populated row to continue the investigation on Activities." },
+  { target: "[data-tour='data-catalog']", view: "data", kicker: "11 / SOURCES", page: "Data lineage", title: "Trace every value to a file", copy: "The catalogue separates the eight challenge inputs from the three organiser sample outputs and states which dashboard components each file feeds.", action: "Open a CSV for inspection or download the exact served file." },
+  { target: "[data-tour='optimizer']", view: "data", kicker: "12 / PLAN", page: "Optimiser", title: "Generate and validate a candidate", copy: "The optimiser workspace runs Scenario A, B or C, shows solver evidence, and keeps internal rich validation separate from official judge validation.", action: "Open the optimiser when you are ready to load data, configure a run and inspect the result." },
 ];
 
 export default function PS1Tour({ open, onClose, onNavigate }: Props) {
@@ -23,54 +27,66 @@ export default function PS1Tour({ open, onClose, onNavigate }: Props) {
   const [playing, setPlaying] = useState(false);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const step = steps[index];
+  const finishTour = () => {
+    setIndex(0);
+    setPlaying(false);
+    setRect(null);
+    onClose();
+  };
 
   useEffect(() => {
     if (!open) return;
     onNavigate(step.view);
-    const update = () => {
+    let settleTimer: number | undefined;
+    const locate = () => {
       const element = document.querySelector(step.target);
-      if (!element) return;
-      element.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
-      window.setTimeout(() => setRect(element.getBoundingClientRect()), 280);
+      if (element) setRect(element.getBoundingClientRect());
     };
-    const timer = window.setTimeout(update, 80);
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    return () => { window.clearTimeout(timer); window.removeEventListener("resize", update); window.removeEventListener("scroll", update, true); };
+    const reveal = () => {
+      const element = document.querySelector(step.target);
+      if (!element) { settleTimer = window.setTimeout(reveal, 160); return; }
+      element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      settleTimer = window.setTimeout(locate, 340);
+    };
+    const timer = window.setTimeout(reveal, 100);
+    window.addEventListener("resize", locate);
+    window.addEventListener("scroll", locate, true);
+    return () => {
+      window.clearTimeout(timer);
+      if (settleTimer) window.clearTimeout(settleTimer);
+      window.removeEventListener("resize", locate);
+      window.removeEventListener("scroll", locate, true);
+    };
   }, [open, step, onNavigate]);
 
   useEffect(() => {
     if (!open || !playing) return;
     const timer = window.setTimeout(() => {
-      if (index === steps.length - 1) { setPlaying(false); onClose(); }
+      if (index === steps.length - 1) {
+        setIndex(0);
+        setPlaying(false);
+        setRect(null);
+        onClose();
+      }
       else setIndex(current => current + 1);
-    }, 5200);
+    }, 7000);
     return () => window.clearTimeout(timer);
   }, [open, playing, index, onClose]);
 
-  useEffect(() => { if (!open) { setIndex(0); setPlaying(false); setRect(null); } }, [open]);
-
-  const cardStyle = useMemo(() => {
-    if (!rect || typeof window === "undefined") return undefined;
-    const width = Math.min(390, window.innerWidth - 28);
-    const left = Math.max(14, Math.min(window.innerWidth - width - 14, rect.left + rect.width / 2 - width / 2));
-    const roomBelow = window.innerHeight - rect.bottom;
-    const top = roomBelow > 260 ? Math.min(window.innerHeight - 235, rect.bottom + 18) : Math.max(14, rect.top - 230);
-    return { left, top, width };
-  }, [rect]);
-
   if (!open) return null;
-  return <div className="psd-tour-layer" role="dialog" aria-modal="true" aria-label="Dashboard walkthrough">
-    {rect && <div className="psd-tour-focus" style={{ left: rect.left - 8, top: rect.top - 8, width: rect.width + 16, height: rect.height + 16 }}/>} 
-    <section className="psd-tour-card" style={cardStyle}>
-      <header><span>{step.kicker}</span><button onClick={onClose} aria-label="Close walkthrough"><X size={16}/></button></header>
-      <div className="psd-tour-visual"><span>{String(index + 1).padStart(2, "0")}</span><div><i/><i/><i/></div></div>
+  return <div className="psd-tour-layer" role="dialog" aria-label="Dashboard walkthrough">
+    {rect && <div className="psd-tour-focus" style={{ left: rect.left - 6, top: rect.top - 6, width: rect.width + 12, height: rect.height + 12 }}/>}
+    <section className="psd-tour-card">
+      <header><span>{step.kicker}</span><button onClick={finishTour} aria-label="Close walkthrough"><X size={17}/></button></header>
+      <div className="psd-tour-page"><span>{step.page}</span><b>{index + 1} of {steps.length}</b></div>
       <h2>{step.title}</h2>
       <p>{step.copy}</p>
+      <div className="psd-tour-action"><MousePointer2 size={16}/><span><b>Try it</b>{step.action}</span></div>
+      <p className="psd-tour-hint">Highlighted controls stay interactive while this guide is open.</p>
       <div className="psd-tour-progress" aria-label={`Step ${index + 1} of ${steps.length}`}>{steps.map((_, dot) => <i key={dot} className={dot === index ? "active" : dot < index ? "done" : ""}/>)}</div>
       <footer>
         <button className="psd-tour-play" onClick={() => setPlaying(value => !value)}>{playing ? <Pause size={14}/> : <Play size={14}/>} {playing ? "Pause" : "Auto play"}</button>
-        <div><button onClick={() => setIndex(value => Math.max(0, value - 1))} disabled={index === 0} aria-label="Previous step"><ChevronLeft size={16}/></button><button className="psd-tour-next" onClick={() => index === steps.length - 1 ? onClose() : setIndex(value => value + 1)}>{index === steps.length - 1 ? "Finish" : "Next"}<ChevronRight size={15}/></button></div>
+        <div><button onClick={() => setIndex(value => Math.max(0, value - 1))} disabled={index === 0} aria-label="Previous step"><ChevronLeft size={16}/></button><button className="psd-tour-next" onClick={() => index === steps.length - 1 ? finishTour() : setIndex(value => value + 1)}>{index === steps.length - 1 ? "Finish" : "Next"}<ChevronRight size={15}/></button></div>
       </footer>
     </section>
   </div>;

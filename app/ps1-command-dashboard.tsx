@@ -229,7 +229,7 @@ export default function PS1CommandDashboard() {
   const scheduledCount = filteredAccesses.length;
   const completionText = sample ? `${sample.results.length - lateResults.length}/${sample.results.length}` : "—";
 
-  return <div className="psd-app">
+  return <div className={`psd-app ${tourOpen ? "tour-active" : ""}`}>
     <aside className="psd-sidebar">
       <button className="psd-brand" aria-label="RailPlan home" onClick={() => setView("overview")}><Route size={24}/></button>
       <nav data-tour="navigation">{nav.map(item => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)} aria-label={item.label}><item.icon size={20}/><span>{item.label}</span></button>)}</nav>
@@ -265,7 +265,7 @@ export default function PS1CommandDashboard() {
         {view === "overview" && <>
           <section className="psd-overview-grid">
             <article className="psd-card psd-network-card" data-tour="network">
-              <header><div><span className="psd-card-kicker">01_DATA / ANIMATED NETWORK MODEL</span><h2>Dual-line track access digital twin</h2></div><span className="psd-chip psd-live-chip"><i/>Live topology</span></header>
+              <header><div><span className="psd-card-kicker">01_DATA / NETWORK TOPOLOGY</span><h2>Dual-line track access topology</h2></div><span className="psd-chip psd-live-chip"><i/>Interactive schematic</span></header>
               <div className="psd-network-scroll"><PS1NetworkMap focusLine={line} focusBound={bound} onSelectLine={selected => setLine(current => current === selected ? "ALL" : selected)}/></div>
               <footer><div><i className="alp"/><b>Line Alpha</b><span>{dataset.tables.activity_details.filter(activity => activity.line_code === "ALP").length} activities · {dataset.tables.activity_details.filter(activity => activity.line_code === "ALP").reduce((sum, activity) => sum + activity.total_accesses, 0)} access-nights</span></div><div><i className="bet"/><b>Line Beta</b><span>{dataset.tables.activity_details.filter(activity => activity.line_code === "BET").length} activities · {dataset.tables.activity_details.filter(activity => activity.line_code === "BET").reduce((sum, activity) => sum + activity.total_accesses, 0)} access-nights</span></div><p>H01↔H02 has separate capacity per line. Only Live work propagates closure across both lines.</p></footer>
             </article>
@@ -289,17 +289,17 @@ export default function PS1CommandDashboard() {
           </section>
         </>}
 
-        {view === "activities" && <section className="psd-card psd-table-card">
+        {view === "activities" && <section className="psd-card psd-table-card" data-tour="activities-view">
           <header><div><span className="psd-card-kicker">08_ACTIVITY_DETAILS.CSV</span><h2>Complete activity workload</h2></div><span className="psd-chip">{filteredActivities.length} activities · {workload} access-nights</span></header>
           <div className="psd-table-wrap"><table><thead><tr><th>Activity</th><th>Contract</th><th>Work</th><th>Line / bound</th><th>Occupied span</th><th>Start</th><th>Workload</th><th>Priority</th><th>Dependency</th></tr></thead><tbody>{filteredActivities.map(activity => <tr key={activity.activity_id}><td><b>{activity.activity_id}</b></td><td>{activity.contract_number}</td><td>{activity.activity_type}</td><td><span className={`psd-line-badge ${activity.line_code.toLowerCase()}`}>{activity.line_code}</span> {activity.bound}</td><td><small>{shortLocation(activity.start_location_id)}</small><span className="psd-arrow">→</span><small>{shortLocation(activity.end_location_id)}</small></td><td>Week {activity.planned_start_week}<small>{formatDate(activity.planned_start_date)}</small></td><td><b>{activity.total_accesses}</b> nights</td><td><span className={`psd-priority p${activity.activity_priority}`}>P{activity.activity_priority} · {priorityNames[activity.activity_priority]}</span></td><td>{activity.predecessor_activity_id || "—"}</td></tr>)}</tbody></table></div>
         </section>}
 
-        {view === "contracts" && <section className="psd-card psd-table-card">
+        {view === "contracts" && <section className="psd-card psd-table-card" data-tour="contracts-view">
           <header><div><span className="psd-card-kicker">07_PROJECT_DETAILS.CSV + RESULTS.CSV</span><h2>Contract delivery and access rules</h2></div><span className="psd-chip">{filteredContracts.length} contracts</span></header>
           <div className="psd-table-wrap"><table><thead><tr><th>Contract</th><th>Programme</th><th>Nature</th><th>Role</th><th>Workfronts</th><th>Weekly cap</th><th>Planned completion</th><th>Sample completion</th></tr></thead><tbody>{filteredContracts.map(contract => { const result = resultMap.get(contract.contract_number); return <tr key={contract.contract_number}><td><b>{contract.contract_number}</b><small>P{contract.contract_priority} contract</small></td><td>{contract.contract_description}</td><td>{contract.nature_of_activity}</td><td><span className="psd-role">{contract.access_type}</span></td><td>{contract.number_of_workfronts}</td><td>{contract.number_of_maximum_access_per_week} nights</td><td>{formatDate(contract.planned_completion_date)}</td><td>{result ? <><b>{formatDate(result.simulated_completion_date)}</b><small className={result.overrun_days ? "late" : "ontime"}>{result.overrun_days ? `+${result.overrun_days} days` : "On plan"}</small></> : "—"}</td></tr>; })}</tbody></table></div>
         </section>}
 
-        {view === "schedule" && <section className="psd-card psd-schedule-card">
+        {view === "schedule" && <section className="psd-card psd-schedule-card" data-tour="schedule-view">
           <header><div><span className="psd-card-kicker">03_SUBMISSION_SAMPLE / SCENARIO A</span><h2>Activity-by-week access schedule</h2></div><span className="psd-chip">{filteredAccesses.length} scheduled accesses</span></header>
           <div className="psd-schedule-legend"><span><i className="planned"/>Planned start</span><span><i className="access"/>Scheduled access</span><span>Horizontal axis: week 1–30</span></div>
           <div className="psd-schedule-scroll"><div className="psd-schedule-head"><span>Activity</span><div>{Array.from({ length: 30 }, (_, index) => <small key={index}>{index + 1}</small>)}</div></div>{filteredActivities.map(activity => { const weeks = scheduledWeeks.get(activity.activity_id) ?? new Set<number>(); return <button className="psd-schedule-row" key={activity.activity_id} onClick={() => { setQuery(activity.activity_id); setView("activities"); }}><span><b>{activity.activity_id}</b><small>{activity.contract_number} · {activity.line_code}/{activity.bound}</small></span><div>{Array.from({ length: 30 }, (_, index) => { const week = index + 1; return <i key={week} className={`${week === activity.planned_start_week ? "planned" : ""} ${weeks.has(week) ? "access" : ""}`} title={`${activity.activity_id} · week ${week}${weeks.has(week) ? " · scheduled" : ""}`}/>; })}</div></button>; })}</div>
@@ -326,7 +326,7 @@ export default function PS1CommandDashboard() {
             <div className="psd-data-feeds"><span>Feeds</span>{source.feeds.map(feed => <i key={feed}>{feed}</i>)}</div>
             <footer><a href={source.href} target="_blank" rel="noreferrer"><ExternalLink size={13}/>Open CSV</a><a href={source.href} download><Download size={13}/>Download</a></footer>
           </article>)}</div>
-          <article className="psd-reference-link"><MapPinned size={18}/><div><b>02_references / network_diagram.svg</b><p>The official topology remains available as the structural reference behind the animated digital twin.</p></div><a href="/ps1/network_diagram.svg" target="_blank" rel="noreferrer">Open reference <ExternalLink size={13}/></a></article>
+          <article className="psd-reference-link"><MapPinned size={18}/><div><b>02_references / network_diagram.svg</b><p>The official topology remains available as the structural reference behind the interactive topology schematic.</p></div><a href="/ps1/network_diagram.svg" target="_blank" rel="noreferrer">Open reference <ExternalLink size={13}/></a></article>
         </section>}
 
         <footer className="psd-provenance"><div><Database size={16}/><span><b>01_data</b> · network, capacity, contracts and activities</span></div><div><MapPinned size={16}/><span><b>02_references</b> · authoritative dual-line topology</span></div><div><Download size={16}/><span><b>03_submission_sample</b> · organiser Scenario A schedule and results</span></div><p>Reference schedule shown for exploration. Internal validator and judge verification remain separate.</p></footer>

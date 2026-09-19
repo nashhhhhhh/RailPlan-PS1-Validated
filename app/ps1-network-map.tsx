@@ -33,46 +33,46 @@ function NetworkLine({
   const className = code === "ALP" ? "alpha" : "beta";
   const gradient = code === "ALP" ? "url(#alphaGradient)" : "url(#betaGradient)";
   const marker = code === "ALP" ? "url(#alphaArrow)" : "url(#betaArrow)";
-  return <g className={`psd-svg-line ${className} ${dimmed ? "dimmed" : ""}`} onClick={onSelect} role="button" tabIndex={0} aria-label={`Focus ${name}`} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") onSelect(); }}>
+  return <g
+    className={`psd-svg-line ${className} ${dimmed ? "dimmed" : ""}`}
+    onClick={onSelect}
+    role="button"
+    tabIndex={0}
+    aria-label={`Filter dashboard to ${name}`}
+    onKeyDown={event => { if (event.key === "Enter" || event.key === " ") onSelect(); }}
+  >
     <g className="psd-line-label">
-      <rect x="42" y={y - 30} width="124" height="62" rx="15" fill={`url(#${className}Panel)`}/>
-      <rect x="43" y={y - 29} width="122" height="60" rx="14" className="psd-line-label-border"/>
-      <text x="62" y={y - 5} className="psd-line-code">{code}</text>
-      <text x="62" y={y + 15} className="psd-line-name">{name}</text>
-      <circle cx="143" cy={y} r="7" className="psd-line-live"/>
+      <rect x="40" y={y - 35} width="130" height="70" rx="12" className="psd-line-label-panel"/>
+      <rect x="40" y={y - 35} width="5" height="70" rx="3" className="psd-line-accent"/>
+      <text x="60" y={y - 7} className="psd-line-code">{code}</text>
+      <text x="60" y={y + 14} className="psd-line-name">{name}</text>
+      <text x="151" y={y - 9} textAnchor="end" className="psd-line-bound">EB</text>
+      <text x="151" y={y + 17} textAnchor="end" className="psd-line-bound">WB</text>
     </g>
 
-    <path d={`M 205 ${y + 17} L 1090 ${y + 17}`} className="psd-track-depth"/>
-    <path d={`M 205 ${y - 12} L 1090 ${y - 12}`} className="psd-track-depth"/>
-    <path d={`M 205 ${y - 17} L 1090 ${y - 17}`} stroke={gradient} className={`psd-track psd-track-eb ${focusBound === "WB" ? "bound-dimmed" : ""}`} markerEnd={marker}/>
-    <path d={`M 1090 ${y + 12} L 205 ${y + 12}`} stroke={gradient} className={`psd-track psd-track-wb ${focusBound === "EB" ? "bound-dimmed" : ""}`} markerEnd={marker}/>
-    <path d={`M 205 ${y - 17} L 1090 ${y - 17}`} stroke={gradient} className={`psd-energy psd-energy-eb ${focusBound === "WB" ? "bound-dimmed" : ""}`}/>
-    <path d={`M 1090 ${y + 12} L 205 ${y + 12}`} stroke={gradient} className={`psd-energy psd-energy-wb ${focusBound === "EB" ? "bound-dimmed" : ""}`}/>
-    <text x="1112" y={y - 12} className="psd-bound-label">EB</text>
-    <text x="184" y={y + 17} className="psd-bound-label" textAnchor="end">WB</text>
+    <path d={`M 205 ${y - 10} L 1090 ${y - 10}`} stroke={gradient} className={`psd-track psd-track-eb ${focusBound === "WB" ? "bound-dimmed" : ""}`} markerEnd={marker}/>
+    <path d={`M 1090 ${y + 10} L 205 ${y + 10}`} stroke={gradient} className={`psd-track psd-track-wb ${focusBound === "EB" ? "bound-dimmed" : ""}`} markerEnd={marker}/>
+    <path d={`M 205 ${y - 10} L 1090 ${y - 10}`} stroke={gradient} className={`psd-energy psd-energy-eb ${focusBound === "WB" ? "bound-dimmed" : ""}`}/>
+    <path d={`M 1090 ${y + 10} L 205 ${y + 10}`} stroke={gradient} className={`psd-energy psd-energy-wb ${focusBound === "EB" ? "bound-dimmed" : ""}`}/>
 
-    <circle r="5" fill={code === "ALP" ? "#73e8ff" : "#dc8cff"} className={`psd-packet ${focusBound === "WB" ? "bound-dimmed" : ""}`}>
-      <animateMotion dur={code === "ALP" ? "5.6s" : "6.4s"} repeatCount="indefinite" path={`M 205 ${y - 17} L 1080 ${y - 17}`}/>
+    <circle r="4" fill={code === "ALP" ? "#79dfff" : "#cb8cff"} className={`psd-packet ${focusBound === "WB" ? "bound-dimmed" : ""}`}>
+      <animateMotion dur={code === "ALP" ? "7s" : "7.8s"} repeatCount="indefinite" path={`M 205 ${y - 10} L 1080 ${y - 10}`}/>
     </circle>
-    <circle r="4" fill={code === "ALP" ? "#8ba8ff" : "#9b8cff"} className={`psd-packet ${focusBound === "EB" ? "bound-dimmed" : ""}`}>
-      <animateMotion dur={code === "ALP" ? "7.1s" : "5.8s"} repeatCount="indefinite" path={`M 1080 ${y + 12} L 205 ${y + 12}`}/>
+    <circle r="4" fill={code === "ALP" ? "#8ba8ff" : "#ee8dd0"} className={`psd-packet ${focusBound === "EB" ? "bound-dimmed" : ""}`}>
+      <animateMotion dur={code === "ALP" ? "8.2s" : "7.2s"} repeatCount="indefinite" path={`M 1080 ${y + 10} L 205 ${y + 10}`}/>
     </circle>
 
     {stations.map((station, index) => {
       const x = stationX[index];
       const isHub = station.startsWith("H");
-      if (isHub) return <g key={station} className="psd-hub" transform={`translate(${x} ${y - 2})`}>
-        <path d="M -17 -24 L 11 -24 L 18 -17 L -10 -17 Z" className="psd-hub-top"/>
-        <path d="M 11 -24 L 18 -17 L 18 20 L 11 27 Z" className="psd-hub-side"/>
-        <rect x="-17" y="-17" width="28" height="44" rx="7" className="psd-hub-face"/>
-        <rect x="-11" y="-11" width="16" height="32" rx="4" className="psd-hub-core"/>
-        <text x="0" y="-34" textAnchor="middle" className="psd-station-label hub-label">{station}</text>
-      </g>;
-      return <g key={station} className="psd-station" transform={`translate(${x} ${y - 2})`}>
-        <ellipse cx="0" cy="8" rx="13" ry="6" className="psd-station-shadow"/>
-        <circle r="13" className="psd-station-outer"/>
-        <circle r="7" className="psd-station-inner"/>
-        <text x="0" y={index % 2 === 0 ? -28 : 36} textAnchor="middle" className="psd-station-label">{station}</text>
+      const labelY = code === "ALP" ? y - 34 : y + 46;
+      return <g key={station} className={`psd-station ${isHub ? "psd-hub" : ""}`} transform={`translate(${x} ${y})`}>
+        <title>{`${name} ${station}`}</title>
+        <line x1="0" y1="-10" x2="0" y2="10" className="psd-station-bridge"/>
+        {isHub
+          ? <><rect x="-14" y="-20" width="28" height="40" rx="8" className="psd-hub-node"/><circle r="4" className="psd-hub-core"/></>
+          : <><circle r="11" className="psd-station-outer"/><circle r="4" className="psd-station-inner"/></>}
+        <text x="0" y={labelY - y} textAnchor="middle" className={`psd-station-label ${isHub ? "hub-label" : ""}`}>{station}</text>
       </g>;
     })}
   </g>;
@@ -80,46 +80,42 @@ function NetworkLine({
 
 export default function PS1NetworkMap({ focusLine, focusBound, onSelectLine }: Props) {
   return <div className="psd-smart-network">
-    <div className="psd-network-orbit orbit-one"/>
-    <div className="psd-network-orbit orbit-two"/>
+    <div className="psd-map-hint">Select a line to filter the dashboard</div>
     <svg viewBox="0 0 1180 430" role="img" aria-labelledby="psd-network-title psd-network-description">
-      <title id="psd-network-title">Animated Line Alpha and Line Beta topology</title>
-      <desc id="psd-network-description">Two independent directional metro lines with interchange stations H01 and H02. Only Live work crosses between lines.</desc>
+      <title id="psd-network-title">Line Alpha and Line Beta network topology</title>
+      <desc id="psd-network-description">Two independent directional metro lines with separate H01 and H02 capacity. Live work can create cross-line closure.</desc>
       <defs>
-        <linearGradient id="alphaGradient" x1="0" x2="1"><stop offset="0" stopColor="#65e9ff"/><stop offset=".52" stopColor="#5db6ff"/><stop offset="1" stopColor="#8a8cff"/></linearGradient>
-        <linearGradient id="betaGradient" x1="0" x2="1"><stop offset="0" stopColor="#9d8cff"/><stop offset=".52" stopColor="#c479ff"/><stop offset="1" stopColor="#ef78cf"/></linearGradient>
-        <linearGradient id="alphaPanel" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#163c5d"/><stop offset="1" stopColor="#1b2450"/></linearGradient>
-        <linearGradient id="betaPanel" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#31265c"/><stop offset="1" stopColor="#4a2453"/></linearGradient>
-        <linearGradient id="hubGradient" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#f2d06b"/><stop offset="1" stopColor="#bd7d37"/></linearGradient>
-        <pattern id="microGrid" width="25" height="25" patternUnits="userSpaceOnUse"><path d="M 25 0 L 0 0 0 25" fill="none" stroke="#263656" strokeWidth=".7" opacity=".35"/></pattern>
-        <filter id="alphaGlow" x="-30%" y="-100%" width="160%" height="300%"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <filter id="betaGlow" x="-30%" y="-100%" width="160%" height="300%"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <marker id="alphaArrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8a8cff"/></marker>
-        <marker id="betaArrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ef78cf"/></marker>
+        <linearGradient id="alphaGradient" x1="0" x2="1"><stop offset="0" stopColor="#5cd9f5"/><stop offset="1" stopColor="#7698ff"/></linearGradient>
+        <linearGradient id="betaGradient" x1="0" x2="1"><stop offset="0" stopColor="#a78bfa"/><stop offset="1" stopColor="#e184c9"/></linearGradient>
+        <pattern id="microGrid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M 28 0 L 0 0 0 28" fill="none" stroke="#263656" strokeWidth=".6" opacity=".22"/></pattern>
+        <marker id="alphaArrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7698ff"/></marker>
+        <marker id="betaArrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#e184c9"/></marker>
       </defs>
       <rect width="1180" height="430" fill="url(#microGrid)"/>
-      <text x="42" y="42" className="psd-map-title">LIVE NETWORK DIGITAL TWIN</text>
-      <text x="42" y="65" className="psd-map-subtitle">Directional capacity · animated access flow · H01↔H02 dual-line interchange</text>
-      <g className="psd-map-legend" transform="translate(815 28)">
-        <rect width="322" height="48" rx="12"/>
-        <circle cx="20" cy="17" r="4" className="legend-eb"/><text x="32" y="20">EB · Eastbound</text>
-        <circle cx="166" cy="17" r="4" className="legend-wb"/><text x="178" y="20">WB · Westbound</text>
-        <text x="20" y="37" className="legend-detail">Pulses indicate direction, not live train positions</text>
+      <text x="40" y="40" className="psd-map-title">DUAL-LINE NETWORK TOPOLOGY</text>
+      <text x="40" y="64" className="psd-map-subtitle">Directional track capacity with line-specific interchange sectors</text>
+      <g className="psd-map-legend" transform="translate(790 25)">
+        <rect width="345" height="54" rx="10"/>
+        <path d="M 18 18 L 74 18" className="legend-eb-line"/><text x="84" y="22">EB · Eastbound</text>
+        <path d="M 185 18 L 241 18" className="legend-wb-line"/><text x="251" y="22">WB · Westbound</text>
+        <text x="18" y="42" className="legend-detail">Moving dots show direction only</text>
       </g>
 
-      <NetworkLine code="ALP" name="Line Alpha" stations={alphaStations} y={155} dimmed={focusLine === "BET"} focusBound={focusBound} onSelect={() => onSelectLine("ALP")}/>
-      <NetworkLine code="BET" name="Line Beta" stations={betaStations} y={325} dimmed={focusLine === "ALP"} focusBound={focusBound} onSelect={() => onSelectLine("BET")}/>
+      <g className="psd-interchange-zone">
+        <rect x="532" y="92" width="196" height="280" rx="18"/>
+        <text x="630" y="113" textAnchor="middle">H01–H02 INTERCHANGE</text>
+      </g>
+      <path d="M 575 177 L 575 305" className="psd-crossline-link"/>
+      <path d="M 685 177 L 685 305" className="psd-crossline-link"/>
+
+      <NetworkLine code="ALP" name="Line Alpha" stations={alphaStations} y={165} dimmed={focusLine === "BET"} focusBound={focusBound} onSelect={() => onSelectLine("ALP")}/>
+      <NetworkLine code="BET" name="Line Beta" stations={betaStations} y={315} dimmed={focusLine === "ALP"} focusBound={focusBound} onSelect={() => onSelectLine("BET")}/>
 
       <g className="psd-crossover">
-        <path d="M 575 187 C 575 225 575 255 575 293"/>
-        <path d="M 685 187 C 685 225 685 255 685 293"/>
-        <circle cx="575" cy="240" r="4"/><circle cx="685" cy="240" r="4"/>
-        <rect x="590" y="216" width="80" height="47" rx="10"/>
-        <text x="630" y="235" textAnchor="middle">LIVE ONLY</text>
-        <text x="630" y="251" textAnchor="middle" className="psd-crossover-detail">cross-line closure</text>
+        <rect x="548" y="222" width="164" height="52" rx="10"/>
+        <text x="630" y="243" textAnchor="middle">LIVE WORK ONLY</text>
+        <text x="630" y="260" textAnchor="middle" className="psd-crossover-detail">may close both lines</text>
       </g>
     </svg>
-    <div className="psd-network-depth"/>
-    <div className="psd-live-readout"><i/><span>Topology model online</span><b>20</b><small>station records</small></div>
   </div>;
 }
